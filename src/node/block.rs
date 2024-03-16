@@ -1,10 +1,5 @@
 use sha2::{Sha256, Digest};
-
-pub struct Transaction {
-    pub sender: String,
-    pub receiver: String,
-    pub amount: f64, 
-}
+use crate::node::transaction::{Transaction};
 
 pub struct Block {
     pub index: usize,
