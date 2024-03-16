@@ -1,6 +1,6 @@
 pub struct Transaction {
-    pub sender: String,
-    pub receiver: String,
+    pub from: String,
+    pub to: String,
     pub amount: f64, 
 }
 
