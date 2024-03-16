@@ -1,16 +1,28 @@
 use sha2::{Sha256, Digest};
 
+pub struct Transaction {
+    pub sender: String,
+    pub receiver: String,
+    pub amount: f64,  // Use the appropriate data type for your use case
+}
+
 pub struct Block {
     pub index: usize,
     pub previous_hash: String,
     pub hash: String,
+    pub transactions : Vec<Transaction>
 }
 
-impl Block {
-    // New function to create a hash for the Block
-    pub fn calculate_hash(&self) -> String {
+impl Block {   
+       // New function to create a hash for the Block
+       pub fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
-        hasher.update(format!("{}{}{}", self.index, self.previous_hash, "Your data here"));
+        // Convert transaction data to a string format for hashing
+        let transactions_string = self.transactions.iter()
+            .map(|tx| format!("{}{}{}", tx.sender, tx.receiver, tx.amount))
+            .collect::<Vec<String>>()
+            .join("");  // Concatenate all transactions into a single string
+        hasher.update(format!("{}{}{}", self.index, self.previous_hash, transactions_string));
         let result = hasher.finalize();
         format!("{:x}", result)  // Converts hash bytes to hex string
     }
@@ -28,6 +40,7 @@ impl Blockchain {
             index:0,
             previous_hash: "0".to_string(),
             hash: String::new(),
+            transactions : vec![]
         };
 
         genesis_block.hash = genesis_block.calculate_hash();
@@ -62,7 +75,7 @@ mod tests {
         let genesis_block = &blockchain.blocks[0];
         assert_eq!(genesis_block.index, 0, "The index of the genesis block should be 0.");
         assert_eq!(genesis_block.previous_hash, "0", "The previous hash of the genesis block should be '0'.");
-        assert_eq!(genesis_block.hash, "525cfeaabe945e2ad405b6e881c8206582b7054d7165a3a15af9fdf9e2b0d56e", "The hash of the genesis block should be '525cfeaabe945e2ad405b6e881c8206582b7054d7165a3a15af9fdf9e2b0d56e', but was '{}'.", genesis_block.hash);
+        assert_eq!(genesis_block.hash, "f1534392279bddbf9d43dde8701cb5be14b82f76ec6607bf8d6ad557f60f304e", "The hash of the genesis block should be 'f1534392279bddbf9d43dde8701cb5be14b82f76ec6607bf8d6ad557f60f304e', but was '{}'.", genesis_block.hash);
     }
     
 }
