@@ -3,7 +3,7 @@ use sha2::{Sha256, Digest};
 pub struct Transaction {
     pub sender: String,
     pub receiver: String,
-    pub amount: f64,  // Use the appropriate data type for your use case
+    pub amount: f64, 
 }
 
 pub struct Block {
@@ -14,7 +14,6 @@ pub struct Block {
 }
 
 impl Block {   
-       // New function to create a hash for the Block
        pub fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
         // Convert transaction data to a string format for hashing
