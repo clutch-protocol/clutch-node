@@ -1,6 +1,4 @@
-use sha2::{Sha256, Digest};
 use crate::node::block::{Block}; 
-use crate::node::transaction::{Transaction};
 
 pub struct Blockchain {
     pub name: &'static str,

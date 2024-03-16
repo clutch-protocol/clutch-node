@@ -30,6 +30,7 @@ impl Block {
             transactions : vec![]
         };
 
+        genesis_block.transactions = Transaction::new_genesis_transactions();
         genesis_block.hash = genesis_block.calculate_hash();
         genesis_block
     }
