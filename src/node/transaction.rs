@@ -1,7 +1,7 @@
 pub struct Transaction {
     pub from: String,
     pub to: String,
-    pub amount: f64, 
+    pub value: f64, 
 }
 
 impl Transaction{
