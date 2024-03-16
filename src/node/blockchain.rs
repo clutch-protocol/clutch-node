@@ -8,17 +8,9 @@ pub struct Blockchain {
 }
 
 impl Blockchain {
-    pub fn new() -> Blockchain {
+    pub fn new() -> Blockchain {            
+        let genesis_block = Block::new_genesis_block();
         
-        let mut genesis_block = Block{
-            index:0,
-            previous_hash: "0".to_string(),
-            hash: String::new(),
-            transactions : vec![]
-        };
-
-        genesis_block.hash = genesis_block.calculate_hash();
-
         let blockchain = Blockchain {
             name: "clutch",      
             blocks: vec![genesis_block],

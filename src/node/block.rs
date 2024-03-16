@@ -9,7 +9,7 @@ pub struct Block {
 }
 
 impl Block {
-    pub fn calculate_hash(&self) -> String {
+    fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
         let transactions_string = self.transactions.iter()
             .map(|tx| format!("{}{}{}", tx.sender, tx.receiver, tx.amount))
@@ -18,5 +18,17 @@ impl Block {
         hasher.update(format!("{}{}{}", self.index, self.previous_hash, transactions_string));
         let result = hasher.finalize();
         format!("{:x}", result)  
+    }
+
+    pub fn new_genesis_block() -> Block {
+        let mut genesis_block = Block{
+            index:0,
+            previous_hash: "0".to_string(),
+            hash: String::new(),
+            transactions : vec![]
+        };
+
+        genesis_block.hash = genesis_block.calculate_hash();
+        genesis_block
     }
 }
