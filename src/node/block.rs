@@ -1,5 +1,5 @@
 use sha2::{Sha256, Digest};
-use crate::node::transaction::{Transaction};
+use crate::node::transaction::Transaction;
 
 pub struct Block {
     pub index: usize,
