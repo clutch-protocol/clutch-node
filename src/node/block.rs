@@ -13,7 +13,7 @@ impl Block {
         let mut hasher = Sha256::new();
         
         let transactions_string = self.transactions.iter()
-            .map(|tx| format!("{}{}{}", tx.sender, tx.receiver, tx.amount))
+            .map(|tx| format!("{}{}{}", tx.from, tx.to, tx.value))
             .collect::<Vec<String>>()
             .join(""); 
                    
