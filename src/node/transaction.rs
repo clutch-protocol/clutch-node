@@ -27,7 +27,7 @@ impl Transaction{
             name: "rideRequest".to_string(),
             arguments: vec![
                 request.pickup_location.latitude.to_string(),
-                request.pickup_location.longitude.to_string(),  
+                request.pickup_location.longitude.to_string(),
                 request.dropoff_location.latitude.to_string(),
                 request.dropoff_location.longitude.to_string(),
             ],
