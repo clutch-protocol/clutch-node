@@ -36,7 +36,7 @@ impl Transaction{
         Transaction {
             
             from:from,
-            to: "".to_string(),
+            to: "clutch".to_string(),
             value: 0.0,
             data: function_call,
         }
