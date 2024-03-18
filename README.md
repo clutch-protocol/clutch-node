@@ -17,14 +17,14 @@ Clutch-Node is designed to revolutionize the way we think about ridesharing. By 
 
 To get started with Clutch-Node, follow these steps:
 
-1- Clone the repository:
+- Clone the repository:
 git clone https://github.com/MehranMazhar/clutch-node
 
-2- Install dependencies:
+- Install dependencies:
 cd clutch-node
 cargo install
 
-3- Start the application:
+- Start the application:
 cargo run
 
 ## Contributing
