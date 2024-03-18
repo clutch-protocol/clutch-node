@@ -1,3 +1,5 @@
+use crate::node::coordinate::Coordinates;
+
 pub struct Transaction {
     pub from: String,
     pub to: String,
@@ -11,9 +13,8 @@ pub struct FunctionCall {
 }
 
 pub struct RideRequest {
-    pub pickup_location: String,
-    pub dropoff_location: String,
-    pub passenger: String, // Consider adding more fields as necessary
+    pub pickup_location: Coordinates,
+    pub dropoff_location: Coordinates,
 }
 
 impl Transaction{
@@ -25,9 +26,10 @@ impl Transaction{
         let function_call = FunctionCall {
             name: "rideRequest".to_string(),
             arguments: vec![
-                request.pickup_location,
-                request.dropoff_location,
-                request.passenger,
+                request.pickup_location.latitude.to_string(),
+                request.pickup_location.longitude.to_string(),  
+                request.dropoff_location.latitude.to_string(),
+                request.dropoff_location.longitude.to_string(),
             ],
         };
 
@@ -48,11 +50,15 @@ mod tests{
         let from_address = "Alice".to_string();
         let to_address = "Bob".to_string();
 
-        // Create a sample ride request
         let ride_request = RideRequest {
-            pickup_location: "123 Main St".to_string(),
-            dropoff_location: "456 Elm St".to_string(),
-            passenger: "Charlie".to_string(),
+            pickup_location: Coordinates {
+                latitude: 40.712776,
+                longitude : -74.005974,
+            },
+            dropoff_location: Coordinates {
+                latitude: 40.712776,
+                longitude : -73.986397,
+            }        
         };
 
         let transaction = Transaction::ride_request(from_address.clone(), to_address.clone(), ride_request);
@@ -60,7 +66,7 @@ mod tests{
         assert_eq!(transaction.from, from_address);
         assert_eq!(transaction.to, to_address);
         assert_eq!(transaction.data.name, "rideRequest".to_string());
-        assert_eq!(transaction.data.arguments, vec!["123 Main St", "456 Elm St", "Charlie"]);
+        assert_eq!(transaction.data.arguments, vec!["40.712776", "-74.005974","40.712776", "-73.986397"]);
 
     }
 }
