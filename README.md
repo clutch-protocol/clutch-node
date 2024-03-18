@@ -26,3 +26,15 @@ cargo install
 
 3. Start the application:
 cargo run
+
+## Contributing
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+## Contact
+
+If you have any questions or comments, please feel free to contact us at mehran.mazhar@gmail.com.
