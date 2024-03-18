@@ -22,7 +22,7 @@ impl Transaction{
         vec![]
     }
 
-      pub fn ride_request(from: String, to: String, request: RideRequest) -> Transaction {
+      pub fn ride_request(from: String, request: RideRequest) -> Transaction {
         let function_call = FunctionCall {
             name: "rideRequest".to_string(),
             arguments: vec![
@@ -34,8 +34,9 @@ impl Transaction{
         };
 
         Transaction {
+            
             from:from,
-            to: to,
+            to: "".to_string(),
             value: 0.0,
             data: function_call,
         }
@@ -48,7 +49,6 @@ mod tests{
     #[test]
     fn new_ride_request(){
         let from_address = "Alice".to_string();
-        let to_address = "Bob".to_string();
 
         let ride_request = RideRequest {
             pickup_location: Coordinates {
@@ -61,10 +61,9 @@ mod tests{
             }        
         };
 
-        let transaction = Transaction::ride_request(from_address.clone(), to_address.clone(), ride_request);
+        let transaction = Transaction::ride_request(from_address.clone(), ride_request);
 
         assert_eq!(transaction.from, from_address);
-        assert_eq!(transaction.to, to_address);
         assert_eq!(transaction.data.name, "rideRequest".to_string());
         assert_eq!(transaction.data.arguments, vec!["40.712776", "-74.005974","40.712776", "-73.986397"]);
     }
