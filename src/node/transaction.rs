@@ -22,7 +22,7 @@ impl Transaction{
         vec![]
     }
 
-      pub fn ride_request(from: String, request: RideRequest) -> Transaction {
+    pub fn ride_request(from: String, request: RideRequest) -> Transaction {
         let function_call = FunctionCall {
             name: "rideRequest".to_string(),
             arguments: vec![
