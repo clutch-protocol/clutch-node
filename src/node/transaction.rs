@@ -9,7 +9,7 @@ pub struct Transaction {
 
 pub struct FunctionCall {
     pub name: String,
-    pub arguments: Vec<String>,
+    pub arguments: String,
 }
 
 
@@ -18,15 +18,11 @@ impl Transaction{
         vec![]
     }
 
-    pub fn ride_request(from: String, request: RideRequest) -> Transaction {
+    pub fn ride_request(from: String, request: RideRequest) -> Transaction {        
+
         let function_call = FunctionCall {
             name: "rideRequest".to_string(),
-            arguments: vec![
-                request.pickup_location.latitude.to_string(),
-                request.pickup_location.longitude.to_string(),
-                request.dropoff_location.latitude.to_string(),
-                request.dropoff_location.longitude.to_string(),
-            ],
+            arguments: serde_json::to_string(&request).unwrap()
         };
 
         Transaction {            
@@ -41,7 +37,7 @@ impl Transaction{
 mod tests{    
     use super::*; 
     use crate::node::coordinate::Coordinates;
-    
+
     #[test]
     fn new_ride_request(){
         let from_address = "Alice".to_string();
@@ -57,10 +53,12 @@ mod tests{
             }        
         };
 
+        let serilized= serde_json::to_string(&ride_request).unwrap();
         let transaction = Transaction::ride_request(from_address.clone(), ride_request);
 
         assert_eq!(transaction.from, from_address);
         assert_eq!(transaction.data.name, "rideRequest".to_string());
-        assert_eq!(transaction.data.arguments, vec!["40.712776", "-74.005974","40.712776", "-73.986397"]);
+        assert_eq!(transaction.data.arguments,serilized);
+        //print!("{}",serilized);
     }
 }
