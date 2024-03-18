@@ -67,6 +67,5 @@ mod tests{
         assert_eq!(transaction.to, to_address);
         assert_eq!(transaction.data.name, "rideRequest".to_string());
         assert_eq!(transaction.data.arguments, vec!["40.712776", "-74.005974","40.712776", "-73.986397"]);
-
     }
 }
