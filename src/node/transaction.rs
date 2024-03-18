@@ -1,4 +1,4 @@
-use crate::node::coordinate::Coordinates;
+use crate::node::riderequest::RideRequest;
 
 pub struct Transaction {
     pub from: String,
@@ -12,10 +12,6 @@ pub struct FunctionCall {
     pub arguments: Vec<String>,
 }
 
-pub struct RideRequest {
-    pub pickup_location: Coordinates,
-    pub dropoff_location: Coordinates,
-}
 
 impl Transaction{
     pub fn new_genesis_transactions() -> Vec<Transaction> {
@@ -44,7 +40,8 @@ impl Transaction{
 
 mod tests{    
     use super::*; 
-
+    use crate::node::coordinate::Coordinates;
+    
     #[test]
     fn new_ride_request(){
         let from_address = "Alice".to_string();
