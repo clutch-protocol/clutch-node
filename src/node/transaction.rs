@@ -33,8 +33,7 @@ impl Transaction{
             ],
         };
 
-        Transaction {
-            
+        Transaction {            
             from:from,
             to: "clutch".to_string(),
             value: 0.0,
