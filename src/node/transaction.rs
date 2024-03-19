@@ -1,4 +1,4 @@
-use crate::node::riderequest::RideRequest;
+use crate::node::rideRequest::RideRequest;
 
 pub struct Transaction {
     pub from: String,

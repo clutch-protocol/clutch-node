@@ -1,5 +1,5 @@
 mod block;
 mod transaction;
 mod coordinate;
-mod riderequest;
+mod rideRequest;
 pub mod blockchain;
