@@ -45,28 +45,28 @@ impl Transaction{
         transaction
     }
 
-    pub fn ride_request(from: String, rideRequest: RideRequest) -> Transaction {
+    pub fn ride_request(from: String, ride_request: RideRequest) -> Transaction {
         let function_call = FunctionCall {
             name: "rideRequest".to_string(),
-            arguments: serde_json::to_string(&rideRequest).unwrap()
+            arguments: serde_json::to_string(&ride_request).unwrap()
         };
 
         Transaction::new_tranaction(from, function_call)
     }
 
-    pub fn ride_offer(from: String, rideOffer: RideOffer) -> Transaction {
+    pub fn ride_offer(from: String, ride_offer: RideOffer) -> Transaction {
         let function_call = FunctionCall {
             name: "rideOffer".to_string(),
-            arguments: serde_json::to_string(&rideOffer).unwrap() 
+            arguments: serde_json::to_string(&ride_offer).unwrap() 
         };
 
         Transaction::new_tranaction(from, function_call)
     }   
 
-    pub fn ride_accept(from:String, rideAcceptance:RideAcceptance) ->Transaction{
-        let mut function_call = FunctionCall{
+    pub fn ride_accept(from:String, ride_acceptance:RideAcceptance) ->Transaction{
+        let function_call = FunctionCall{
             name : "rideAcceptance".to_string(),
-            arguments : serde_json::to_string(&rideAcceptance).unwrap(),
+            arguments : serde_json::to_string(&ride_acceptance).unwrap(),
         };
 
         Transaction::new_tranaction(from, function_call)
