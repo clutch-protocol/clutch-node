@@ -1,4 +1,4 @@
-use crate::node::block::{Block}; 
+use crate::node::block::Block; 
 
 pub struct Blockchain {
     pub name: &'static str,
