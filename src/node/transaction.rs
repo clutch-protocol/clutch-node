@@ -19,7 +19,7 @@ impl Transaction{
 
     fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
-        hasher.update(format!("{}{}{}{}{}", self.from, self.to, self.value, self.data.name, self.data.arguments));
+        hasher.update(format!("{}{}{}{}", self.from, self.value, self.data.name, self.data.arguments));
         let result = hasher.finalize();
         format!("{:x}", result)                 
     }
