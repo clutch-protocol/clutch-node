@@ -2,8 +2,9 @@ use sha2::{Sha256, Digest};
 use crate::node::rideRequest::RideRequest;
 use crate::node::rideOffer::RideOffer;
 use crate::node::rideAcceptance::RideAcceptance;
+use crate::node::confirmArrival::ConfirmArrival;
 
-use super::rideAcceptance;
+use super::confirmArrival;
 
 pub struct Transaction {
     pub from: String,
@@ -72,6 +73,14 @@ impl Transaction{
         Transaction::new_tranaction(from, function_call)
     }
 
+    pub fn confirm_arrival(from:String, confirm_arrival:ConfirmArrival) -> Transaction{
+        let function_call = FunctionCall{
+            name: "confirmArrival".to_string(),
+            arguments: serde_json::to_string(&confirm_arrival).unwrap(),
+        };
+
+        Transaction::new_tranaction(from, function_call)
+    }
 }
 
 
