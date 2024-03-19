@@ -1,6 +1,9 @@
 use sha2::{Sha256, Digest};
 use crate::node::rideRequest::RideRequest;
 use crate::node::rideOffer::RideOffer;
+use crate::node::rideAcceptance::RideAcceptance;
+
+use super::rideAcceptance;
 
 pub struct Transaction {
     pub from: String,
@@ -59,6 +62,15 @@ impl Transaction{
 
         Transaction::new_tranaction(from, function_call)
     }   
+
+    pub fn ride_accept(from:String, rideAcceptance:RideAcceptance) ->Transaction{
+        let mut function_call = FunctionCall{
+            name : "rideAcceptance".to_string(),
+            arguments : serde_json::to_string(&rideAcceptance).unwrap(),
+        };
+
+        Transaction::new_tranaction(from, function_call)
+    }
 
 }
 
