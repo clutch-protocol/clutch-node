@@ -6,4 +6,5 @@ mod rideOffer;
 mod rideAcceptance;
 mod confirmArrival;
 mod complainArrival;
+mod ridePayment;
 pub mod blockchain;

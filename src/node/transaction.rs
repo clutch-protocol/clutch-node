@@ -4,8 +4,7 @@ use crate::node::rideOffer::RideOffer;
 use crate::node::rideAcceptance::RideAcceptance;
 use crate::node::confirmArrival::ConfirmArrival;
 use crate::node::complainArrival::ComplainArrival;
-
-use super::confirmArrival;
+use crate::node::ridePayment::RidePayment;
 
 pub struct Transaction {
     pub from: String,
@@ -87,6 +86,15 @@ impl Transaction{
         let function_call: FunctionCall = FunctionCall{
             name: "complainArrival".to_string(),
             arguments: serde_json::to_string(&complain_arrival).unwrap(),
+        };
+
+        Transaction::new_tranaction(from, function_call)
+    }
+
+    pub fn ride_payment(from:String, ridePayment:RidePayment) -> Transaction{
+        let function_call: FunctionCall = FunctionCall{
+            name: "ridePayment".to_string(),
+            arguments: serde_json::to_string(&ridePayment).unwrap(),
         };
 
         Transaction::new_tranaction(from, function_call)
