@@ -3,6 +3,7 @@ use crate::node::rideRequest::RideRequest;
 use crate::node::rideOffer::RideOffer;
 use crate::node::rideAcceptance::RideAcceptance;
 use crate::node::confirmArrival::ConfirmArrival;
+use crate::node::complainArrival::ComplainArrival;
 
 use super::confirmArrival;
 
@@ -74,9 +75,18 @@ impl Transaction{
     }
 
     pub fn confirm_arrival(from:String, confirm_arrival:ConfirmArrival) -> Transaction{
-        let function_call = FunctionCall{
+        let function_call: FunctionCall = FunctionCall{
             name: "confirmArrival".to_string(),
             arguments: serde_json::to_string(&confirm_arrival).unwrap(),
+        };
+
+        Transaction::new_tranaction(from, function_call)
+    }
+
+    pub fn complain_arrival(from:String, complain_arrival:ComplainArrival) -> Transaction{
+        let function_call: FunctionCall = FunctionCall{
+            name: "complainArrival".to_string(),
+            arguments: serde_json::to_string(&complain_arrival).unwrap(),
         };
 
         Transaction::new_tranaction(from, function_call)
