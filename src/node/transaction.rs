@@ -102,7 +102,7 @@ impl Transaction{
 }
 
 
-
+#[cfg(test)]
 mod tests{    
     use super::*; 
     use crate::node::coordinate::Coordinates;
