@@ -1,10 +1,10 @@
 use sha2::{Sha256, Digest};
-use crate::node::rideRequest::RideRequest;
-use crate::node::rideOffer::RideOffer;
-use crate::node::rideAcceptance::RideAcceptance;
-use crate::node::confirmArrival::ConfirmArrival;
-use crate::node::complainArrival::ComplainArrival;
-use crate::node::ridePayment::RidePayment;
+use crate::node::ride_request::RideRequest;
+use crate::node::ride_offer::RideOffer;
+use crate::node::ride_acceptance::RideAcceptance;
+use crate::node::confirm_arrival::ConfirmArrival;
+use crate::node::complain_arrival::ComplainArrival;
+use crate::node::ride_payment::RidePayment;
 
 pub struct Transaction {
     pub from: String,

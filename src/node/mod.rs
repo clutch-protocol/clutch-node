@@ -1,10 +1,10 @@
 mod block;
 mod transaction;
 mod coordinate;
-mod rideRequest;
-mod rideOffer;
-mod rideAcceptance;
-mod confirmArrival;
-mod complainArrival;
-mod ridePayment;
+mod ride_request;
+mod ride_offer;
+mod ride_acceptance;
+mod confirm_arrival;
+mod complain_arrival;
+mod ride_payment;
 pub mod blockchain;
