@@ -1,10 +1,11 @@
 use sha2::{Sha256, Digest};
 use crate::node::rideRequest::RideRequest;
+use crate::node::rideOffer::RideOffer;
 
 pub struct Transaction {
     pub from: String,
     pub to: Option<String>,
-    pub value: f64, 
+    pub value: Option<f64>, 
     pub hash: String,
     pub data: FunctionCall,
 }
@@ -19,7 +20,7 @@ impl Transaction{
 
     fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
-        hasher.update(format!("{}{}{}{}", self.from, self.value, self.data.name, self.data.arguments));
+        hasher.update(format!("{}{}{}", self.from, self.data.name, self.data.arguments));
         let result = hasher.finalize();
         format!("{:x}", result)                 
     }
@@ -28,25 +29,40 @@ impl Transaction{
         vec![]
     }
 
-    pub fn ride_request(from: String, request: RideRequest) -> Transaction {
-
-        let function_call = FunctionCall {
-            name: "rideRequest".to_string(),
-            arguments: serde_json::to_string(&request).unwrap()
-        };
-
-       let mut transaction = Transaction {         
-            hash: String::new(),   
-            from:from,
-            to: None,
-            value: 0.0,
-            data: function_call,
-        };
-
+    fn new_tranaction(from: String, function_call: FunctionCall) -> Transaction {
+        let mut transaction = Transaction {         
+                hash: String::new(),   
+                from:from,
+                to: None,
+                value: None,
+                data: function_call,
+            };
+    
         transaction.hash = transaction.calculate_hash();
         transaction
     }
+
+    pub fn ride_request(from: String, rideRequest: RideRequest) -> Transaction {
+        let function_call = FunctionCall {
+            name: "rideRequest".to_string(),
+            arguments: serde_json::to_string(&rideRequest).unwrap()
+        };
+
+        Transaction::new_tranaction(from, function_call)
+    }
+
+    pub fn ride_offer(from: String, rideOffer: RideOffer) -> Transaction {
+        let function_call = FunctionCall {
+            name: "rideOffer".to_string(),
+            arguments: serde_json::to_string(&rideOffer).unwrap() 
+        };
+
+        Transaction::new_tranaction(from, function_call)
+    }   
+
 }
+
+
 
 mod tests{    
     use super::*; 
