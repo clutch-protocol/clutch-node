@@ -1,9 +1,11 @@
+use sha2::{Sha256, Digest};
 use crate::node::rideRequest::RideRequest;
 
 pub struct Transaction {
     pub from: String,
-    pub to: String,
+    pub to: Option<String>,
     pub value: f64, 
+    pub hash: String,
     pub data: FunctionCall,
 }
 
@@ -14,23 +16,35 @@ pub struct FunctionCall {
 
 
 impl Transaction{
+
+    fn calculate_hash(&self) -> String {
+        let mut hasher = Sha256::new();
+        hasher.update(format!("{}{}{}{}{}", self.from, self.to, self.value, self.data.name, self.data.arguments));
+        let result = hasher.finalize();
+        format!("{:x}", result)                 
+    }
+
     pub fn new_genesis_transactions() -> Vec<Transaction> {
         vec![]
     }
 
-    pub fn ride_request(from: String, request: RideRequest) -> Transaction {        
+    pub fn ride_request(from: String, request: RideRequest) -> Transaction {
 
         let function_call = FunctionCall {
             name: "rideRequest".to_string(),
             arguments: serde_json::to_string(&request).unwrap()
         };
 
-        Transaction {            
+       let mut transaction = Transaction {         
+            hash: String::new(),   
             from:from,
-            to: "clutch".to_string(),
+            to: None,
             value: 0.0,
             data: function_call,
-        }
+        };
+
+        transaction.hash = transaction.calculate_hash();
+        transaction
     }
 }
 

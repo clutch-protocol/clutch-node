@@ -12,21 +12,21 @@ impl Block {
     fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
         
-        let transactions_string = self.transactions.iter()
-            .map(|tx| format!("{}{}{}", tx.from, tx.to, tx.value))
+        let transactions_hash_string = self.transactions.iter()
+            .map(|tx| format!("{}", tx.hash))
             .collect::<Vec<String>>()
             .join(""); 
                    
-        hasher.update(format!("{}{}{}", self.index, self.previous_hash, transactions_string));
+        hasher.update(format!("{}{}{}", self.index, self.previous_hash, transactions_hash_string));
         let result = hasher.finalize();
         format!("{:x}", result)  
     }
 
     pub fn new_genesis_block() -> Block {
         let mut genesis_block = Block{
+            hash: String::new(),
             index:0,
             previous_hash: "0".to_string(),
-            hash: String::new(),
             transactions : vec![]
         };
 
