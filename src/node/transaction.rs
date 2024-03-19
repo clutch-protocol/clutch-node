@@ -91,10 +91,10 @@ impl Transaction{
         Transaction::new_tranaction(from, function_call)
     }
 
-    pub fn ride_payment(from:String, ridePayment:RidePayment) -> Transaction{
+    pub fn ride_payment(from:String, ride_payment:RidePayment) -> Transaction{
         let function_call: FunctionCall = FunctionCall{
             name: "ridePayment".to_string(),
-            arguments: serde_json::to_string(&ridePayment).unwrap(),
+            arguments: serde_json::to_string(&ride_payment).unwrap(),
         };
 
         Transaction::new_tranaction(from, function_call)
