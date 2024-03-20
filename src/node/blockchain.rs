@@ -8,7 +8,8 @@ pub struct Blockchain {
 impl Blockchain {
     pub fn new() -> Blockchain {            
         let genesis_block = Block::new_genesis_block();
-         let mut all_blocks = vec![Block::new_genesis_block()];
+        let mut all_blocks = vec![Block::new_genesis_block()];
+        
         let blockchain = Blockchain {
             name: "clutch",      
             blocks: vec![genesis_block],
