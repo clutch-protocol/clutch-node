@@ -46,7 +46,7 @@ impl Transaction{
         transaction
     }
 
-    pub fn ride_request(from: String, ride_request: RideRequest) -> Transaction {
+    pub fn new_ride_request(from: String, ride_request: RideRequest) -> Transaction {
         let function_call = FunctionCall {
             name: "rideRequest".to_string(),
             arguments: serde_json::to_string(&ride_request).unwrap()
@@ -55,7 +55,7 @@ impl Transaction{
         Transaction::new_tranaction(from, function_call)
     }
 
-    pub fn ride_offer(from: String, ride_offer: RideOffer) -> Transaction {
+    pub fn new_ride_offer(from: String, ride_offer: RideOffer) -> Transaction {
         let function_call = FunctionCall {
             name: "rideOffer".to_string(),
             arguments: serde_json::to_string(&ride_offer).unwrap() 
@@ -123,7 +123,7 @@ mod tests{
         };
 
         let serilized= serde_json::to_string(&ride_request).unwrap();
-        let transaction = Transaction::ride_request(from_address.clone(), ride_request);
+        let transaction = Transaction::new_ride_request(from_address.clone(), ride_request);
 
         assert_eq!(transaction.from, from_address);
         assert_eq!(transaction.data.name, "rideRequest".to_string());
