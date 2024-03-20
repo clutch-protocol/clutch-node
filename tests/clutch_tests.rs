@@ -18,7 +18,7 @@ fn ride_request_block() -> Block {
         pickup_location : coordinate::Coordinates { latitude: 35.55841414973938, longitude: 51.23861773552397 },//Home
         dropoff_location : coordinate::Coordinates { latitude: 26.649646426996483, longitude: 55.857706441083984 }  //Ghil,hengam iceland
     };
-    let ride_request_transcation = transaction::Transaction::new_ride_request(FROM.to_string(), ride_request);
+    let ride_request_transcation = transaction::Transaction::new_ride_request_tranaction(FROM.to_string(), ride_request);
     let ride_request_block= block::Block::new_block(vec![ride_request_transcation]);
     ride_request_block
 }
@@ -28,7 +28,7 @@ fn ride_offer_block() -> Block {
        fare: 1440,
        ride_request_transaction_hash  : "".to_string(),
     };
-    let ride_request_transcation = transaction::Transaction::new_ride_offer(FROM.to_string(), ride_offer);
+    let ride_request_transcation = transaction::Transaction::new_ride_offer_tranaction(FROM.to_string(), ride_offer);
     let ride_offer_block= block::Block::new_block(vec![ride_request_transcation]);
     ride_offer_block
 }

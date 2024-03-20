@@ -46,7 +46,7 @@ impl Transaction{
         transaction
     }
 
-    pub fn new_ride_request(from: String, ride_request: RideRequest) -> Transaction {
+    pub fn new_ride_request_tranaction(from: String, ride_request: RideRequest) -> Transaction {
         let function_call = FunctionCall {
             name: "rideRequest".to_string(),
             arguments: serde_json::to_string(&ride_request).unwrap()
@@ -55,7 +55,7 @@ impl Transaction{
         Transaction::new_tranaction(from, function_call)
     }
 
-    pub fn new_ride_offer(from: String, ride_offer: RideOffer) -> Transaction {
+    pub fn new_ride_offer_tranaction(from: String, ride_offer: RideOffer) -> Transaction {
         let function_call = FunctionCall {
             name: "rideOffer".to_string(),
             arguments: serde_json::to_string(&ride_offer).unwrap() 
@@ -64,7 +64,7 @@ impl Transaction{
         Transaction::new_tranaction(from, function_call)
     }   
 
-    pub fn ride_accept(from:String, ride_acceptance:RideAcceptance) ->Transaction{
+    pub fn new_ride_accept_tranaction(from:String, ride_acceptance:RideAcceptance) ->Transaction{
         let function_call = FunctionCall{
             name : "rideAcceptance".to_string(),
             arguments : serde_json::to_string(&ride_acceptance).unwrap(),
@@ -73,7 +73,7 @@ impl Transaction{
         Transaction::new_tranaction(from, function_call)
     }
 
-    pub fn confirm_arrival(from:String, confirm_arrival:ConfirmArrival) -> Transaction{
+    pub fn new_confirm_arrival_tranaction(from:String, confirm_arrival:ConfirmArrival) -> Transaction{
         let function_call: FunctionCall = FunctionCall{
             name: "confirmArrival".to_string(),
             arguments: serde_json::to_string(&confirm_arrival).unwrap(),
@@ -82,7 +82,7 @@ impl Transaction{
         Transaction::new_tranaction(from, function_call)
     }
 
-    pub fn complain_arrival(from:String, complain_arrival:ComplainArrival) -> Transaction{
+    pub fn new_complain_arrival_tranaction(from:String, complain_arrival:ComplainArrival) -> Transaction{
         let function_call: FunctionCall = FunctionCall{
             name: "complainArrival".to_string(),
             arguments: serde_json::to_string(&complain_arrival).unwrap(),
@@ -91,7 +91,7 @@ impl Transaction{
         Transaction::new_tranaction(from, function_call)
     }
 
-    pub fn ride_payment(from:String, ride_payment:RidePayment) -> Transaction{
+    pub fn new_ride_payment_tranaction(from:String, ride_payment:RidePayment) -> Transaction{
         let function_call: FunctionCall = FunctionCall{
             name: "ridePayment".to_string(),
             arguments: serde_json::to_string(&ride_payment).unwrap(),
@@ -123,7 +123,7 @@ mod tests{
         };
 
         let serilized= serde_json::to_string(&ride_request).unwrap();
-        let transaction = Transaction::new_ride_request(from_address.clone(), ride_request);
+        let transaction = Transaction::new_ride_request_tranaction(from_address.clone(), ride_request);
 
         assert_eq!(transaction.from, from_address);
         assert_eq!(transaction.data.name, "rideRequest".to_string());
