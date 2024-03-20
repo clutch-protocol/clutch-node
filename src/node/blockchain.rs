@@ -2,15 +2,15 @@ use crate::node::block::Block;
 
 #[derive(Debug)]
 pub struct Blockchain {
-    pub name: &'static str,
+    pub name: String,
     pub blocks: Vec<Block>,
 }
 
 impl Blockchain {
-    pub fn new() -> Blockchain {            
+    pub fn new(name:String) -> Blockchain {            
         let genesis_block = Block::new_genesis_block();        
         let blockchain = Blockchain {
-            name: "clutch",      
+            name: name,      
             blocks: vec![genesis_block],
         };
 

@@ -1,17 +1,18 @@
 use clutch_node::node::{block::Block, *};
 
+const BLOCKCHAIN_NAME: &str = "Clutch"; 
 const FROM: &str = "0xMehran"; 
 
 #[test]
 fn test(){    
-    let mut blockchain = blockchain::Blockchain::new();    
+    let mut blockchain = blockchain::Blockchain::new(BLOCKCHAIN_NAME.to_string());    
     let block1 = ride_request_block();    
     blockchain.add_block(block1);
 
     let block2 = ride_offer_block();
     blockchain.add_block(block2);
 
-    println!("Blockchain after adding block: {:?}", blockchain.blocks);
+    println!("Blockchain: {:?}", blockchain);
 }
 
 fn ride_request_block() -> Block {
