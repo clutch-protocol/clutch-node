@@ -8,10 +8,22 @@ pub struct Blockchain {
 impl Blockchain {
     pub fn new() -> Blockchain {            
         let genesis_block = Block::new_genesis_block();
-        
+         let mut all_blocks = vec![Block::new_genesis_block()];
         let blockchain = Blockchain {
             name: "clutch",      
             blocks: vec![genesis_block],
+        };
+
+        blockchain
+    }
+
+    pub fn new_from_blocks(blocks:Vec<Block>) -> Blockchain {            
+        let mut all_blocks = vec![Block::new_genesis_block()];
+        all_blocks.extend(blocks);
+
+        let blockchain = Blockchain {
+            name: "clutch",      
+            blocks: all_blocks,
         };
 
         blockchain
