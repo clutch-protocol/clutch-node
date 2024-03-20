@@ -1,5 +1,6 @@
 mod node;
 
 fn main() {
-    let _blockchain = node::blockchain::Blockchain::new();       
+    // let _blockchain = node::blockchain::Blockchain::new(); 
+    print!("{}","Hi");
 }

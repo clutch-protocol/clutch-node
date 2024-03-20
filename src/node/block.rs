@@ -1,6 +1,8 @@
 use sha2::{Sha256, Digest};
 use crate::node::transaction::Transaction;
 
+use super::transaction;
+
 pub struct Block {
     pub index: usize,
     pub previous_hash: String,
@@ -25,13 +27,26 @@ impl Block {
     pub fn new_genesis_block() -> Block {
         let mut genesis_block = Block{
             hash: String::new(),
-            index:0,
             previous_hash: "0".to_string(),
+            index:0,
             transactions : vec![]
         };
 
         genesis_block.transactions = Transaction::new_genesis_transactions();
         genesis_block.hash = genesis_block.calculate_hash();
         genesis_block
+    }
+
+    pub fn new_block(transactions:Vec<Transaction>) -> Block{
+
+        let mut block = Block {
+                hash : String::new(),
+                previous_hash : "0x".to_string(),
+                index : 0,
+                transactions : transactions,
+        };
+
+        block.hash = block.calculate_hash();
+        block
     }
 }
