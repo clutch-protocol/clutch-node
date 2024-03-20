@@ -6,6 +6,7 @@ use crate::node::confirm_arrival::ConfirmArrival;
 use crate::node::complain_arrival::ComplainArrival;
 use crate::node::ride_payment::RidePayment;
 
+#[derive(Debug)]
 pub struct Transaction {
     pub from: String,
     pub to: Option<String>,
@@ -14,6 +15,7 @@ pub struct Transaction {
     pub data: FunctionCall,
 }
 
+#[derive(Debug)]
 pub struct FunctionCall {
     pub name: String,
     pub arguments: String,

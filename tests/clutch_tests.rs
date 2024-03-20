@@ -10,6 +10,8 @@ fn test(){
 
     let block2 = ride_offer_block();
     blockchain.add_block(block2);
+
+    println!("Blockchain after adding block: {:?}", blockchain.blocks);
 }
 
 fn ride_request_block() -> Block {

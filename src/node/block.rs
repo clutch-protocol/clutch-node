@@ -3,6 +3,7 @@ use crate::node::transaction::Transaction;
 
 use super::transaction;
 
+#[derive(Debug)]
 pub struct Block {
     pub index: usize,
     pub previous_hash: String,

@@ -1,5 +1,6 @@
 use crate::node::block::Block; 
 
+#[derive(Debug)]
 pub struct Blockchain {
     pub name: &'static str,
     pub blocks: Vec<Block>,
@@ -7,9 +8,7 @@ pub struct Blockchain {
 
 impl Blockchain {
     pub fn new() -> Blockchain {            
-        let genesis_block = Block::new_genesis_block();
-        let mut all_blocks = vec![Block::new_genesis_block()];
-
+        let genesis_block = Block::new_genesis_block();        
         let blockchain = Blockchain {
             name: "clutch",      
             blocks: vec![genesis_block],
@@ -21,5 +20,4 @@ impl Blockchain {
     pub fn add_block(&mut self, block:Block){
         self.blocks.push(block);
     }
-
 }
