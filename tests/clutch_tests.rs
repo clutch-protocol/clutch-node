@@ -4,14 +4,12 @@ const FROM: &str = "0xMehran";
 
 #[test]
 fn test(){    
+    let mut blockchain = blockchain::Blockchain::new();    
+    let block1 = ride_request_block();    
+    blockchain.add_block(block1);
 
-    let block1 = ride_request_block();
-    print!("From: {} ",block1.transactions[0].hash);
     let block2 = ride_offer_block();
-
-
-    let blocks:Vec<Block> = vec![block1,block2];
-    let _blockchain = blockchain::Blockchain::new_from_blocks(blocks);    
+    blockchain.add_block(block2);
 }
 
 fn ride_request_block() -> Block {
