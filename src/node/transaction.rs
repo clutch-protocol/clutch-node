@@ -109,7 +109,7 @@ mod tests{
 
     #[test]
     fn new_ride_request(){
-        let from_address = "Alice".to_string();
+        let from_address = "0xAlice".to_string();
 
         let ride_request = RideRequest {
             pickup_location: Coordinates {

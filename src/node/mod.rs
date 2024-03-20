@@ -1,11 +1,10 @@
 pub mod blockchain;
 pub mod block;
 pub mod transaction;
-
-mod coordinate;
-mod ride_request;
-mod ride_offer;
-mod ride_acceptance;
-mod confirm_arrival;
-mod complain_arrival;
-mod ride_payment;
+pub mod coordinate;
+pub mod ride_request;
+pub mod ride_offer;
+pub mod ride_acceptance;
+pub mod confirm_arrival;
+pub mod complain_arrival;
+pub mod ride_payment;
