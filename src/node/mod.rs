@@ -8,3 +8,4 @@ pub mod ride_acceptance;
 pub mod confirm_arrival;
 pub mod complain_arrival;
 pub mod ride_payment;
+pub mod function_call;

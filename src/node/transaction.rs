@@ -5,6 +5,7 @@ use crate::node::ride_acceptance::RideAcceptance;
 use crate::node::confirm_arrival::ConfirmArrival;
 use crate::node::complain_arrival::ComplainArrival;
 use crate::node::ride_payment::RidePayment;
+use crate::node::function_call::{FunctionCall,FunctionCallType};
 
 #[derive(Debug)]
 pub struct Transaction {
@@ -15,18 +16,11 @@ pub struct Transaction {
     pub data: FunctionCall,
 }
 
-#[derive(Debug)]
-pub struct FunctionCall {
-    pub name: String,
-    pub arguments: String,
-}
-
-
 impl Transaction{
 
     fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
-        hasher.update(format!("{}{}{}", self.from, self.data.name, self.data.arguments));
+        hasher.update(format!("{}{}{}", self.from, self.data.function_call_type, self.data.arguments));
         let result = hasher.finalize();
         format!("{:x}", result)                 
     }
@@ -50,7 +44,7 @@ impl Transaction{
 
     pub fn new_ride_request_tranaction(from: String, ride_request: RideRequest) -> Transaction {
         let function_call = FunctionCall {
-            name: "rideRequest".to_string(),
+            function_call_type: FunctionCallType::RideRequest,
             arguments: serde_json::to_string(&ride_request).unwrap()
         };
 
@@ -59,7 +53,7 @@ impl Transaction{
 
     pub fn new_ride_offer_tranaction(from: String, ride_offer: RideOffer) -> Transaction {
         let function_call = FunctionCall {
-            name: "rideOffer".to_string(),
+            function_call_type: FunctionCallType::RideOffer,
             arguments: serde_json::to_string(&ride_offer).unwrap() 
         };
 
@@ -67,8 +61,8 @@ impl Transaction{
     }   
 
     pub fn new_ride_accept_tranaction(from:String, ride_acceptance:RideAcceptance) ->Transaction{
-        let function_call = FunctionCall{
-            name : "rideAcceptance".to_string(),
+        let function_call = FunctionCall {            
+            function_call_type: FunctionCallType::RideAcceptance,
             arguments : serde_json::to_string(&ride_acceptance).unwrap(),
         };
 
@@ -76,8 +70,8 @@ impl Transaction{
     }
 
     pub fn new_confirm_arrival_tranaction(from:String, confirm_arrival:ConfirmArrival) -> Transaction{
-        let function_call: FunctionCall = FunctionCall{
-            name: "confirmArrival".to_string(),
+        let function_call: FunctionCall = FunctionCall{            
+            function_call_type: FunctionCallType::ConfirmArrival,
             arguments: serde_json::to_string(&confirm_arrival).unwrap(),
         };
 
@@ -85,8 +79,8 @@ impl Transaction{
     }
 
     pub fn new_complain_arrival_tranaction(from:String, complain_arrival:ComplainArrival) -> Transaction{
-        let function_call: FunctionCall = FunctionCall{
-            name: "complainArrival".to_string(),
+        let function_call: FunctionCall = FunctionCall{            
+            function_call_type: FunctionCallType::ComplainArrival,
             arguments: serde_json::to_string(&complain_arrival).unwrap(),
         };
 
@@ -94,8 +88,8 @@ impl Transaction{
     }
 
     pub fn new_ride_payment_tranaction(from:String, ride_payment:RidePayment) -> Transaction{
-        let function_call: FunctionCall = FunctionCall{
-            name: "ridePayment".to_string(),
+        let function_call: FunctionCall = FunctionCall{            
+            function_call_type: FunctionCallType::RidePayment,
             arguments: serde_json::to_string(&ride_payment).unwrap(),
         };
 
