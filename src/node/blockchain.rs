@@ -17,7 +17,7 @@ impl Blockchain {
         blockchain
     }
 
-    pub fn add_block(&mut self, block:Block){
+    pub fn block_import(&mut self, block:Block){
         self.blocks.push(block);
     }
 }

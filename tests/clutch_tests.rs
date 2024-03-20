@@ -7,10 +7,10 @@ const FROM: &str = "0xMehran";
 fn test(){    
     let mut blockchain = blockchain::Blockchain::new(BLOCKCHAIN_NAME.to_string());    
     let block1 = ride_request_block();    
-    blockchain.add_block(block1);
+    blockchain.block_import(block1);
 
     let block2 = ride_offer_block();
-    blockchain.add_block(block2);
+    blockchain.block_import(block2);
 
     println!("Blockchain: {:#?}", blockchain);
 }
@@ -21,7 +21,7 @@ fn ride_request_block() -> Block {
         dropoff_location : coordinate::Coordinates { latitude: 26.649646426996483, longitude: 55.857706441083984 } //Ghil,Hengam iceland,Iran
     };
     let ride_request_transcation = transaction::Transaction::new_ride_request_tranaction(FROM.to_string(), ride_request);
-    let ride_request_block= block::Block::new_block(vec![ride_request_transcation]);
+    let ride_request_block= Block::new_block(vec![ride_request_transcation]);
     ride_request_block
 }
 
@@ -31,6 +31,6 @@ fn ride_offer_block() -> Block {
        ride_request_transaction_hash  : "".to_string(),
     };
     let ride_request_transcation = transaction::Transaction::new_ride_offer_tranaction(FROM.to_string(), ride_offer);
-    let ride_offer_block= block::Block::new_block(vec![ride_request_transcation]);
+    let ride_offer_block= Block::new_block(vec![ride_request_transcation]);
     ride_offer_block
 }
