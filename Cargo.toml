@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+rocksdb = "0.17.0"
 sha2 = "0.9"
 serde_json = "1.0.114"
 serde = { version = "1.0.197", features = ["derive"] }
