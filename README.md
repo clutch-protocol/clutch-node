@@ -38,3 +38,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## Contact
 
 If you have any questions or comments, please feel free to contact us at mehran.mazhar@gmail.com.
+
+## Dcoker commands
+docker build -t clutch-node:dev .
+docker run -it --rm clutch-node:dev bash
