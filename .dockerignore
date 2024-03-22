@@ -13,3 +13,5 @@ Cargo.lock
 .vscode/
 .idea/
 *.iml
+
+*_blockchain.db

@@ -25,4 +25,4 @@ COPY . .
 RUN cargo build
 
 # Command to run tests
-CMD ["cargo", "test"]
+RUN cargo test
