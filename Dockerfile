@@ -8,7 +8,7 @@ WORKDIR /usr/src/clutch-node
 COPY . .
 
 # Build dependencies to cache them
-RUN cargo build --release
+RUN cargo build
 
 # Command to run tests
-CMD ["cargo", "test"]
+# CMD ["cargo", "test"]
