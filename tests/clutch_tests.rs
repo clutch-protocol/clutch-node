@@ -1,6 +1,6 @@
 use clutch_node::node::{block::Block, *};
 
-const BLOCKCHAIN_NAME: &str = "Clutch"; 
+const BLOCKCHAIN_NAME: &str = "clutch-node-test"; 
 const FROM: &str = "0xMehran"; 
 
 #[test]

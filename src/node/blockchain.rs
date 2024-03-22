@@ -1,4 +1,4 @@
-use rocksdb::{DB, Options};
+use rocksdb::{DBPath, Options, DB};
 use std::env;
 use crate::node::block::Block;
 
@@ -9,10 +9,11 @@ pub struct Blockchain {
 }
 
 impl Blockchain {
-    pub fn new(name:String) -> Blockchain {            
-                        
-        let current_dir = env::current_dir().expect("Failed to get current directory");
-        let db_path = current_dir.join(format!("{}_blockchain.db", name));  
+    pub fn new(name:String) -> Blockchain {        
+
+        let db_base_path = env::var("DB_PATH").expect("Failed to get DB_PATH env.");        
+        let db_path =  format!("{}/{}_database.db",db_base_path,name);
+
         let mut options = Options::default();
         options.create_if_missing(true); 
 

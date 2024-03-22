@@ -1,10 +1,13 @@
 # Use a Rust base image
-FROM rust:latest as builder
+FROM rust:latest
 
 # Install Clang
 RUN apt-get update && \
     apt-get install -y clang && \
     rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
+
+# SET ENV
+ENV DB_PATH="/clutch-node-db"
 
 # Set the working directory inside the container
 WORKDIR /clutch-node
