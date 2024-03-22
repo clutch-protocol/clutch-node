@@ -2,7 +2,7 @@
 FROM rust:latest as builder
 
 # Set the working directory inside the container
-WORKDIR /usr/src/clutch-node
+WORKDIR /clutch-node
 
 # Copy the dependency manifest files
 COPY . .
@@ -11,4 +11,4 @@ COPY . .
 RUN cargo build
 
 # Command to run tests
-# CMD ["cargo", "test"]
+CMD ["cargo", "test"]

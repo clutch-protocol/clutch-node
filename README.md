@@ -42,3 +42,4 @@ If you have any questions or comments, please feel free to contact us at mehran.
 ## Dcoker commands
 docker build -t clutch-node:dev .
 docker run -it --rm clutch-node:dev bash
+docker build -t clutch-node:dev . && docker run --rm clutch-node:dev
