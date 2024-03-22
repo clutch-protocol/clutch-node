@@ -10,10 +10,9 @@ pub struct Blockchain {
 
 impl Blockchain {
     pub fn new(name:String) -> Blockchain {            
-             
-        // Get the current directory
+                        
         let current_dir = env::current_dir().expect("Failed to get current directory");
-        let db_path = current_dir.join(format!("{}_blockchain.db", name));  // Use PathBuf for file path manipulation
+        let db_path = current_dir.join(format!("{}_blockchain.db", name));  
         let mut options = Options::default();
         options.create_if_missing(true); 
 
