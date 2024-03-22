@@ -1,0 +1,15 @@
+# Files and directories to exclude when building Docker image for Rust project
+
+# Cargo build artifacts
+target/
+
+# Generated documentation
+doc/
+
+# Build artifacts from Cargo
+Cargo.lock
+
+# IDE-specific files
+.vscode/
+.idea/
+*.iml
