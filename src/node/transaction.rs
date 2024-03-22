@@ -1,4 +1,5 @@
 use sha2::{Sha256, Digest};
+use serde::{Deserialize,Serialize};
 use crate::node::ride_request::RideRequest;
 use crate::node::ride_offer::RideOffer;
 use crate::node::ride_acceptance::RideAcceptance;
@@ -7,7 +8,7 @@ use crate::node::complain_arrival::ComplainArrival;
 use crate::node::ride_payment::RidePayment;
 use crate::node::function_call::{FunctionCall,FunctionCallType};
 
-#[derive(Debug)]
+#[derive(Debug,Serialize,Deserialize)]
 pub struct Transaction {
     pub from: String,
     pub to: Option<String>,

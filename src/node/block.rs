@@ -1,9 +1,10 @@
 use sha2::{Sha256, Digest};
+use serde::{Deserialize,Serialize};
 use crate::node::transaction::Transaction;
 
 use super::transaction;
 
-#[derive(Debug)]
+#[derive(Debug,Serialize,Deserialize)]
 pub struct Block {
     pub index: usize,
     pub previous_hash: String,
