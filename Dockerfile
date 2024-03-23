@@ -27,5 +27,5 @@ COPY . .
 # Build dependencies to cache them
 RUN cargo build
 
-# Command to run tests
-RUN cargo test
+# Command to run when starting the container
+CMD ["cargo", "run"]

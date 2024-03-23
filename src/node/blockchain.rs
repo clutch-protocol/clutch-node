@@ -28,7 +28,6 @@ impl Blockchain {
             println!("{:?}: {:?}", key, value);
         }
 
-
          blockchain
     }
 
