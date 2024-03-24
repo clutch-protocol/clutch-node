@@ -53,11 +53,9 @@ impl Blockchain {
 
     pub fn block_import(&mut self, block:Block){
 
-        // for tx in block.transactions {
-        //     match tx.data.function_call_type {
-        //         _ => {},
-        //     }
-        // }
+        for tx in block.transactions {
+           println!("{}",tx.data.function_call_type);
+        }
 
         // self.blocks.push(block);
     }
