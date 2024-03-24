@@ -20,14 +20,7 @@ impl Blockchain {
          let genesis_block = Block::new_genesis_block();
          let serialized_block = serde_json::to_string(&genesis_block).unwrap();
          blockchain.db.put(b"block_0", serialized_block.as_bytes()).unwrap();
-
-        let iter = blockchain.db.iterator(rocksdb::IteratorMode::Start); // From the start
-
-        // Iterate through all key-value pairs in the database
-        for (key, value) in iter {
-            println!("{:?}: {:?}", key, value);
-        }
-
+         
          blockchain
     }
 
