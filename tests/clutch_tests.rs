@@ -2,17 +2,32 @@ use clutch_node::node::{block::Block, *};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test"; 
 const FROM: &str = "0xMehran"; 
+const TO: &str = "0xEhsan";
 
 #[test]
 fn test(){    
     let mut blockchain = blockchain::Blockchain::new(BLOCKCHAIN_NAME.to_string());    
-    let block1 = ride_request_block();    
+
+    let block1 = transfer_block();    
     blockchain.block_import(block1);
 
-    let block2 = ride_offer_block();
+    let block2 = ride_request_block();    
     blockchain.block_import(block2);
 
+    let block3 = ride_offer_block();
+    blockchain.block_import(block3);
+
     println!("Blockchain: {:#?}", blockchain);
+}
+
+fn transfer_block() -> Block {
+    let transfer = transfer::Transfer{
+       to: TO.to_string(),
+       value : 10.0,
+    };
+    let transfer_request_transcation = transaction::Transaction::new_transfer_transaction(FROM.to_string(), transfer);
+    let transfer_request_block= Block::new_block(vec![transfer_request_transcation]);
+    transfer_request_block
 }
 
 fn ride_request_block() -> Block {

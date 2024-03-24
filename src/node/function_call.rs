@@ -10,6 +10,7 @@ pub struct FunctionCall {
 
 #[derive(Debug,Serialize,Deserialize)]
 pub enum FunctionCallType{
+    Transfer,
     RideRequest,
     RideOffer,
     RideAcceptance,

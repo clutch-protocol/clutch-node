@@ -2,6 +2,7 @@ pub mod blockchain;
 pub mod block;
 pub mod transaction;
 pub mod coordinate;
+pub mod transfer;
 pub mod ride_request;
 pub mod ride_offer;
 pub mod ride_acceptance;

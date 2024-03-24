@@ -6,13 +6,12 @@ use crate::node::ride_acceptance::RideAcceptance;
 use crate::node::confirm_arrival::ConfirmArrival;
 use crate::node::complain_arrival::ComplainArrival;
 use crate::node::ride_payment::RidePayment;
+use crate::node::transfer::Transfer;
 use crate::node::function_call::{FunctionCall,FunctionCallType};
 
 #[derive(Debug,Serialize,Deserialize)]
 pub struct Transaction {
-    pub from: String,
-    pub to: Option<String>,
-    pub value: Option<f64>, 
+    pub from: String, 
     pub hash: String,
     pub data: FunctionCall,
 }
@@ -33,14 +32,21 @@ impl Transaction{
     fn new_tranaction(from: String, function_call: FunctionCall) -> Transaction {
         let mut transaction = Transaction {         
                 hash: String::new(),   
-                from:from,
-                to: None,
-                value: None,
+                from:from,           
                 data: function_call,
             };
     
         transaction.hash = transaction.calculate_hash();
         transaction
+    }
+
+    pub fn new_transfer_transaction(from: String, transfer: Transfer) -> Transaction {
+        let function_call = FunctionCall {
+            function_call_type: FunctionCallType::Transfer,
+            arguments: serde_json::to_string(&transfer).unwrap()
+        };
+
+        Transaction::new_tranaction(from, function_call)
     }
 
     pub fn new_ride_request_tranaction(from: String, ride_request: RideRequest) -> Transaction {
