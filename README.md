@@ -42,3 +42,7 @@ If you have any questions or comments, please feel free to contact us at mehran.
 ## Dcoker commands TO BUILD and bash
 
 - docker build -t clutch-node:dev . && docker run -v c:\clutch-node:/clutch-node-db -it --rm --name clutch-node-container clutch-node:dev bash
+
+## temp
+C:\Users\m.mazhar>echo %LIBCLANG_PATH%
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\bin
