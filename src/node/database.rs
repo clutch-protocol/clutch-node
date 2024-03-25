@@ -22,19 +22,8 @@ impl Database {
         Database { db }
     }
 
-    // pub fn get(&self, key: &[u8]) -> Option<Vec<u8>> {
-    //     match self.db.get(key) {
-    //         Ok(Some(value)) => Some(value),
-    //         Ok(None) => None,
-    //         Err(e) => {
-    //             eprintln!("Failed to get value from database: {}", e);
-    //             None
-    //         }
-    //     }
-    // }
-
-    pub fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, rocksdb::Error>  {
-        self.db.get(key)
+    pub fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, String>  {
+        self.db.get(key).map_err(|e| e.to_string())
     }
 
     pub fn put(&self, key: &[u8], value: &[u8]) -> Result<(), String> {

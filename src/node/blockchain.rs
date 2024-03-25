@@ -1,7 +1,6 @@
 use crate::node::block::Block;
 use crate::node::database::Database;
 use crate::node::transaction::Transaction;
-use rocksdb::DB;
 
 #[derive(Debug)]
 pub struct Blockchain {
