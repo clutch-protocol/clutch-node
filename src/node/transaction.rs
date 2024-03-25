@@ -39,6 +39,42 @@ impl Transaction{
         transaction
     }
 
+    pub fn validate_transaction(&self) -> bool {
+        match self.data.function_call_type {
+            FunctionCallType::Transfer => {
+                // Add validation logic for Transfer
+                // e.g., check sender's balance, verify digital signature, etc.
+                true // Return true if valid, false otherwise
+            },
+            FunctionCallType::RideRequest => {
+                // Validation logic for RideRequest
+                true
+            },
+            FunctionCallType::RideOffer => {
+                // Validation logic for RideOffer
+                true
+            },
+            FunctionCallType::RideAcceptance => {
+                // Validation logic for RideAcceptance
+                true
+            },
+            FunctionCallType::ConfirmArrival => {
+                // Validation logic for ConfirmArrival
+                true
+            },
+            FunctionCallType::ComplainArrival => {
+                // Validation logic for ComplainArrival
+                true
+            },
+            FunctionCallType::RidePayment => {
+                // Validation logic for RidePayment
+                // This might include checking the ride status, confirming the fare, etc.
+                true
+            },
+            _ => false // Add more types as needed
+        }
+    }
+
     pub fn new_transfer_transaction(from: String, transfer: Transfer) -> Transaction {
         let function_call = FunctionCall {
             function_call_type: FunctionCallType::Transfer,

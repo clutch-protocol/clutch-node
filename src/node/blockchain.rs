@@ -52,18 +52,23 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block:Block){
-
+        let mut is_valid_block = true;
+        
         for tx in block.transactions {
-            match tx.data.function_call_type {
-                crate::node::function_call::FunctionCallType::Transfer => todo!(),
-                crate::node::function_call::FunctionCallType::RideRequest => todo!(),
-                crate::node::function_call::FunctionCallType::RideOffer => todo!(),
-                crate::node::function_call::FunctionCallType::RideAcceptance => todo!(),
-                crate::node::function_call::FunctionCallType::ConfirmArrival => todo!(),
-                crate::node::function_call::FunctionCallType::ComplainArrival => todo!(),
-                crate::node::function_call::FunctionCallType::RidePayment => todo!(),
-            }
-           println!("{}",tx.data.function_call_type);
+            is_valid_block= tx.validate_transaction();
+            if !is_valid_block{
+                println!("Invalid transaction detected: {:?}", tx);
+                break;
+            }         
+        }
+
+        if is_valid_block {
+            // If all transactions are valid, proceed with adding the block
+            println!("All transactions are valid. Block can be added.");
+            // Add block to blockchain logic here
+            // e.g., self.blocks.push(block); or storing in DB
+        } else {
+            println!("Block contains invalid transactions and will not be added.");
         }
 
         // self.blocks.push(block);
