@@ -54,6 +54,15 @@ impl Blockchain {
     pub fn block_import(&mut self, block:Block){
 
         for tx in block.transactions {
+            match tx.data.function_call_type {
+                crate::node::function_call::FunctionCallType::Transfer => todo!(),
+                crate::node::function_call::FunctionCallType::RideRequest => todo!(),
+                crate::node::function_call::FunctionCallType::RideOffer => todo!(),
+                crate::node::function_call::FunctionCallType::RideAcceptance => todo!(),
+                crate::node::function_call::FunctionCallType::ConfirmArrival => todo!(),
+                crate::node::function_call::FunctionCallType::ComplainArrival => todo!(),
+                crate::node::function_call::FunctionCallType::RidePayment => todo!(),
+            }
            println!("{}",tx.data.function_call_type);
         }
 

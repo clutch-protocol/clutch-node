@@ -17,16 +17,15 @@ pub struct Transaction {
 }
 
 impl Transaction{
+    pub fn new_genesis_transactions() -> Vec<Transaction> {
+        vec![]
+    }
 
     fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
         hasher.update(format!("{}{}{}", self.from, self.data.function_call_type, self.data.arguments));
         let result = hasher.finalize();
         format!("{:x}", result)                 
-    }
-
-    pub fn new_genesis_transactions() -> Vec<Transaction> {
-        vec![]
     }
 
     fn new_tranaction(from: String, function_call: FunctionCall) -> Transaction {
