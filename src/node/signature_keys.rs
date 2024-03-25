@@ -1,28 +1,26 @@
-
 use std::fmt::format;
 
-use secp256k1::{Secp256k1, SecretKey,Message, PublicKey,ecdsa::Signature};
-use rand::rngs::OsRng; 
-use sha2::Sha256;
+use rand::rngs::OsRng;
+use secp256k1::{ecdsa::Signature, Message, PublicKey, Secp256k1, SecretKey};
 use sha2::Digest as Sha256Digest;
-use sha3::Keccak256;
+use sha2::Sha256;
 use sha3::Digest as Keccak256Digest;
+use sha3::Keccak256;
 
 #[derive(Debug)]
-pub struct SignatureKeys{
+pub struct SignatureKeys {
     secret_key: SecretKey,
     public_key: PublicKey,
-    address_key: String, 
+    address_key: String,
 }
 
-impl SignatureKeys{
-
+impl SignatureKeys {
     fn address_key(public_key: &PublicKey) -> String {
         let serialized_pubkey = public_key.serialize_uncompressed(); // This is 65 bytes
         let mut hasher = Keccak256::new();
         hasher.update(&serialized_pubkey[1..]);
         let hash = hasher.finalize();
-                  
+
         let address_key = format!("0x{}", hex::encode(&hash[12..32]));
         address_key
     }
@@ -34,16 +32,16 @@ impl SignatureKeys{
         result.into()
     }
 
-    pub fn generate_new_keypair()-> Self {
+    pub fn generate_new_keypair() -> Self {
         let secp = Secp256k1::new();
         let mut rng = OsRng::default();
         let (secret_key, public_key) = secp.generate_keypair(&mut rng);
-        let address_key = Self::address_key(&public_key);   
+        let address_key = Self::address_key(&public_key);
 
-        SignatureKeys{
-            secret_key : secret_key,
-            public_key : public_key,
-            address_key
+        SignatureKeys {
+            secret_key: secret_key,
+            public_key: public_key,
+            address_key: address_key,
         }
     }
 
@@ -60,10 +58,10 @@ impl SignatureKeys{
 
         let message_digest = Self::create_message_digest(data); // Hashing the data first
         let message = Message::from_digest_slice(&message_digest).expect("32 bytes");
-        
-        secp.verify_ecdsa(&message, signature, &self.public_key).is_ok()
-    }    
 
+        secp.verify_ecdsa(&message, signature, &self.public_key)
+            .is_ok()
+    }
 }
 
 #[cfg(test)]
@@ -73,7 +71,10 @@ mod tests {
     #[test]
     fn test_generate_new_keypair() {
         let keys = SignatureKeys::generate_new_keypair();
-        println!("{:?},{:?},{:?}",keys.address_key,keys.secret_key,keys.public_key)
+        println!(
+            "{:?},{:?},{:?}",
+            keys.address_key, keys.secret_key, keys.public_key
+        )
     }
 
     #[test]
@@ -88,13 +89,20 @@ mod tests {
         let secp = Secp256k1::new();
         let message_digest = SignatureKeys::create_message_digest(data);
         let message = Message::from_digest_slice(&message_digest).expect("32 bytes");
-        assert!(secp.verify_ecdsa(&message, &signature, &keys.public_key).is_ok(), "Signature should be valid and verifiable");
+        assert!(
+            secp.verify_ecdsa(&message, &signature, &keys.public_key)
+                .is_ok(),
+            "Signature should be valid and verifiable"
+        );
 
         // Test verification with correct data
         assert!(keys.verify(data, &signature), "Signature should be valid");
 
         // Test verification with incorrect data
         let incorrect_data = b"Wrong data";
-        assert!(!keys.verify(incorrect_data, &signature), "Signature should be invalid with incorrect data");
-    } 
+        assert!(
+            !keys.verify(incorrect_data, &signature),
+            "Signature should be invalid with incorrect data"
+        );
+    }
 }
