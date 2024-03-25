@@ -6,7 +6,7 @@ use rocksdb::DB;
 #[derive(Debug)]
 pub struct Blockchain {
     pub name: String,
-    db: DB,
+    db: Database,
 }
 
 impl Blockchain {
@@ -34,7 +34,7 @@ impl Blockchain {
             }
             Err(e) => panic!("Failed to check for genesis block: {}", e),
         }
-    }
+    }   
 
     pub fn block_import(&mut self, block: Block) {
         let is_valid_block = Transaction::validate_transactions(&block.transactions);

@@ -1,12 +1,13 @@
+use rocksdb::{DBWithThreadMode, Options, SingleThreaded, DB};
 use std::env;
-use rocksdb::{Options, DB};
 
-pub struct Database{
-
+#[derive(Debug)]
+pub struct Database {
+    db: DBWithThreadMode<SingleThreaded>,
 }
 
 impl Database {
-    pub fn new_db(name: &str) -> rocksdb::DBWithThreadMode<rocksdb::SingleThreaded> {
+    pub fn new_db(name: &str) -> Self {
         let db_base_path = env::var("DB_PATH").unwrap_or_else(|_| {
             let current_dir = env::current_dir().expect("Failed to get current directory");
             current_dir.to_str().unwrap_or(".").to_string()
@@ -17,9 +18,26 @@ impl Database {
         let mut options = Options::default();
         options.create_if_missing(true);
 
-        match DB::open(&options, &db_path) {
-            Ok(db) => db,
-            Err(e) => panic!("Failed to open database: {}", e),
-        }
+        let db = DB::open(&options, db_path).expect("Failed to open database");
+        Database { db }
+    }
+
+    // pub fn get(&self, key: &[u8]) -> Option<Vec<u8>> {
+    //     match self.db.get(key) {
+    //         Ok(Some(value)) => Some(value),
+    //         Ok(None) => None,
+    //         Err(e) => {
+    //             eprintln!("Failed to get value from database: {}", e);
+    //             None
+    //         }
+    //     }
+    // }
+
+    pub fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, rocksdb::Error>  {
+        self.db.get(key)
+    }
+
+    pub fn put(&self, key: &[u8], value: &[u8]) -> Result<(), String> {
+        self.db.put(key, value).map_err(|e| e.to_string())
     }
 }
