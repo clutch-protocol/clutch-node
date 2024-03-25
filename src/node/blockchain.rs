@@ -1,6 +1,6 @@
 use crate::node::block::Block;
 use rocksdb::{DBPath, Options, DB};
-use std::{env};
+use std::env;
 
 use super::transaction;
 
@@ -51,8 +51,7 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block: Block) {
-        let mut is_valid_block = true;
-        is_valid_block = transaction::Transaction::validate_transactions(&block.transactions);
+        let is_valid_block = transaction::Transaction::validate_transactions(&block.transactions);
 
         if !is_valid_block {
             println!("Block contains invalid transactions and will not be added.");
