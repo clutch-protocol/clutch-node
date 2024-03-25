@@ -27,7 +27,7 @@ impl Transaction {
         let mut hasher = Sha256::new();
         hasher.update(format!("{}{}{}", self.from, self.data.function_call_type, self.data.arguments));
         let result = hasher.finalize();
-        format!("{:x}", result)                 
+        format!("{:x}", result)
     }
 
     fn new_tranaction(from: String, function_call: FunctionCall) -> Transaction {
