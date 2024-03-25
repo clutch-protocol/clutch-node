@@ -2,6 +2,8 @@ use rocksdb::{DBPath, Options, DB};
 use std::env;
 use crate::node::block::Block;
 
+use super::transaction;
+
 #[derive(Debug)]
 pub struct Blockchain {
     pub name: String,
@@ -52,15 +54,8 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block:Block){
-        let mut is_valid_block = true;
-        
-        for tx in block.transactions {
-            is_valid_block= tx.validate_transaction();
-            if !is_valid_block{
-                println!("Invalid transaction detected: {:?}", tx);
-                break;
-            }         
-        }
+        let mut is_valid_block = true;            
+        is_valid_block=  transaction::Transaction::validate_transactions(&block.transactions);          
 
         if is_valid_block {
             // If all transactions are valid, proceed with adding the block

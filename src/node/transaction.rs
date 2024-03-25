@@ -1,3 +1,5 @@
+use std::vec;
+
 use sha2::{Sha256, Digest};
 use serde::{Deserialize,Serialize};
 use crate::node::ride_request::RideRequest;
@@ -16,7 +18,7 @@ pub struct Transaction {
     pub data: FunctionCall,
 }
 
-impl Transaction{
+impl Transaction {
     pub fn new_genesis_transactions() -> Vec<Transaction> {
         vec![]
     }
@@ -39,40 +41,50 @@ impl Transaction{
         transaction
     }
 
-    pub fn validate_transaction(&self) -> bool {
-        match self.data.function_call_type {
-            FunctionCallType::Transfer => {
-                // Add validation logic for Transfer
-                // e.g., check sender's balance, verify digital signature, etc.
-                true // Return true if valid, false otherwise
-            },
-            FunctionCallType::RideRequest => {
-                // Validation logic for RideRequest
-                true
-            },
-            FunctionCallType::RideOffer => {
-                // Validation logic for RideOffer
-                true
-            },
-            FunctionCallType::RideAcceptance => {
-                // Validation logic for RideAcceptance
-                true
-            },
-            FunctionCallType::ConfirmArrival => {
-                // Validation logic for ConfirmArrival
-                true
-            },
-            FunctionCallType::ComplainArrival => {
-                // Validation logic for ComplainArrival
-                true
-            },
-            FunctionCallType::RidePayment => {
-                // Validation logic for RidePayment
-                // This might include checking the ride status, confirming the fare, etc.
-                true
-            },
-            _ => false // Add more types as needed
+    pub fn validate_transactions(transactions: &Vec<Transaction>) -> bool {
+        for tx in transactions {
+            let is_valid = match tx.data.function_call_type {
+                FunctionCallType::Transfer => {
+                    // Add validation logic for Transfer
+                    // e.g., check sender's balance, verify digital signature, etc.
+                    true // Return true if valid, false otherwise
+                },
+                FunctionCallType::RideRequest => {
+                    // Validation logic for RideRequest
+                    true
+                },
+                FunctionCallType::RideOffer => {
+                    // Validation logic for RideOffer
+                    true
+                },
+                FunctionCallType::RideAcceptance => {
+                    // Validation logic for RideAcceptance
+                    true
+                },
+                FunctionCallType::ConfirmArrival => {
+                    // Validation logic for ConfirmArrival
+                    true
+                },
+                FunctionCallType::ComplainArrival => {
+                    // Validation logic for ComplainArrival
+                    true
+                },
+                FunctionCallType::RidePayment => {
+                    // Validation logic for RidePayment
+                    // This might include checking the ride status, confirming the fare, etc.
+                    true
+                },
+                _ => false // Add more types as needed
+            };
+
+            // If any transaction is invalid, return false immediately
+            if !is_valid {
+                return false;
+            }
         }
+
+        // If all transactions are valid, return true
+        true
     }
 
     pub fn new_transfer_transaction(from: String, transfer: Transfer) -> Transaction {
