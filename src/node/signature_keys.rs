@@ -12,7 +12,7 @@ use sha3::Digest as Keccak256Digest;
 pub struct SignatureKeys{
     secret_key: SecretKey,
     public_key: PublicKey,
-    address_key: String,  // This will store the Ethereum-format public key
+    address_key: String, 
 }
 
 impl SignatureKeys{
