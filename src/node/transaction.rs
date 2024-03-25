@@ -1,5 +1,4 @@
 use std::vec;
-
 use sha2::{Sha256, Digest};
 use serde::{Deserialize,Serialize};
 use crate::node::ride_request::RideRequest;
@@ -11,6 +10,8 @@ use crate::node::ride_payment::RidePayment;
 use crate::node::transfer::Transfer;
 use crate::node::function_call::{FunctionCall,FunctionCallType};
 
+const FROM_GENESIS: &str = "0xGENESIS";
+
 #[derive(Debug,Serialize,Deserialize)]
 pub struct Transaction {
     pub from: String, 
@@ -20,7 +21,14 @@ pub struct Transaction {
 
 impl Transaction {
     pub fn new_genesis_transactions() -> Vec<Transaction> {
-        vec![]
+
+    let tx1=  Self:: new_transfer_transaction(FROM_GENESIS.to_string(), Transfer{to: "0xb87a9ac289f679f1f489fefa14f885187e311e2f".to_string(), value:10.0}); 
+    let tx2=  Self:: new_transfer_transaction(FROM_GENESIS.to_string(), Transfer{to: "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2".to_string(), value:10.0}); 
+    let tx3=  Self:: new_transfer_transaction(FROM_GENESIS.to_string(), Transfer{to: "0xac20ff4e42ff243046faaf032068762dd2c018dc".to_string(), value:10.0}); 
+    let tx4=  Self:: new_transfer_transaction(FROM_GENESIS.to_string(), Transfer{to: "0xa91101310bee451ca0e219aba08d8d4dd929f16c".to_string(), value:10.0}); 
+    let tx5=  Self:: new_transfer_transaction(FROM_GENESIS.to_string(), Transfer{to: "0x37adf81cb1f18762042e5da03a55f1e54ba66870".to_string(), value:10.0}); 
+
+     vec![tx1,tx2,tx3,tx4,tx5]
     }
 
     fn calculate_hash(&self) -> String {

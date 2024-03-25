@@ -30,7 +30,7 @@ impl Block {
         let mut genesis_block = Block{
             hash: String::new(),
             previous_hash: "0".to_string(),
-            index:0,
+            index: 0,
             transactions : vec![]
         };
 
