@@ -1,8 +1,7 @@
 use crate::node::block::Block;
-use rocksdb::{DBPath, Options, DB};
-use std::env;
-
-use super::transaction;
+use crate::node::database::Database;
+use crate::node::transaction::Transaction;
+use rocksdb::DB;
 
 #[derive(Debug)]
 pub struct Blockchain {
@@ -12,28 +11,11 @@ pub struct Blockchain {
 
 impl Blockchain {
     pub fn new(name: String) -> Blockchain {
-        let db = Self::rocks_db(&name);
+        let db = Database::new_db(&name);
         let mut blockchain = Blockchain { name: name, db: db };
 
         blockchain.ensure_genesis_block_exists();
         blockchain
-    }
-
-    fn rocks_db(name: &str) -> rocksdb::DBWithThreadMode<rocksdb::SingleThreaded> {
-        let db_base_path = env::var("DB_PATH").unwrap_or_else(|_| {
-            let current_dir = env::current_dir().expect("Failed to get current directory");
-            current_dir.to_str().unwrap_or(".").to_string()
-        });
-        
-        let db_path = format!("{}/{}.db", db_base_path, name);
-
-        let mut options = Options::default();
-        options.create_if_missing(true);
-
-        match DB::open(&options, &db_path) {
-            Ok(db) => db,
-            Err(e) => panic!("Failed to open database: {}", e),
-        }
     }
 
     fn ensure_genesis_block_exists(&mut self) {
@@ -55,7 +37,7 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block: Block) {
-        let is_valid_block = transaction::Transaction::validate_transactions(&block.transactions);
+        let is_valid_block = Transaction::validate_transactions(&block.transactions);
 
         if !is_valid_block {
             println!("Block contains invalid transactions and will not be added.");
