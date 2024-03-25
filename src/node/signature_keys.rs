@@ -1,4 +1,6 @@
 
+use std::fmt::format;
+
 use secp256k1::{Secp256k1, SecretKey,Message, PublicKey,ecdsa::Signature};
 use rand::rngs::OsRng; 
 use sha2::Sha256;
@@ -10,10 +12,20 @@ use sha3::Digest as Keccak256Digest;
 pub struct SignatureKeys{
     secret_key: SecretKey,
     public_key: PublicKey,
-    formatted_public_key: String,  // This will store the Ethereum-format public key
+    address_key: String,  // This will store the Ethereum-format public key
 }
 
 impl SignatureKeys{
+
+    fn address_key(public_key: &PublicKey) -> String {
+        let serialized_pubkey = public_key.serialize_uncompressed(); // This is 65 bytes
+        let mut hasher = Keccak256::new();
+        hasher.update(&serialized_pubkey[1..]);
+        let hash = hasher.finalize();
+                  
+        let address_key = format!("0x{}", hex::encode(&hash[12..32]));
+        address_key
+    }
 
     pub fn create_message_digest(data: &[u8]) -> [u8; 32] {
         let mut hasher = Sha256::new();
@@ -26,17 +38,12 @@ impl SignatureKeys{
         let secp = Secp256k1::new();
         let mut rng = OsRng::default();
         let (secret_key, public_key) = secp.generate_keypair(&mut rng);
-
-        let serialized_pubkey = public_key.serialize_uncompressed(); // This is 65 bytes
-        let mut hasher = Keccak256::new(); // Uses Keccak256Digest trait
-        hasher.update(&serialized_pubkey[1..]); // Skip the first byte (0x04)
-        let hash_result = hasher.finalize();
-        let ethereum_public_key = hash_result.as_slice()[hash_result.len() - 20..].to_vec();
+        let address_key = Self::address_key(&public_key);   
 
         SignatureKeys{
             secret_key : secret_key,
             public_key : public_key,
-            formatted_public_key: hex::encode(ethereum_public_key)
+            address_key
         }
     }
 
@@ -56,6 +63,7 @@ impl SignatureKeys{
         
         secp.verify_ecdsa(&message, signature, &self.public_key).is_ok()
     }    
+
 }
 
 #[cfg(test)]
@@ -65,8 +73,7 @@ mod tests {
     #[test]
     fn test_generate_new_keypair() {
         let keys = SignatureKeys::generate_new_keypair();
-        println!("{:?},{:?},{:?}",keys.public_key,keys.formatted_public_key,keys.secret_key)
-
+        println!("{:?},{:?},{:?}",keys.address_key,keys.secret_key,keys.public_key)
     }
 
     #[test]
@@ -89,5 +96,5 @@ mod tests {
         // Test verification with incorrect data
         let incorrect_data = b"Wrong data";
         assert!(!keys.verify(incorrect_data, &signature), "Signature should be invalid with incorrect data");
-    } // due to its cryptographic nature; often, tests will simulate this by using a different key to sign or altering the data.
+    } 
 }
