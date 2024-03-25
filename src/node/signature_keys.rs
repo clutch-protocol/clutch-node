@@ -27,7 +27,7 @@ impl SignatureKeys{
         address_key
     }
 
-    pub fn create_message_digest(data: &[u8]) -> [u8; 32] {
+    fn create_message_digest(data: &[u8]) -> [u8; 32] {
         let mut hasher = Sha256::new();
         hasher.update(data);
         let result = hasher.finalize();
