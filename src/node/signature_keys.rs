@@ -1,12 +1,16 @@
 
-use secp256k1::{Secp256k1, SecretKey,Message, PublicKey,ecdsa::{Signature}};
+use secp256k1::{Secp256k1, SecretKey,Message, PublicKey,ecdsa::Signature};
 use rand::rngs::OsRng; 
-use sha2::{Sha256, Digest};
+use sha2::Sha256;
+use sha2::Digest as Sha256Digest;
+use sha3::Keccak256;
+use sha3::Digest as Keccak256Digest;
 
 #[derive(Debug)]
 pub struct SignatureKeys{
     secret_key: SecretKey,
     public_key: PublicKey,
+    formatted_public_key: String,  // This will store the Ethereum-format public key
 }
 
 impl SignatureKeys{
@@ -22,9 +26,17 @@ impl SignatureKeys{
         let secp = Secp256k1::new();
         let mut rng = OsRng::default();
         let (secret_key, public_key) = secp.generate_keypair(&mut rng);
+
+        let serialized_pubkey = public_key.serialize_uncompressed(); // This is 65 bytes
+        let mut hasher = Keccak256::new(); // Uses Keccak256Digest trait
+        hasher.update(&serialized_pubkey[1..]); // Skip the first byte (0x04)
+        let hash_result = hasher.finalize();
+        let ethereum_public_key = hash_result.as_slice()[hash_result.len() - 20..].to_vec();
+
         SignatureKeys{
             secret_key : secret_key,
             public_key : public_key,
+            formatted_public_key: hex::encode(ethereum_public_key)
         }
     }
 
@@ -53,7 +65,7 @@ mod tests {
     #[test]
     fn test_generate_new_keypair() {
         let keys = SignatureKeys::generate_new_keypair();
-        println!("{:?},{:?}",keys.public_key,keys.secret_key)
+        println!("{:?},{:?},{:?}",keys.public_key,keys.formatted_public_key,keys.secret_key)
 
     }
 
