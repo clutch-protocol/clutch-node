@@ -2,6 +2,7 @@
 use secp256k1::{Secp256k1, SecretKey,Message, PublicKey,ecdsa::{Signature}};
 use rand::rngs::OsRng; 
 use sha2::{Sha256, Digest};
+use hex;
 
 pub fn create_message_digest(data: &[u8]) -> [u8; 32] {
     let mut hasher = Sha256::new();
@@ -42,30 +43,40 @@ impl SignatureKey{
         let message = Message::from_digest_slice(&message_digest).expect("32 bytes");
         
         secp.verify_ecdsa(&message, signature, &self.public_key).is_ok()
-    }
-    
+    }    
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*; // Import everything from the outer module.
+    use super::*;
+    use secp256k1::ecdsa::Signature;
 
     #[test]
     fn test_generate_new_keypair() {
-        // Generate the keypair
-        let sig = SignatureKey::generate_new_keypair();
+        let keys = SignatureKey::generate_new_keypair();
+        println!("{:?},{:?}",keys.public_key,keys.secret_key)
 
-        // Check that the secret key is not empty
-        //assert!(!sig.secret_key.public_key(secp).is_empty(), "Secret key should not be empty");
-
-        // Check that the public key is not empty
-        //assert!(!sig.public_key.is_empty(), "Public key should not be empty");
-
-        // Additional checks could include format validations, length checks, etc.
-        // For example, checking if the public key starts with "04" if uncompressed (typical for Secp256k1)
-        // assert!(sig.public_key.starts_with("04"), "Public key should start with '04'");
-        
-        println!("Public Key: {:?}", sig.public_key);
-        println!("Secret Key: {:?}", sig.secret_key);
     }
+
+    #[test]
+    fn test_sign_and_verify() {
+        let keys = SignatureKey::generate_new_keypair();
+        let data = b"Blockchain technology";
+
+        // Test signing
+        let signature = keys.sign(data);
+
+        // Instead of comparing against a default, verify the signature directly
+        let secp = Secp256k1::new();
+        let message_digest = create_message_digest(data);
+        let message = Message::from_digest_slice(&message_digest).expect("32 bytes");
+        assert!(secp.verify_ecdsa(&message, &signature, &keys.public_key).is_ok(), "Signature should be valid and verifiable");
+
+        // Test verification with correct data
+        assert!(keys.verify(data, &signature), "Signature should be valid");
+
+        // Test verification with incorrect data
+        let incorrect_data = b"Wrong data";
+        assert!(!keys.verify(incorrect_data, &signature), "Signature should be invalid with incorrect data");
+    } // due to its cryptographic nature; often, tests will simulate this by using a different key to sign or altering the data.
 }

@@ -10,3 +10,4 @@ serde_json = "1.0.114"
 serde = { version = "1.0.197", features = ["derive"] }
 secp256k1 = { version = "0.28.2", features= ["recovery","rand"] }
 rand = "0.8.4"
+hex = "0.4.3"
