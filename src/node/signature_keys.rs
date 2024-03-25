@@ -12,17 +12,17 @@ pub fn create_message_digest(data: &[u8]) -> [u8; 32] {
 }
 
 #[derive(Debug)]
-pub struct SignatureKey{
+pub struct SignatureKeys{
     secret_key: SecretKey,
     public_key: PublicKey,
 }
 
-impl SignatureKey{
+impl SignatureKeys{
     pub fn generate_new_keypair()-> Self {
         let secp = Secp256k1::new();
         let mut rng = OsRng::default();
         let (secret_key, public_key) = secp.generate_keypair(&mut rng);
-        SignatureKey{
+        SignatureKeys{
             secret_key : secret_key,
             public_key : public_key,
         }
@@ -53,14 +53,14 @@ mod tests {
 
     #[test]
     fn test_generate_new_keypair() {
-        let keys = SignatureKey::generate_new_keypair();
+        let keys = SignatureKeys::generate_new_keypair();
         println!("{:?},{:?}",keys.public_key,keys.secret_key)
 
     }
 
     #[test]
     fn test_sign_and_verify() {
-        let keys = SignatureKey::generate_new_keypair();
+        let keys = SignatureKeys::generate_new_keypair();
         let data = b"Blockchain technology";
 
         // Test signing
