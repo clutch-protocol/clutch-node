@@ -73,7 +73,7 @@ mod tests {
         let keys = SignatureKeys::generate_new_keypair();
         println!(
             "{:?},{:?},{:?}",
-            keys.address_key, keys.secret_key, keys.public_key
+            keys.address_key, keys.secret_key.display_secret(), keys.public_key
         )
     }
 
