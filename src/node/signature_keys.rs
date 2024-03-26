@@ -73,7 +73,9 @@ mod tests {
         let keys = SignatureKeys::generate_new_keypair();
         println!(
             "{:?},{:?},{:?}",
-            keys.address_key, keys.secret_key.display_secret(), keys.public_key
+            keys.address_key,
+            keys.secret_key.display_secret(),
+            keys.public_key
         )
     }
 
@@ -81,9 +83,13 @@ mod tests {
     fn test_sign_and_verify() {
         let keys = SignatureKeys::generate_new_keypair();
         let data = b"Blockchain technology";
+        println!("Public_key:{:?}", keys.public_key);
+        println!("secret_key:{:?}", keys.secret_key.display_secret());
+        println!("Address:{:?}", keys.address_key);
 
         // Test signing
         let signature = keys.sign(data);
+        println!("Signature:{:?}", signature);
 
         // Instead of comparing against a default, verify the signature directly
         let secp = Secp256k1::new();
