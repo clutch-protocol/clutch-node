@@ -1,8 +1,8 @@
 use clutch_node::node::{block::Block, *};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test"; 
-const FROM: &str = "0xMehran"; 
-const TO: &str = "0xEhsan";
+const FROM: &str = "0xb87a9ac289f679f1f489fefa14f885187e311e2f"; 
+const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
 
 #[test]
 fn test(){    
