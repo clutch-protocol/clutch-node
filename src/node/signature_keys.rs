@@ -83,8 +83,7 @@ mod tests {
     fn test_sign_and_verify() {
         let keys = SignatureKeys::generate_new_keypair();
         let data = b"Blockchain technology";
-        println!("Public_key:{:?}", keys.public_key);
-        println!("secret_key:{:?}", keys.secret_key.display_secret());
+        println!("Public key:{:?}", keys.public_key);    
         println!("Address:{:?}", keys.address_key);
 
         // Test signing
@@ -95,6 +94,8 @@ mod tests {
         let secp = Secp256k1::new();
         let message_digest = SignatureKeys::create_message_digest(data);
         let message = Message::from_digest_slice(&message_digest).expect("32 bytes");
+        println!("message:{:?}", &message);
+
         assert!(
             secp.verify_ecdsa(&message, &signature, &keys.public_key)
                 .is_ok(),
