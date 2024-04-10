@@ -21,14 +21,19 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block: Block) {
-        let is_valid_block = Transaction::validate_transactions(&block.transactions);
+        let is_valid_block = block.validate_block();
         if !is_valid_block {
+            println!("Block is invalid and will not be added.");
+            return;
+        }
+
+        let is_valid_transactions = Transaction::validate_transactions(&block.transactions);
+        if !is_valid_transactions {
             println!("Block contains invalid transactions and will not be added.");
             return;
         }
 
         self.add_block_to_chain(block);       
-
     }
 
     fn genesis_block_import(&mut self) {

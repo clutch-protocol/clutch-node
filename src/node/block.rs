@@ -51,4 +51,10 @@ impl Block {
         block.hash = block.calculate_hash();
         block
     }
+
+    pub fn validate_block(&self) -> bool{
+        
+
+        true
+    }
 }
