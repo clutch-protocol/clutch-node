@@ -1,4 +1,4 @@
-use rocksdb::{DBWithThreadMode, Options, SingleThreaded, DB};
+use rocksdb::{DBWithThreadMode, Options, SingleThreaded, WriteBatch, DB};
 use std::env;
 
 #[derive(Debug)]
@@ -22,11 +22,23 @@ impl Database {
         Database { db }
     }
 
-    pub fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, String>  {
+    pub fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, String> {
         self.db.get(key).map_err(|e| e.to_string())
     }
 
     pub fn put(&self, key: &[u8], value: &[u8]) -> Result<(), String> {
         self.db.put(key, value).map_err(|e| e.to_string())
+    }
+
+    pub fn write(&self, operations: Vec<(&[u8], &[u8])>) -> Result<(), String> {
+        let mut batch = WriteBatch::default();
+
+        // Iterate over the operations and add them to the batch
+        for (key, value) in operations {
+            batch.put(key, value); // No error handling here, as put on a WriteBatch does not fail
+        }
+
+        // Perform the batch write
+        self.db.write(batch).map_err(|e| e.to_string())
     }
 }
