@@ -11,11 +11,11 @@ fn test(){
     let block1 = transfer_block();    
     blockchain.block_import(block1);
 
-    let block2 = ride_request_block();    
-    blockchain.block_import(block2);
+    // let block2 = ride_request_block();    
+    // blockchain.block_import(block2);
 
-    let block3 = ride_offer_block();
-    blockchain.block_import(block3);
+    // let block3 = ride_offer_block();
+    // blockchain.block_import(block3);
 
     println!("Blockchain: {:#?}", blockchain);
 }

@@ -84,8 +84,9 @@ impl Blockchain {
     
         let mut operations: Vec<(&[u8], &[u8])> = Vec::new();
                 
-        let serialized_block = serde_json::to_string(&block).unwrap();
-        operations.push((b"block_0", serialized_block.as_bytes()));
+        let block_key = format!("block_{}", block.index).into_bytes();
+        let block_value = serde_json::to_string(&block).unwrap().into_bytes();
+        operations.push((&block_key, &block_value));
     
         for (key, value) in keys.iter().zip(values.iter()) {
             operations.push((key, value));
