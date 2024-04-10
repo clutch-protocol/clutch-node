@@ -1,9 +1,9 @@
-use sha2::{Sha256, Digest};
-use serde::{Deserialize,Serialize};
-use crate::node::transaction::Transaction;
 use crate::node::blockchain::Blockchain;
+use crate::node::transaction::Transaction;
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
     pub index: usize,
     pub previous_hash: String,
@@ -14,23 +14,28 @@ pub struct Block {
 impl Block {
     fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
-        
-        let transactions_hash_string = self.transactions.iter()
+
+        let transactions_hash_string = self
+            .transactions
+            .iter()
             .map(|tx| format!("{}", tx.hash))
             .collect::<Vec<String>>()
-            .join(""); 
-                   
-        hasher.update(format!("{}{}{}", self.index, self.previous_hash, transactions_hash_string));
+            .join("");
+
+        hasher.update(format!(
+            "{}{}{}",
+            self.index, self.previous_hash, transactions_hash_string
+        ));
         let result = hasher.finalize();
-        format!("{:x}", result)  
+        format!("{:x}", result)
     }
 
     pub fn new_genesis_block() -> Block {
-        let mut genesis_block = Block{
+        let mut genesis_block = Block {
             hash: String::new(),
             previous_hash: "0".to_string(),
             index: 0,
-            transactions : vec![]
+            transactions: vec![],
         };
 
         genesis_block.transactions = Transaction::new_genesis_transactions();
@@ -38,25 +43,28 @@ impl Block {
         genesis_block
     }
 
-    pub fn new_block(transactions:Vec<Transaction>) -> Block{
-
+    pub fn new_block(index: usize, transactions: Vec<Transaction>) -> Block {
         let mut block = Block {
-                hash : String::new(),
-                previous_hash : "0x".to_string(),
-                index : 0,
-                transactions : transactions,
+            hash: String::new(),
+            previous_hash: "0x".to_string(),
+            index: index,
+            transactions: transactions,
         };
 
         block.hash = block.calculate_hash();
         block
     }
 
-    pub fn validate_block(&self, blockchain: &Blockchain) -> bool{
-        let  latest_block_index= blockchain.get_latest_block_index();
+    pub fn validate_block(&self, blockchain: &Blockchain) -> bool {
+        let latest_block_index = blockchain.get_latest_block_index();
 
-        if self.index != latest_block_index + 1 {        
-            println!("Invalid block: The block index should be {}, but it was {}.", latest_block_index + 1, self.index);
-            return  false;
+        if self.index != latest_block_index + 1 {
+            println!(
+                "Invalid block: The block index should be {}, but it was {}.",
+                latest_block_index + 1,
+                self.index
+            );
+            return false;
         }
 
         true
