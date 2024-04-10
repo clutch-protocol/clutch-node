@@ -20,64 +20,6 @@ impl Blockchain {
         blockchain
     }
 
-    fn genesis_block_import(&mut self) {
-        match self.db.get(b"block_0") {
-            Ok(Some(_)) => {
-                println!("Genesis block already exists.");
-            }
-            Ok(None) => {
-                println!("Genesis block does not exist, creating new one...");
-                let genesis_block = Block::new_genesis_block();                
-
-                let mut keys: Vec<Vec<u8>> = Vec::new();
-                let mut values: Vec<Vec<u8>> = Vec::new();
-
-                for tx in genesis_block.transactions.iter() {
-                    match tx.data.function_call_type {
-                        FunctionCallType::Transfer => {
-                            let transfer: Transfer =
-                                serde_json::from_str(&tx.data.arguments).unwrap();
-
-                            let account_balance = AccountBalance::new_account_balance(
-                                transfer.to.to_string(),
-                                transfer.value,
-                            );
-
-                            let key = format!("balance_{}", transfer.to).into_bytes();
-                            let serialized_balance = serde_json::to_string(&account_balance)
-                                .unwrap()
-                                .into_bytes();
-
-                            keys.push(key);
-                            values.push(serialized_balance);
-                        }
-                        FunctionCallType::RideRequest => todo!(),
-                        FunctionCallType::RideOffer => todo!(),
-                        FunctionCallType::RideAcceptance => todo!(),
-                        FunctionCallType::ConfirmArrival => todo!(),
-                        FunctionCallType::ComplainArrival => todo!(),
-                        FunctionCallType::RidePayment => todo!(),
-                    }
-                }
-
-                let mut operations: Vec<(&[u8], &[u8])> = Vec::new();
-                
-                let serialized_block = serde_json::to_string(&genesis_block).unwrap();
-                operations.push((b"block_0", serialized_block.as_bytes()));
-
-                for (key, value) in keys.iter().zip(values.iter()) {
-                    operations.push((key, value));
-                }
-
-                match self.db.write(operations) {
-                    Ok(_) => println!("Genesis block and account balances stored successfully."),
-                    Err(e) => panic!("Failed to store genesis block and account balances: {}", e),
-                }
-            }
-            Err(e) => panic!("Failed to check for genesis block: {}", e),
-        }
-    }
-
     pub fn block_import(&mut self, block: Block) {
         let is_valid_block = Transaction::validate_transactions(&block.transactions);
 
@@ -93,4 +35,66 @@ impl Blockchain {
 
         // self.blocks.push(block);
     }
+
+    fn genesis_block_import(&mut self) {
+        match self.db.get(b"block_0") {
+            Ok(Some(_)) => {
+                println!("Genesis block already exists.");
+            }
+            Ok(None) => {
+                println!("Genesis block does not exist, creating new one...");
+                let genesis_block = Block::new_genesis_block();
+                self.add_block_to_chain(genesis_block);
+            }
+            Err(e) => panic!("Failed to check for genesis block: {}", e),
+        }
+    }
+
+    fn add_block_to_chain(&mut self, block: Block) {
+        let mut keys: Vec<Vec<u8>> = Vec::new();
+        let mut values: Vec<Vec<u8>> = Vec::new();
+    
+        for tx in block.transactions.iter() {
+            match tx.data.function_call_type {
+                FunctionCallType::Transfer => {
+                    let transfer: Transfer =
+                        serde_json::from_str(&tx.data.arguments).unwrap();
+    
+                    let account_balance = AccountBalance::new_account_balance(
+                        transfer.to.to_string(),
+                        transfer.value,
+                    );
+    
+                    let key = format!("balance_{}", transfer.to).into_bytes();
+                    let serialized_balance = serde_json::to_string(&account_balance)
+                        .unwrap()
+                        .into_bytes();
+    
+                    keys.push(key);
+                    values.push(serialized_balance);
+                }
+                FunctionCallType::RideRequest => todo!(),
+                FunctionCallType::RideOffer => todo!(),
+                FunctionCallType::RideAcceptance => todo!(),
+                FunctionCallType::ConfirmArrival => todo!(),
+                FunctionCallType::ComplainArrival => todo!(),
+                FunctionCallType::RidePayment => todo!(),
+            }
+        }
+    
+        let mut operations: Vec<(&[u8], &[u8])> = Vec::new();
+                
+        let serialized_block = serde_json::to_string(&block).unwrap();
+        operations.push((b"block_0", serialized_block.as_bytes()));
+    
+        for (key, value) in keys.iter().zip(values.iter()) {
+            operations.push((key, value));
+        }
+    
+        match self.db.write(operations) {
+            Ok(_) => println!("Genesis block and account balances stored successfully."),
+            Err(e) => panic!("Failed to store genesis block and account balances: {}", e),
+        }
+    }
+   
 }
