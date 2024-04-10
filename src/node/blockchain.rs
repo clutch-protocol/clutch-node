@@ -20,8 +20,19 @@ impl Blockchain {
         blockchain
     }
 
+    pub fn get_latest_block_index(&self) -> usize {
+        match self.db.get(b"block_latest_block_index") {
+            Ok(Some(value)) => {
+                let index_str = String::from_utf8(value).unwrap();
+                index_str.parse::<usize>().unwrap()
+            },
+            Ok(None) => 0,
+            Err(_) => panic!("Failed to retrieve the latest block index"),
+        }
+    }
+
     pub fn block_import(&mut self, block: Block) {
-        let is_valid_block = block.validate_block();
+        let is_valid_block = block.validate_block(self);
         if !is_valid_block {
             println!("Block is invalid and will not be added.");
             return;

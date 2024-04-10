@@ -1,8 +1,7 @@
 use sha2::{Sha256, Digest};
 use serde::{Deserialize,Serialize};
 use crate::node::transaction::Transaction;
-
-use super::transaction;
+use crate::node::blockchain::Blockchain;
 
 #[derive(Debug,Serialize,Deserialize)]
 pub struct Block {
@@ -52,8 +51,13 @@ impl Block {
         block
     }
 
-    pub fn validate_block(&self) -> bool{
-        
+    pub fn validate_block(&self, blockchain: &Blockchain) -> bool{
+        let  latest_block_index= blockchain.get_latest_block_index();
+
+        if self.index != latest_block_index + 1 {        
+            println!("Invalid block: The block index should be {}, but it was {}.", latest_block_index + 1, self.index);
+            return  false;
+        }
 
         true
     }
