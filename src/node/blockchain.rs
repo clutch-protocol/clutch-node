@@ -1,6 +1,9 @@
+use crate::node::account_balanace::AccountBalance;
 use crate::node::block::Block;
 use crate::node::database::Database;
+use crate::node::function_call::FunctionCallType;
 use crate::node::transaction::Transaction;
+use crate::node::transfer::Transfer;
 
 #[derive(Debug)]
 pub struct Blockchain {
@@ -24,19 +27,47 @@ impl Blockchain {
             }
             Ok(None) => {
                 println!("Genesis block does not exist, creating new one...");
-
                 let genesis_block = Block::new_genesis_block();
                 let serialized_block = serde_json::to_string(&genesis_block).unwrap();
 
-                let account_balances = 1;
-                let serialized_balances = serde_json::to_string(&account_balances).unwrap();
+                let mut keys: Vec<Vec<u8>> = Vec::new();
+                let mut values: Vec<Vec<u8>> = Vec::new();              
 
-                let operations: Vec<(&[u8], &[u8])> = vec![
-                    (b"balance_0", serialized_balances.as_bytes()),
-                    (b"block_0", serialized_block.as_bytes()),
-                ];
+                for tx in genesis_block.transactions.iter() {
+                    match tx.data.function_call_type {
+                        FunctionCallType::Transfer => {
+                            let transfer: Transfer =
+                                serde_json::from_str(&tx.data.arguments).unwrap();
+                            let account_balance = AccountBalance::new_account_balance(
+                                tx.from.to_string(),
+                                transfer.value,
+                            );
 
-                // Using the updated write method
+                            let key = format!("balance_{}", tx.from).into_bytes();
+                            let serialized_balance = serde_json::to_string(&account_balance)
+                                .unwrap()
+                                .into_bytes();
+
+                            keys.push(key);
+                            values.push(serialized_balance);
+                        }
+
+                        FunctionCallType::RideRequest => todo!(),
+                        FunctionCallType::RideOffer => todo!(),
+                        FunctionCallType::RideAcceptance => todo!(),
+                        FunctionCallType::ConfirmArrival => todo!(),
+                        FunctionCallType::ComplainArrival => todo!(),
+                        FunctionCallType::RidePayment => todo!(),
+                    }
+                }
+                
+                let mut operations: Vec<(&[u8], &[u8])> = Vec::new();
+                operations.push((b"block_0", serialized_block.as_bytes()));
+
+                for (key, value) in keys.iter().zip(values.iter()) {
+                    operations.push((key, value));
+                }
+                
                 match self.db.write(operations) {
                     Ok(_) => println!("Genesis block and account balances stored successfully."),
                     Err(e) => panic!("Failed to store genesis block and account balances: {}", e),
