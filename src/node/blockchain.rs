@@ -9,13 +9,19 @@ use crate::node::transfer::Transfer;
 pub struct Blockchain {
     pub name: String,
     db: Database,
+    latest_block_index: usize,
 }
 
 impl Blockchain {
     pub fn new(name: String) -> Blockchain {
         let db = Database::new_db(&name);
-        let mut blockchain = Blockchain { name: name, db: db };
+        let mut blockchain = Blockchain {
+            name: name,
+            db: db,
+            latest_block_index: 0,
+        };
 
+        blockchain.latest_block_index = Blockchain::get_latest_block_index(&blockchain);
         blockchain.genesis_block_import();
         blockchain
     }
@@ -25,7 +31,7 @@ impl Blockchain {
             Ok(Some(value)) => {
                 let index_str = String::from_utf8(value).unwrap();
                 index_str.parse::<usize>().unwrap()
-            },
+            }
             Ok(None) => 0,
             Err(_) => panic!("Failed to retrieve the latest block index"),
         }
@@ -44,7 +50,7 @@ impl Blockchain {
             return;
         }
 
-        self.add_block_to_chain(block);       
+        self.add_block_to_chain(block);
     }
 
     fn genesis_block_import(&mut self) {
@@ -114,7 +120,10 @@ impl Blockchain {
         }
 
         match self.db.write(operations) {
-            Ok(_) => println!("Genesis block and account balances stored successfully."),
+            Ok(_) => {
+                println!("Genesis block and account balances stored successfully.");
+                self.latest_block_index = block.index;
+            }
             Err(e) => panic!("Failed to store genesis block and account balances: {}", e),
         }
     }
