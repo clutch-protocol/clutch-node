@@ -73,6 +73,7 @@ impl Blockchain {
         let mut keys: Vec<Vec<u8>> = Vec::new();
         let mut values: Vec<Vec<u8>> = Vec::new();
 
+          //State block
         match block.state_block() {
             Some((block_keys, block_values)) => {
                 keys.extend(block_keys);
@@ -92,12 +93,13 @@ impl Blockchain {
             }
         }
 
-        //Update database
+        //Map operations
         let mut operations: Vec<(&[u8], &[u8])> = Vec::new();
         for (key, value) in keys.iter().zip(values.iter()) {
             operations.push((key, value));
         }
 
+        //Update Database
         match self.db.write(operations) {
             Ok(_) => {
                 println!(
