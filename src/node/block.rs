@@ -69,4 +69,24 @@ impl Block {
 
         true
     }
+
+    pub fn state_block(&self) -> Option<(Vec<Vec<u8>>,Vec<Vec<u8>>)>{        
+        let mut keys: Vec<Vec<u8>> = Vec::new();
+        let mut values: Vec<Vec<u8>> = Vec::new();
+
+        //Add block
+        let block_key = format!("block_{}", self.index).into_bytes();
+        let block_value = serde_json::to_string(self).unwrap().into_bytes();
+        keys.push(block_key);
+        values.push(block_value);
+
+        // Save the latest block index to the database
+        let latest_index_key = b"block_latest_block_index";
+        let latest_index_value = self.index.to_string().into_bytes();
+
+        keys.push(latest_index_key.to_vec());
+        values.push(latest_index_value);
+
+        Some((keys,values))
+    }
 }

@@ -73,45 +73,22 @@ impl Blockchain {
         let mut keys: Vec<Vec<u8>> = Vec::new();
         let mut values: Vec<Vec<u8>> = Vec::new();
 
-        //Add block
-        let block_key = format!("block_{}", block.index).into_bytes();
-        let block_value = serde_json::to_string(&block).unwrap().into_bytes();
-        keys.push(block_key);
-        values.push(block_value);
+        match block.state_block() {
+            Some((block_keys, block_values)) => {
+                keys.extend(block_keys);
+                values.extend(block_values);
+            }
+            None => {
+                println!("Failed to serialize block for storage.");
+                return;
+            }
+        };
 
-        // Save the latest block index to the database
-        let latest_index_key = b"block_latest_block_index";
-        let latest_index_value = block.index.to_string().into_bytes();
-
-        // This special key-value pair keeps track of the latest block index
-        keys.push(latest_index_key.to_vec());
-        values.push(latest_index_value);
-
-        //Add transactions
+        //State transactions
         for tx in block.transactions.iter() {
-            match tx.data.function_call_type {
-                FunctionCallType::Transfer => {
-                    let transfer: Transfer = serde_json::from_str(&tx.data.arguments).unwrap();
-
-                    let account_balance = AccountBalance::new_account_balance(
-                        transfer.to.to_string(),
-                        transfer.value,
-                    );
-
-                    let key = format!("balance_{}", transfer.to).into_bytes();
-                    let serialized_balance = serde_json::to_string(&account_balance)
-                        .unwrap()
-                        .into_bytes();
-
-                    keys.push(key);
-                    values.push(serialized_balance);
-                }
-                FunctionCallType::RideRequest => todo!(),
-                FunctionCallType::RideOffer => todo!(),
-                FunctionCallType::RideAcceptance => todo!(),
-                FunctionCallType::ConfirmArrival => todo!(),
-                FunctionCallType::ComplainArrival => todo!(),
-                FunctionCallType::RidePayment => todo!(),
+            if let Some((key, value)) = tx.state_transaction() {
+                keys.push(key);
+                values.push(value);
             }
         }
 
@@ -123,10 +100,13 @@ impl Blockchain {
 
         match self.db.write(operations) {
             Ok(_) => {
-                println!("Genesis block and account balances stored successfully.");
+                println!(
+                    "add_block_to_chain successfully. block index:{}",
+                    block.index
+                );
                 self.latest_block_index = block.index;
             }
-            Err(e) => panic!("Failed to store genesis block and account balances: {}", e),
+            Err(e) => panic!("Failed add_block_to_chain: {}", e),
         }
     }
 }

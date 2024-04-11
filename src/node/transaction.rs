@@ -6,6 +6,8 @@ use crate::node::ride_offer::RideOffer;
 use crate::node::ride_payment::RidePayment;
 use crate::node::ride_request::RideRequest;
 use crate::node::transfer::Transfer;
+use crate::node::account_balanace::AccountBalance;
+
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::vec;
@@ -118,6 +120,27 @@ impl Transaction {
 
         // If all transactions are valid, return true
         is_valid
+    }
+
+    pub fn state_transaction(&self) -> Option<(Vec<u8>, Vec<u8>)>  {
+        match self.data.function_call_type {
+            FunctionCallType::Transfer => {
+                let transfer: Transfer = serde_json::from_str(&self.data.arguments).unwrap();
+
+                let account_balance = AccountBalance::new_account_balance(
+                    transfer.to.to_string(),
+                    transfer.value,
+                );
+
+                let key = format!("balance_{}", transfer.to).into_bytes();
+                let serialized_balance = serde_json::to_string(&account_balance)
+                    .unwrap()
+                    .into_bytes();                  
+
+                Some((key, serialized_balance))
+            }      
+            _ => None,
+        }        
     }
 
     pub fn new_transfer_transaction(from: String, transfer: Transfer) -> Transaction {
