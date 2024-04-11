@@ -73,7 +73,7 @@ impl Blockchain {
         let mut keys: Vec<Vec<u8>> = Vec::new();
         let mut values: Vec<Vec<u8>> = Vec::new();
 
-          //State block
+        //State block
         match block.state_block() {
             Some((block_keys, block_values)) => {
                 keys.extend(block_keys);
