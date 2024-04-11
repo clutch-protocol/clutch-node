@@ -44,10 +44,12 @@ impl Blockchain {
             return;
         }
 
-        let is_valid_transactions = Transaction::validate_transactions(&block.transactions);
-        if !is_valid_transactions {
-            println!("Block contains invalid transactions and will not be added.");
-            return;
+        for tx in block.transactions.iter() {
+            let is_valid_tx = tx.validate_transaction();
+            if !is_valid_tx {
+                println!("Block contains invalid transactions and will not be added.");
+                return;
+            }
         }
 
         self.add_block_to_chain(block);
