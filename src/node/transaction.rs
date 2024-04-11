@@ -1,3 +1,4 @@
+use crate::node::account_balanace::AccountBalance;
 use crate::node::complain_arrival::ComplainArrival;
 use crate::node::confirm_arrival::ConfirmArrival;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
@@ -6,11 +7,12 @@ use crate::node::ride_offer::RideOffer;
 use crate::node::ride_payment::RidePayment;
 use crate::node::ride_request::RideRequest;
 use crate::node::transfer::Transfer;
-use crate::node::account_balanace::AccountBalance;
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::vec;
+
+use super::database::Database;
 
 const FROM_GENESIS: &str = "0xGENESIS";
 
@@ -27,35 +29,35 @@ impl Transaction {
             FROM_GENESIS.to_string(),
             Transfer {
                 to: "0xb87a9ac289f679f1f489fefa14f885187e311e2f".to_string(),
-                value: 10.0,
+                value: 100.0,
             },
         );
         let tx2 = Self::new_transfer_transaction(
             FROM_GENESIS.to_string(),
             Transfer {
                 to: "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2".to_string(),
-                value: 10.0,
+                value: 90.0,
             },
         );
         let tx3 = Self::new_transfer_transaction(
             FROM_GENESIS.to_string(),
             Transfer {
                 to: "0xac20ff4e42ff243046faaf032068762dd2c018dc".to_string(),
-                value: 10.0,
+                value: 80.0,
             },
         );
         let tx4 = Self::new_transfer_transaction(
             FROM_GENESIS.to_string(),
             Transfer {
                 to: "0xa91101310bee451ca0e219aba08d8d4dd929f16c".to_string(),
-                value: 10.0,
+                value: 20.0,
             },
         );
         let tx5 = Self::new_transfer_transaction(
             FROM_GENESIS.to_string(),
             Transfer {
                 to: "0x37adf81cb1f18762042e5da03a55f1e54ba66870".to_string(),
-                value: 10.0,
+                value: 45.0,
             },
         );
 
@@ -122,25 +124,33 @@ impl Transaction {
         is_valid
     }
 
-    pub fn state_transaction(&self) -> Option<(Vec<u8>, Vec<u8>)>  {
+    pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         match self.data.function_call_type {
             FunctionCallType::Transfer => {
                 let transfer: Transfer = serde_json::from_str(&self.data.arguments).unwrap();
+                let value = transfer.value;
 
-                let account_balance = AccountBalance::new_account_balance(
-                    transfer.to.to_string(),
-                    transfer.value,
-                );
-
-                let key = format!("balance_{}", transfer.to).into_bytes();
-                let serialized_balance = serde_json::to_string(&account_balance)
+                let from = &self.from;
+                let from_balance = AccountBalance::get_current_balance(&from, &db) - value;
+                let from_account_balance = AccountBalance::new_account_balance(&from, from_balance);
+                let from_key = format!("balance_{}", from).into_bytes();
+                let from_serialized_balance = serde_json::to_string(&from_account_balance)
                     .unwrap()
-                    .into_bytes();                  
+                    .into_bytes();
 
-                Some((key, serialized_balance))
-            }      
-            _ => None,
-        }        
+                let to = transfer.to;
+                let to_balance = AccountBalance::get_current_balance(&to, &db) + value;
+                let to_account_balance = AccountBalance::new_account_balance(&to, to_balance);
+                let to_key =  format!("balance_{}", to).into_bytes();
+                let to_serialized_balance = serde_json::to_string(&to_account_balance)
+                    .unwrap()
+                    .into_bytes();
+                
+                vec![Some((from_key, from_serialized_balance)), Some((to_key, to_serialized_balance))]
+
+            }
+            _ => vec![None],
+        }
     }
 
     pub fn new_transfer_transaction(from: String, transfer: Transfer) -> Transaction {

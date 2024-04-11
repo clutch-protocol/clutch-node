@@ -87,9 +87,16 @@ impl Blockchain {
 
         //State transactions
         for tx in block.transactions.iter() {
-            if let Some((key, value)) = tx.state_transaction() {
-                keys.push(key);
-                values.push(value);
+            match tx.state_transaction(&self.db) {
+                updates  => {
+                    for update in updates {
+                        for (key, value) in update {
+                            keys.push(key);
+                            values.push(value);
+                        }
+                    }
+                },
+                _=> println!("Error processing transaction states")
             }
         }
 
@@ -106,6 +113,7 @@ impl Blockchain {
                     "add_block_to_chain successfully. block index:{}",
                     block.index
                 );
+
                 self.latest_block_index = block.index;
             }
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
