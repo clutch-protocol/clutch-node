@@ -20,8 +20,8 @@ impl AccountBalance {
         let key = format!("balance_{}", public_Key).into_bytes();
         match db.get(&key){
             Ok(Some(value)) => {
-                let index_str = String::from_utf8(value).unwrap();                
-                let account_balance: AccountBalance = serde_json::from_str(&index_str).unwrap();
+                let account_balance_str = String::from_utf8(value).unwrap();                
+                let account_balance: AccountBalance = serde_json::from_str(&account_balance_str).unwrap();
                 account_balance.balance
             },
             Ok(None) => 0.0 ,
