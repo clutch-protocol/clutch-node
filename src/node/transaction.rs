@@ -85,13 +85,22 @@ impl Transaction {
         transaction
     }
 
-    pub fn validate_transaction(&self) -> bool {
+    pub fn validate_transaction(&self, db: &Database) -> bool {
         // e.g., check sender's balance, verify digital signature, etc.
-        
+
         let is_valid = match self.data.function_call_type {
             FunctionCallType::Transfer => {
-                // Add validation logic for Transfer
-                true // Return true if valid, false otherwise
+                let transfer: Transfer = serde_json::from_str(&self.data.arguments).unwrap();
+                let from = &self.from;
+                let value = transfer.value;
+
+                let from_balance = AccountBalance::get_current_balance(&from, &db);
+                if from_balance < value{
+                    println!("Error: Insufficient balance. Required: {}, Available: {}", value, from_balance);
+                    return false;
+                }
+
+                true
             }
             FunctionCallType::RideRequest => {
                 // Validation logic for RideRequest

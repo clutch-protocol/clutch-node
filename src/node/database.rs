@@ -41,4 +41,21 @@ impl Database {
         // Perform the batch write
         self.db.write(batch).map_err(|e| e.to_string())
     }
+
+    /// Deletes all data from the database.
+    pub fn delete_all(&self) -> Result<(), String> {
+        // Use empty arrays specifically, since error messages indicate this requirement
+        let start_key: &[u8; 0] = &[]; // Empty fixed-size array for start key.
+        let end_key: &[u8; 0] = &[]; // Empty fixed-size array for end key.
+
+        // Access the default column family handle
+        let cf_handle = self.db.cf_handle("default").unwrap_or_else(|| {
+            panic!("Default column family not found");
+        });
+
+        // Perform the range deletion on the default column family.
+        self.db
+            .delete_range_cf(cf_handle, start_key, end_key)
+            .map_err(|e| e.to_string())
+    }
 }

@@ -45,7 +45,7 @@ impl Blockchain {
         }
 
         for tx in block.transactions.iter() {
-            let is_valid_tx = tx.validate_transaction();
+            let is_valid_tx = tx.validate_transaction(&self.db);
             if !is_valid_tx {
                 println!("Block contains invalid transactions and will not be added.");
                 return;
