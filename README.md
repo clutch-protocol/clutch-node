@@ -45,4 +45,4 @@ If you have any questions or comments, please feel free to contact us at mehran.
 
 ## Instarll Clang on windows
 ECHO %LIBCLANG_PATH%
-SET LIBCLANG_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\bin
+SET LIBCLANG_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin
