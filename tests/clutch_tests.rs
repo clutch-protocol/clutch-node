@@ -7,7 +7,7 @@ const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
 
 #[test]
 fn test() {
-    let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string());
+    let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(),true);
 
     let block1 = transfer_block(1);
     blockchain.block_import(block1);
@@ -20,6 +20,7 @@ fn test() {
     // blockchain.block_import(block3);
 
     println!("Blockchain: {:#?}", blockchain);
+    blockchain.cleanup_if_developer_mode();
 }
 
 fn transfer_block(index: usize) -> Block {

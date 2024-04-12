@@ -6,15 +6,17 @@ pub struct Blockchain {
     pub name: String,
     db: Database,
     latest_block_index: usize,
+    developer_mode: bool,
 }
 
 impl Blockchain {
-    pub fn new(name: String) -> Blockchain {
+    pub fn new(name: String, developer_mode: bool) -> Blockchain {
         let db = Database::new_db(&name);
         let mut blockchain = Blockchain {
             name: name,
             db: db,
             latest_block_index: 0,
+            developer_mode: developer_mode,
         };
 
         blockchain.latest_block_index = Blockchain::get_latest_block_index(&blockchain);
@@ -51,6 +53,15 @@ impl Blockchain {
         self.add_block_to_chain(block);
     }
 
+    pub fn cleanup_if_developer_mode(&self) {
+        if self.developer_mode {
+            match self.db.delete_all() {
+                Ok(_) => println!("Developer mode: Database cleaned up successfully."),
+                Err(e) => println!("Error cleaning up database: {}", e),
+            }
+        }
+    }
+
     fn genesis_block_import(&mut self) {
         match self.db.get(b"block_0") {
             Ok(Some(_)) => {
@@ -84,15 +95,15 @@ impl Blockchain {
         //State transactions
         for tx in block.transactions.iter() {
             match tx.state_transaction(&self.db) {
-                updates  => {
+                updates => {
                     for update in updates {
                         for (key, value) in update {
                             keys.push(key);
                             values.push(value);
                         }
                     }
-                },
-                _=> println!("Error processing transaction states")
+                }
+                _ => println!("Error processing transaction states"),
             }
         }
 

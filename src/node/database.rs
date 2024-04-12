@@ -1,4 +1,4 @@
-use rocksdb::{DBWithThreadMode, Options, SingleThreaded, WriteBatch, DB};
+use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, Options, SingleThreaded, WriteBatch, DB};
 use std::env;
 
 #[derive(Debug)]
@@ -14,11 +14,14 @@ impl Database {
         });
 
         let db_path = format!("{}/{}.db", db_base_path, name);
-
         let mut options = Options::default();
         options.create_if_missing(true);
 
-        let db = DB::open(&options, db_path).expect("Failed to open database");
+        // Check and open with the default column family
+        let cf_descriptor = ColumnFamilyDescriptor::new("default", Options::default());
+        let db = DB::open_cf_descriptors(&options, &db_path, vec![cf_descriptor])
+            .expect("Failed to open database with default column family");
+
         Database { db }
     }
 
@@ -44,18 +47,15 @@ impl Database {
 
     /// Deletes all data from the database.
     pub fn delete_all(&self) -> Result<(), String> {
-        // Use empty arrays specifically, since error messages indicate this requirement
-        let start_key: &[u8; 0] = &[]; // Empty fixed-size array for start key.
-        let end_key: &[u8; 0] = &[]; // Empty fixed-size array for end key.
+        let start_key: &[u8; 0] = &[];
+        let end_key: &[u8; 0] = &[];
 
-        // Access the default column family handle
-        let cf_handle = self.db.cf_handle("default").unwrap_or_else(|| {
-            panic!("Default column family not found");
-        });
-
-        // Perform the range deletion on the default column family.
-        self.db
-            .delete_range_cf(cf_handle, start_key, end_key)
-            .map_err(|e| e.to_string())
+        match self.db.cf_handle("default") {
+            Some(cf_handle) => self
+                .db
+                .delete_range_cf(cf_handle, start_key, end_key)
+                .map_err(|e| e.to_string()),
+            None => Err("Default column family not found".to_string()),
+        }
     }
 }
