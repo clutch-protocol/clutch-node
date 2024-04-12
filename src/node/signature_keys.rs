@@ -51,7 +51,7 @@ impl SignatureKeys {
         let message = Message::from_digest_slice(&message_digest).expect("32 bytes");
 
         secp.sign_ecdsa(&message, &self.secret_key)
-    }
+    }    
 
     pub fn verify(&self, data: &[u8], signature: &Signature) -> bool {
         let secp = Secp256k1::new();
