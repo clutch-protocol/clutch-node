@@ -57,7 +57,8 @@ impl Database {
     }
 
     pub fn delete_database(&self, name: &str) -> Result<(), String> {
-        let db_path = Database::db_path(&name);        
+        let db_path = Database::db_path(&name);   
+             
         DB::destroy(&Options::default(), db_path).map_err(|e| e.to_string())?;
         Ok(())
     }
