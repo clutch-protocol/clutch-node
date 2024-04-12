@@ -19,8 +19,8 @@ const FROM_GENESIS: &str = "0xGENESIS";
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Transaction {
     pub from: String,
-    pub hash: String,
     pub data: FunctionCall,
+    pub hash: String,
 }
 
 impl Transaction {
