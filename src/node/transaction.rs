@@ -6,6 +6,7 @@ use crate::node::ride_acceptance::RideAcceptance;
 use crate::node::ride_offer::RideOffer;
 use crate::node::ride_payment::RidePayment;
 use crate::node::ride_request::RideRequest;
+use crate::node::signature_keys::SignatureKeys;
 use crate::node::transfer::Transfer;
 
 use serde::{Deserialize, Serialize};
@@ -13,6 +14,7 @@ use sha2::{Digest, Sha256};
 use std::vec;
 
 use super::database::Database;
+use super::signature_keys;
 
 const FROM_GENESIS: &str = "0xGENESIS";
 
@@ -87,6 +89,7 @@ impl Transaction {
 
     pub fn validate_transaction(&self, db: &Database) -> bool {
         // e.g., check sender's balance, verify digital signature, etc.
+        //signature_keys::SignatureKeys::verify(&self, data, signature)
 
         let is_valid_tx = match self.data.function_call_type {
             FunctionCallType::Transfer => {
@@ -135,6 +138,14 @@ impl Transaction {
 
         // If all transactions are valid, return true
         is_valid_tx
+    }
+
+    pub fn verify_signature(&self) -> bool {
+        let from_public_key = &self.from;
+        //let data = self.hash;
+
+        // SignatureKeys::verify(from_public_key, data, signature)
+        true
     }
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
