@@ -86,10 +86,11 @@ impl Transaction {
     }
 
     pub fn validate_transaction(&self) -> bool {
+        // e.g., check sender's balance, verify digital signature, etc.
+        
         let is_valid = match self.data.function_call_type {
             FunctionCallType::Transfer => {
                 // Add validation logic for Transfer
-                // e.g., check sender's balance, verify digital signature, etc.
                 true // Return true if valid, false otherwise
             }
             FunctionCallType::RideRequest => {
@@ -141,13 +142,15 @@ impl Transaction {
                 let to = transfer.to;
                 let to_balance = AccountBalance::get_current_balance(&to, &db) + value;
                 let to_account_balance = AccountBalance::new_account_balance(&to, to_balance);
-                let to_key =  format!("balance_{}", to).into_bytes();
+                let to_key = format!("balance_{}", to).into_bytes();
                 let to_serialized_balance = serde_json::to_string(&to_account_balance)
                     .unwrap()
                     .into_bytes();
-                
-                vec![Some((from_key, from_serialized_balance)), Some((to_key, to_serialized_balance))]
 
+                vec![
+                    Some((from_key, from_serialized_balance)),
+                    Some((to_key, to_serialized_balance)),
+                ]
             }
             _ => vec![None],
         }
