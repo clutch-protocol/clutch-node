@@ -53,16 +53,6 @@ impl Blockchain {
         self.add_block_to_chain(block);
     }
 
-    pub fn cleanup_if_developer_mode(&mut self) {       
-        if self.developer_mode {
-            self.db.close();            
-            match self.db.delete_database(self.name.as_str()) {
-                Ok(_) => println!("Developer mode: Database cleaned up successfully."),
-                Err(e) => println!("Error cleaning up database: {}", e),
-            }
-        }
-    }
-
     fn genesis_block_import(&mut self) {
         match self.db.get(b"block_0") {
             Ok(Some(_)) => {
@@ -125,6 +115,16 @@ impl Blockchain {
                 self.latest_block_index = block.index;
             }
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
+        }
+    }
+
+    pub fn cleanup_if_developer_mode(&mut self) {       
+        if self.developer_mode {
+            self.db.close();            
+            match self.db.delete_database(self.name.as_str()) {
+                Ok(_) => println!("Developer mode: Database cleaned up successfully."),
+                Err(e) => println!("Error cleaning up database: {}", e),
+            }
         }
     }
 }
