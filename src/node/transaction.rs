@@ -88,7 +88,7 @@ impl Transaction {
     pub fn validate_transaction(&self, db: &Database) -> bool {
         // e.g., check sender's balance, verify digital signature, etc.
 
-        let is_valid = match self.data.function_call_type {
+        let is_valid_tx = match self.data.function_call_type {
             FunctionCallType::Transfer => {
                 let transfer: Transfer = serde_json::from_str(&self.data.arguments).unwrap();
                 let from = &self.from;
@@ -134,7 +134,7 @@ impl Transaction {
         };
 
         // If all transactions are valid, return true
-        is_valid
+        is_valid_tx
     }
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
