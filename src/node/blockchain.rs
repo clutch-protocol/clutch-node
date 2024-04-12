@@ -55,7 +55,7 @@ impl Blockchain {
 
     pub fn cleanup_if_developer_mode(&self) {
         if self.developer_mode {
-            match self.db.delete_all() {
+            match self.db.delete_database(self.name.as_str()) {
                 Ok(_) => println!("Developer mode: Database cleaned up successfully."),
                 Err(e) => println!("Error cleaning up database: {}", e),
             }

@@ -7,19 +7,22 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn new_db(name: &str) -> Self {
+
+    fn db_path(name: &str) -> String {
         let db_base_path = env::var("DB_PATH").unwrap_or_else(|_| {
             let current_dir = env::current_dir().expect("Failed to get current directory");
             current_dir.to_str().unwrap_or(".").to_string()
         });
-
-        let db_path = format!("{}/{}.db", db_base_path, name);
+        format!("{}/{}.db", db_base_path, name)
+    }
+    
+    pub fn new_db(name: &str) -> Self {       
+        let db_path =Database::db_path(&name);
         let mut options = Options::default();
         options.create_if_missing(true);
-
-        // Check and open with the default column family
-        let cf_descriptor = ColumnFamilyDescriptor::new("default", Options::default());
-        let db = DB::open_cf_descriptors(&options, &db_path, vec![cf_descriptor])
+        options.create_missing_column_families(true);
+        
+        let db = DB::open_default(&db_path)
             .expect("Failed to open database with default column family");
 
         Database { db }
@@ -45,17 +48,9 @@ impl Database {
         self.db.write(batch).map_err(|e| e.to_string())
     }
 
-    /// Deletes all data from the database.
-    pub fn delete_all(&self) -> Result<(), String> {
-        let start_key: &[u8; 0] = &[];
-        let end_key: &[u8; 0] = &[];
-
-        match self.db.cf_handle("default") {
-            Some(cf_handle) => self
-                .db
-                .delete_range_cf(cf_handle, start_key, end_key)
-                .map_err(|e| e.to_string()),
-            None => Err("Default column family not found".to_string()),
-        }
+    pub fn delete_database(&self, name: &str) -> Result<(), String> {        
+        let db_path =Database::db_path(&name);                     
+        DB::destroy(&Options::default(), db_path).map_err(|e| e.to_string())?;
+        Ok(())
     }
 }
