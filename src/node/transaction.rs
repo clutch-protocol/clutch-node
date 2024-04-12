@@ -95,8 +95,11 @@ impl Transaction {
                 let value = transfer.value;
 
                 let from_balance = AccountBalance::get_current_balance(&from, &db);
-                if from_balance < value{
-                    println!("Error: Insufficient balance. Required: {}, Available: {}", value, from_balance);
+                if from_balance < value {
+                    println!(
+                        "Error: Insufficient balance.From:{} Required: {}, Available: {}",
+                        from, value, from_balance
+                    );
                     return false;
                 }
 
