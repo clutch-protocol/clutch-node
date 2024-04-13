@@ -23,7 +23,11 @@ pub struct Transaction {
     pub from: String,
     pub data: FunctionCall,
     pub nonce: u64,
+    // pub signature_r: String,
+    // pub signature_s: String,
+    // pub signature_v: i32,
     pub hash: String,
+
 }
 
 impl Transaction {
@@ -86,8 +90,8 @@ impl Transaction {
         let mut transaction = Transaction {
             hash: String::new(),
             from: from,
-            data: function_call,
             nonce: nonce,
+            data: function_call,
         };
 
         transaction.hash = transaction.calculate_hash();
