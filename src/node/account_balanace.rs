@@ -16,8 +16,8 @@ impl AccountBalance {
         }
     }
 
-    pub fn get_current_balance(public_Key: &String ,db:&Database) -> f64 {
-        let key = format!("balance_{}", public_Key).into_bytes();
+    pub fn get_current_balance(public_key: &String ,db:&Database) -> f64 {
+        let key = format!("balance_{}", public_key).into_bytes();
         match db.get(&key){
             Ok(Some(value)) => {
                 let account_balance_str = String::from_utf8(value).unwrap();                
