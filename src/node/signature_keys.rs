@@ -1,7 +1,10 @@
 use backtrace::Backtrace;
 use hex::FromHex;
 use rand::rngs::OsRng;
-use secp256k1::{ecdsa::RecoveryId, ecdsa::Signature, Message, PublicKey, Secp256k1, SecretKey};
+use secp256k1::{
+    ecdsa::RecoverableSignature, ecdsa::RecoveryId, ecdsa::Signature, Message, PublicKey,
+    Secp256k1, SecretKey,
+};
 use sha3::{Digest, Keccak256};
 
 #[derive(Debug)]
@@ -64,7 +67,7 @@ impl SignatureKeys {
         (r, s, v)
     }
 
-    pub fn verify(public_key_hex: &str, data: &[u8], r: &str, s: &str, v: i32) -> bool {
+    pub fn verify(derive_address: &str, data: &[u8], r: &str, s: &str, v: i32) -> bool {
         let secp = Secp256k1::new();
         let mut hasher = Keccak256::new();
         hasher.update(data);
@@ -72,16 +75,19 @@ impl SignatureKeys {
         let message = Message::from_digest_slice(&message_hash)
             .expect("Message could not be created from hash");
 
-        let public_key_bytes = hex::decode(public_key_hex).expect("Invalid hex for public key");
-        let public_key = PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
-
         let sig_r = Vec::from_hex(r).expect("Invalid hex in r");
         let sig_s = Vec::from_hex(s).expect("Invalid hex in s");
+        let signature_data = [&sig_r[..], &sig_s[..]].concat();
         let recovery_id = RecoveryId::from_i32(v - 27).expect("Invalid recovery ID");
-        let signature = Signature::from_compact(&[&sig_r[..], &sig_s[..]].concat())
-            .expect("Invalid signature format");
+        let recoverable_sig = RecoverableSignature::from_compact(&signature_data, recovery_id)
+            .expect("Valid signature");
 
-        secp.verify_ecdsa(&message, &signature, &public_key).is_ok()
+        if let Ok(recovered_public_key) = secp.recover_ecdsa(&message, &recoverable_sig) {
+            let derived_address = Self::derive_address(&recovered_public_key);
+            derived_address == derive_address
+        } else {
+            false
+        }
     }
 }
 
