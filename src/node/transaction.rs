@@ -196,7 +196,7 @@ impl Transaction {
             arguments: serde_json::to_string(&transfer).unwrap(),
         };
 
-        Transaction::new_tranaction(from, nonce, function_call)
+        Self::new_tranaction(from, nonce, function_call)
     }
 
     pub fn new_ride_request_tranaction(
@@ -209,7 +209,7 @@ impl Transaction {
             arguments: serde_json::to_string(&ride_request).unwrap(),
         };
 
-        Transaction::new_tranaction(from, nonce, function_call)
+        Self::new_tranaction(from, nonce, function_call)
     }
 
     pub fn new_ride_offer_tranaction(
@@ -222,7 +222,7 @@ impl Transaction {
             arguments: serde_json::to_string(&ride_offer).unwrap(),
         };
 
-        Transaction::new_tranaction(from, nonce, function_call)
+        Self::new_tranaction(from, nonce, function_call)
     }
 
     pub fn new_ride_accept_tranaction(
@@ -235,7 +235,7 @@ impl Transaction {
             arguments: serde_json::to_string(&ride_acceptance).unwrap(),
         };
 
-        Transaction::new_tranaction(from, nonce, function_call)
+        Self::new_tranaction(from, nonce, function_call)
     }
 
     pub fn new_confirm_arrival_tranaction(
@@ -248,7 +248,7 @@ impl Transaction {
             arguments: serde_json::to_string(&confirm_arrival).unwrap(),
         };
 
-        Transaction::new_tranaction(from, nonce, function_call)
+        Self::new_tranaction(from, nonce, function_call)
     }
 
     pub fn new_complain_arrival_tranaction(
@@ -261,7 +261,7 @@ impl Transaction {
             arguments: serde_json::to_string(&complain_arrival).unwrap(),
         };
 
-        Transaction::new_tranaction(from, nonce, function_call)
+        Self::new_tranaction(from, nonce, function_call)
     }
 
     pub fn new_ride_payment_tranaction(
@@ -274,6 +274,6 @@ impl Transaction {
             arguments: serde_json::to_string(&ride_payment).unwrap(),
         };
 
-        Transaction::new_tranaction(from, nonce, function_call)
+        Self::new_tranaction(from, nonce, function_call)
     }
 }
