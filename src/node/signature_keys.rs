@@ -1,3 +1,4 @@
+use backtrace::Backtrace;
 use hex::FromHex;
 use rand::rngs::OsRng;
 use secp256k1::{ecdsa::RecoveryId, ecdsa::Signature, Message, PublicKey, Secp256k1, SecretKey};
@@ -36,6 +37,7 @@ impl SignatureKeys {
 
     pub fn sign(secret_key: &str, data: &[u8]) -> (String, String, i32) {
         let secp = Secp256k1::new();
+
         let secret_key_bytes = hex::decode(secret_key).unwrap();
         let secret_key = SecretKey::from_slice(&secret_key_bytes).unwrap();
 
@@ -104,18 +106,13 @@ mod tests {
         let data = b"Blockchain technology";
         println!("Public key:{:?}", keys.public_key);
         println!("Address:{:?}", keys.address_key);
+        println!("secret key:{:?}", keys.secret_key);
 
         // Test signing
         let (r, s, v) = SignatureKeys::sign(&keys.secret_key, data);
         println!("Signature: r={:?}, s={:?} , v={:?}", r, s, v);
 
-        let is_verified  = SignatureKeys::verify(
-            &keys.public_key,
-            data,
-            &r,
-            &s,
-            v,
-        );
+        let is_verified = SignatureKeys::verify(&keys.public_key, data, &r, &s, v);
 
         assert!(is_verified, "Signature verification should succeed");
     }
@@ -127,25 +124,30 @@ mod tests {
         let modified_data = b"Altered data";
 
         // Test signing with the original data
-        let (r, s, v) = SignatureKeys::sign(&keys.secret_key, original_data);            
+        let (r, s, v) = SignatureKeys::sign(&keys.secret_key, original_data);
 
         // Attempt to verify signature against modified data
         let is_verified = SignatureKeys::verify(&keys.public_key, modified_data, &r, &s, v);
-        assert!(!is_verified, "Signature verification should fail on modified data");
+        assert!(
+            !is_verified,
+            "Signature verification should fail on modified data"
+        );
     }
 
     #[test]
     fn test_sign_and_verify_failure_on_wrong_key() {
         let keys = SignatureKeys::generate_new_keypair();
-        let other_keys = SignatureKeys::generate_new_keypair();  // Generate a different key pair
+        let other_keys = SignatureKeys::generate_new_keypair(); // Generate a different key pair
         let data = b"Blockchain technology";
 
         // Test signing with the first key
-        let (r, s, v) = SignatureKeys::sign(&keys.secret_key, data);          
+        let (r, s, v) = SignatureKeys::sign(&keys.secret_key, data);
 
         // Attempt to verify signature with a different public key
         let is_verified = SignatureKeys::verify(&other_keys.public_key, data, &r, &s, v);
-        assert!(!is_verified, "Signature verification should fail with a different public key");
+        assert!(
+            !is_verified,
+            "Signature verification should fail with a different public key"
+        );
     }
-
 }

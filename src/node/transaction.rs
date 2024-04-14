@@ -1,20 +1,11 @@
+use super::database::Database;
+use super::signature_keys;
 use crate::node::account_balanace::AccountBalance;
-use crate::node::complain_arrival::ComplainArrival;
-use crate::node::confirm_arrival::ConfirmArrival;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
-use crate::node::ride_acceptance::RideAcceptance;
-use crate::node::ride_offer::RideOffer;
-use crate::node::ride_payment::RidePayment;
-use crate::node::ride_request::RideRequest;
-use crate::node::signature_keys::SignatureKeys;
 use crate::node::transfer::Transfer;
-
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::vec;
-
-use super::database::Database;
-use super::signature_keys;
 
 const FROM_GENESIS: &str = "0xGENESIS";
 
@@ -23,9 +14,9 @@ pub struct Transaction {
     pub from: String,
     pub data: FunctionCall,
     pub nonce: u64,
-    // pub signature_r: String,
-    // pub signature_s: String,
-    // pub signature_v: i32,
+    pub signature_r: String,
+    pub signature_s: String,
+    pub signature_v: i32,
     pub hash: String,
 }
 
@@ -34,6 +25,7 @@ impl Transaction {
         from: String,
         nonce: u64,
         function_call_type: FunctionCallType,
+        secret_key: String,
         payload: T,
     ) -> Transaction {
         let arguments = serde_json::to_string(&payload).unwrap();
@@ -44,29 +36,42 @@ impl Transaction {
 
         let mut transaction = Transaction {
             hash: String::new(),
+            signature_r: String::new(),
+            signature_s: String::new(),
+            signature_v: 0,
             from: from,
             nonce: nonce,
             data: function_call,
         };
 
         transaction.hash = transaction.calculate_hash();
+        let data = transaction.hash.as_bytes();
+        let (r, s, v) = signature_keys::SignatureKeys::sign(&secret_key, data);
+        transaction.signature_r = r;
+        transaction.signature_s = s;
+        transaction.signature_v = v;
+
         transaction
     }
 
     pub fn new_genesis_transactions() -> Vec<Transaction> {
+        let from_secret_key = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df2f81f48e9f2748f";
+
         let tx1 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
+            from_secret_key.to_string(),
             Transfer {
-                to: "0xb87a9ac289f679f1f489fefa14f885187e311e2f".to_string(),
-                value: 100.0,
+                to: "0xdeb4cfb63db134698e1879ea24904df074726cc0".to_string(),
+                value: 150.0,
             },
         );
         let tx2 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
+            from_secret_key.to_string(),
             Transfer {
                 to: "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2".to_string(),
                 value: 90.0,
@@ -76,6 +81,7 @@ impl Transaction {
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
+            from_secret_key.to_string(),
             Transfer {
                 to: "0xac20ff4e42ff243046faaf032068762dd2c018dc".to_string(),
                 value: 80.0,
@@ -85,6 +91,7 @@ impl Transaction {
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
+            from_secret_key.to_string(),
             Transfer {
                 to: "0xa91101310bee451ca0e219aba08d8d4dd929f16c".to_string(),
                 value: 20.0,
@@ -94,6 +101,7 @@ impl Transaction {
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
+            from_secret_key.to_string(),
             Transfer {
                 to: "0x37adf81cb1f18762042e5da03a55f1e54ba66870".to_string(),
                 value: 45.0,
