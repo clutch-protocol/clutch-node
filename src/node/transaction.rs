@@ -27,46 +27,73 @@ pub struct Transaction {
     // pub signature_s: String,
     // pub signature_v: i32,
     pub hash: String,
-
 }
 
 impl Transaction {
+    pub fn new_transaction<T: Serialize>(
+        from: String,
+        nonce: u64,
+        function_call_type: FunctionCallType,
+        payload: T,
+    ) -> Transaction {
+        let arguments = serde_json::to_string(&payload).unwrap();
+        let function_call = FunctionCall {
+            function_call_type,
+            arguments,
+        };
+
+        let mut transaction = Transaction {
+            hash: String::new(),
+            from: from,
+            nonce: nonce,
+            data: function_call,
+        };
+
+        transaction.hash = transaction.calculate_hash();
+        transaction
+    }
+
     pub fn new_genesis_transactions() -> Vec<Transaction> {
-        let tx1 = Self::new_transfer_transaction(
+        let tx1 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
+            FunctionCallType::Transfer,
             Transfer {
                 to: "0xb87a9ac289f679f1f489fefa14f885187e311e2f".to_string(),
                 value: 100.0,
             },
         );
-        let tx2 = Self::new_transfer_transaction(
+        let tx2 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
+            FunctionCallType::Transfer,
             Transfer {
                 to: "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2".to_string(),
                 value: 90.0,
             },
         );
-        let tx3 = Self::new_transfer_transaction(
+        let tx3 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
+            FunctionCallType::Transfer,
             Transfer {
                 to: "0xac20ff4e42ff243046faaf032068762dd2c018dc".to_string(),
                 value: 80.0,
             },
         );
-        let tx4 = Self::new_transfer_transaction(
+        let tx4 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
+            FunctionCallType::Transfer,
             Transfer {
                 to: "0xa91101310bee451ca0e219aba08d8d4dd929f16c".to_string(),
                 value: 20.0,
             },
         );
-        let tx5 = Self::new_transfer_transaction(
+        let tx5 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
+            FunctionCallType::Transfer,
             Transfer {
                 to: "0x37adf81cb1f18762042e5da03a55f1e54ba66870".to_string(),
                 value: 45.0,
@@ -84,18 +111,6 @@ impl Transaction {
         ));
         let result = hasher.finalize();
         format!("{:x}", result)
-    }
-
-    fn new_tranaction(from: String, nonce: u64, function_call: FunctionCall) -> Transaction {
-        let mut transaction = Transaction {
-            hash: String::new(),
-            from: from,
-            nonce: nonce,
-            data: function_call,
-        };
-
-        transaction.hash = transaction.calculate_hash();
-        transaction
     }
 
     pub fn validate_transaction(&self, db: &Database) -> bool {
@@ -159,21 +174,6 @@ impl Transaction {
         true
     }
 
-    pub fn new_transaction2<T: Serialize>(
-        from: String,
-        nonce: u64,
-        function_call_type: FunctionCallType,
-        payload: T,
-    ) -> Transaction {
-        let arguments = serde_json::to_string(&payload).unwrap();
-        let function_call = FunctionCall {
-            function_call_type,
-            arguments,
-        };
-
-        Self::new_tranaction(from, nonce, function_call)
-    }
-
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         match self.data.function_call_type {
             FunctionCallType::Transfer => {
@@ -203,92 +203,5 @@ impl Transaction {
             }
             _ => vec![None],
         }
-    }
-
-    pub fn new_transfer_transaction(from: String, nonce: u64, transfer: Transfer) -> Transaction {
-        let function_call = FunctionCall {
-            function_call_type: FunctionCallType::Transfer,
-            arguments: serde_json::to_string(&transfer).unwrap(),
-        };
-
-        Self::new_tranaction(from, nonce, function_call)
-    }
-
-    pub fn new_ride_request_tranaction(
-        from: String,
-        nonce: u64,
-        ride_request: RideRequest,
-    ) -> Transaction {
-        let function_call = FunctionCall {
-            function_call_type: FunctionCallType::RideRequest,
-            arguments: serde_json::to_string(&ride_request).unwrap(),
-        };
-
-        Self::new_tranaction(from, nonce, function_call)
-    }
-
-    pub fn new_ride_offer_tranaction(
-        from: String,
-        nonce: u64,
-        ride_offer: RideOffer,
-    ) -> Transaction {
-        let function_call = FunctionCall {
-            function_call_type: FunctionCallType::RideOffer,
-            arguments: serde_json::to_string(&ride_offer).unwrap(),
-        };
-
-        Self::new_tranaction(from, nonce, function_call)
-    }
-
-    pub fn new_ride_accept_tranaction(
-        from: String,
-        nonce: u64,
-        ride_acceptance: RideAcceptance,
-    ) -> Transaction {
-        let function_call = FunctionCall {
-            function_call_type: FunctionCallType::RideAcceptance,
-            arguments: serde_json::to_string(&ride_acceptance).unwrap(),
-        };
-
-        Self::new_tranaction(from, nonce, function_call)
-    }
-
-    pub fn new_confirm_arrival_tranaction(
-        from: String,
-        nonce: u64,
-        confirm_arrival: ConfirmArrival,
-    ) -> Transaction {
-        let function_call: FunctionCall = FunctionCall {
-            function_call_type: FunctionCallType::ConfirmArrival,
-            arguments: serde_json::to_string(&confirm_arrival).unwrap(),
-        };
-
-        Self::new_tranaction(from, nonce, function_call)
-    }
-
-    pub fn new_complain_arrival_tranaction(
-        from: String,
-        nonce: u64,
-        complain_arrival: ComplainArrival,
-    ) -> Transaction {
-        let function_call: FunctionCall = FunctionCall {
-            function_call_type: FunctionCallType::ComplainArrival,
-            arguments: serde_json::to_string(&complain_arrival).unwrap(),
-        };
-
-        Self::new_tranaction(from, nonce, function_call)
-    }
-
-    pub fn new_ride_payment_tranaction(
-        from: String,
-        nonce: u64,
-        ride_payment: RidePayment,
-    ) -> Transaction {
-        let function_call: FunctionCall = FunctionCall {
-            function_call_type: FunctionCallType::RidePayment,
-            arguments: serde_json::to_string(&ride_payment).unwrap(),
-        };
-
-        Self::new_tranaction(from, nonce, function_call)
     }
 }

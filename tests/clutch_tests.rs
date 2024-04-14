@@ -1,4 +1,5 @@
 use clutch_node::node::blockchain::Blockchain;
+use clutch_node::node::function_call::FunctionCallType;
 use clutch_node::node::{block::Block, *};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
@@ -27,8 +28,12 @@ fn transfer_block(index: usize) -> Block {
         to: TO.to_string(),
         value: 110.0,
     };
-    let transfer_request_transcation =
-        transaction::Transaction::new_transfer_transaction(FROM.to_string(), 0, transfer);
+    let transfer_request_transcation = transaction::Transaction::new_transaction(
+        FROM.to_string(),
+        0,
+        FunctionCallType::Transfer,
+        transfer,
+    );
     let transfer_request_block = Block::new_block(index, vec![transfer_request_transcation]);
     transfer_request_block
 }
@@ -44,19 +49,12 @@ fn ride_request_block(index: usize) -> Block {
             longitude: 55.857706441083984,
         }, //Ghil,Hengam iceland,Iran
     };
-    let ride_request_transcation =
-        transaction::Transaction::new_ride_request_tranaction(FROM.to_string(), 0, ride_request);
+    let ride_request_transcation = transaction::Transaction::new_transaction(
+        FROM.to_string(),
+        0,
+        FunctionCallType::Transfer,
+        ride_request,
+    );
     let ride_request_block = Block::new_block(index, vec![ride_request_transcation]);
     ride_request_block
-}
-
-fn ride_offer_block(index: usize) -> Block {
-    let ride_offer = ride_offer::RideOffer {
-        fare: 1440,
-        ride_request_transaction_hash: "".to_string(),
-    };
-    let ride_request_transcation =
-        transaction::Transaction::new_ride_offer_tranaction(FROM.to_string(), 0, ride_offer);
-    let ride_offer_block = Block::new_block(index, vec![ride_request_transcation]);
-    ride_offer_block
 }
