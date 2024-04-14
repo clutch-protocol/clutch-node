@@ -159,6 +159,21 @@ impl Transaction {
         true
     }
 
+    pub fn new_transaction2<T: Serialize>(
+        from: String,
+        nonce: u64,
+        function_call_type: FunctionCallType,
+        payload: T,
+    ) -> Transaction {
+        let arguments = serde_json::to_string(&payload).unwrap();
+        let function_call = FunctionCall {
+            function_call_type,
+            arguments,
+        };
+
+        Self::new_tranaction(from, nonce, function_call)
+    }
+
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         match self.data.function_call_type {
             FunctionCallType::Transfer => {
