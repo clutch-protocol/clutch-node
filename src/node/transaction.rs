@@ -124,6 +124,7 @@ impl Transaction {
     pub fn validate_transaction(&self, db: &Database) -> bool {
 
         if !self.verify_signature() {
+            println!("Verification failed: Signature does not match for transaction from {}", self.from);
             return false;
         }
 
@@ -177,7 +178,7 @@ impl Transaction {
     }
 
     fn verify_signature(&self) -> bool {
-                
+
         let from_public_key = &self.from;
         let data = self.hash.as_bytes();
         let r = &self.signature_r;
