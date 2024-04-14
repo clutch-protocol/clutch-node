@@ -1,5 +1,5 @@
 use super::database::Database;
-use super::signature_keys;
+use super::signature_keys::{self, SignatureKeys};
 use crate::node::account_balanace::AccountBalance;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
 use crate::node::transfer::Transfer;
@@ -122,8 +122,10 @@ impl Transaction {
     }
 
     pub fn validate_transaction(&self, db: &Database) -> bool {
-        // e.g., check sender's balance, verify digital signature, etc.
-        //signature_keys::SignatureKeys::verify(&self, data, signature)
+
+        if !self.verify_signature() {
+            return false;
+        }
 
         let is_valid_tx = match self.data.function_call_type {
             FunctionCallType::Transfer => {
@@ -174,12 +176,15 @@ impl Transaction {
         is_valid_tx
     }
 
-    pub fn verify_signature(&self) -> bool {
+    fn verify_signature(&self) -> bool {
+                
         let from_public_key = &self.from;
-        //let data = self.hash;
+        let data = self.hash.as_bytes();
+        let r = &self.signature_r;
+        let s = &self.signature_s;
+        let v = self.signature_v;
 
-        // SignatureKeys::verify(from_public_key, data, signature)
-        true
+        SignatureKeys::verify(from_public_key, data, r, s, v)
     }
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
