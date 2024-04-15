@@ -122,9 +122,19 @@ impl Transaction {
     }
 
     pub fn validate_transaction(&self, db: &Database) -> bool {
-
         if !self.verify_signature() {
-            println!("Verification failed: Signature does not match for transaction from {}", self.from);
+            println!(
+                "Verification failed: Signature does not match for transaction from {}",
+                self.from
+            );
+            return false;
+        }
+
+        if !self.verify_nonce() {
+            println!(
+                "Verification failed: nonce does not match for transaction from {}",
+                self.from
+            );
             return false;
         }
 
@@ -178,7 +188,6 @@ impl Transaction {
     }
 
     fn verify_signature(&self) -> bool {
-
         let from_public_key = &self.from;
         let data = self.hash.as_bytes();
         let r = &self.signature_r;
@@ -186,6 +195,12 @@ impl Transaction {
         let v = self.signature_v;
 
         SignatureKeys::verify(from_public_key, data, r, s, v)
+    }
+    
+    fn verify_nonce(&self)-> bool {
+        let nonce = self.nonce;
+
+        true 
     }
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
