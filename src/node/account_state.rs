@@ -19,9 +19,9 @@ impl AccountState {
         let key = format!("balance_{}", public_key).into_bytes();
         match db.get(&key){
             Ok(Some(value)) => {
-                let account_balance_str = String::from_utf8(value).unwrap();                
-                let account_balance: AccountState = serde_json::from_str(&account_balance_str).unwrap();
-                account_balance.balance
+                let account_state_str = String::from_utf8(value).unwrap();                
+                let account_state: AccountState = serde_json::from_str(&account_state_str).unwrap();
+                account_state.balance
             },
             Ok(None) => 0.0 ,
             Err(_) => todo!(),
