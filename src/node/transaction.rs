@@ -114,8 +114,8 @@ impl Transaction {
     fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
         hasher.update(format!(
-            "{}{}{}",
-            self.from, self.data.function_call_type, self.data.arguments
+            "{}{}{}{}",
+            self.from, self.data.function_call_type, self.data.arguments, self.nonce,
         ));
         let result = hasher.finalize();
         format!("{:x}", result)
