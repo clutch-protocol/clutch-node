@@ -36,3 +36,27 @@ fn transfer_block(index: usize) -> Block {
     let transfer_request_block = Block::new_block(index, vec![transfer_request_transcation]);
     transfer_request_block
 }
+
+
+fn ride_request_block(index: usize) -> Block {
+    let ride_request = ride_request::RideRequest {
+        pickup_location: coordinate::Coordinates {
+            latitude: 35.55841414973938,
+            longitude: 51.23861773552397,
+        }, //Tehran,Iran
+        dropoff_location: coordinate::Coordinates {
+            latitude: 26.649646426996483,
+            longitude: 55.857706441083984,
+        }, //Ghil,Hengam iceland,Iran
+    };
+
+    let ride_request_transcation = transaction::Transaction::new_transaction(
+        FROM_ADDRESS_KEY.to_string(),
+        2,
+        FunctionCallType::RideRequest,
+        FROM_SECRET_KEY.to_string(),
+        ride_request,
+    );
+    let ride_request_block = Block::new_block(index, vec![ride_request_transcation]);
+    ride_request_block
+}
