@@ -28,7 +28,7 @@ fn transfer_block(index: usize) -> Block {
 
     let transfer_request_transcation = transaction::Transaction::new_transaction(
         FROM_ADDRESS_KEY.to_string(),
-        0,
+        1,
         FunctionCallType::Transfer,
         FROM_SECRET_KEY.to_string(),
         transfer,

@@ -130,10 +130,12 @@ impl Transaction {
             return false;
         }
 
-        if !self.verify_nonce() {
+        let from_account_state = AccountState::get_current_state(&self.from, &db);
+
+        if !self.verify_nonce(from_account_state.nonce) {
             println!(
-                "Verification failed: nonce does not match for transaction from {}",
-                self.from
+                "Verification failed: Incorrect nonce for transaction from '{}'. Expected: {}, got: {}.",
+                self.from, from_account_state.nonce + 1, self.nonce
             );
             return false;
         }
@@ -141,14 +143,11 @@ impl Transaction {
         let is_valid_tx = match self.data.function_call_type {
             FunctionCallType::Transfer => {
                 let transfer: Transfer = serde_json::from_str(&self.data.arguments).unwrap();
-                let from = &self.from;
-                let value = transfer.value;
 
-                let from_balance_state = AccountState::get_current_state(&from, &db);
-                if from_balance_state.balance < value {
+                if from_account_state.balance < transfer.value {
                     println!(
                         "Error: Insufficient balance.From:{} Required: {}, Available: {}",
-                        from, value, from_balance_state.balance
+                        self.from, transfer.value, from_account_state.balance
                     );
                     return false;
                 }
@@ -196,11 +195,14 @@ impl Transaction {
 
         SignatureKeys::verify(from_public_key, data, r, s, v)
     }
-    
-    fn verify_nonce(&self)-> bool {
-        let nonce = self.nonce;
 
-        true 
+    fn verify_nonce(&self, last_nonce: u64) -> bool {
+        let nonce = self.nonce;
+        if nonce != last_nonce + 1 {
+            return false;
+        }
+
+        true
     }
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
@@ -211,7 +213,7 @@ impl Transaction {
 
                 let from = &self.from;
                 let mut from_account_state = AccountState::get_current_state(&from, &db);
-                from_account_state.balance  = from_account_state.balance - value;
+                from_account_state.balance = from_account_state.balance - value;
                 let from_key = format!("balance_{}", from).into_bytes();
                 let from_serialized_balance = serde_json::to_string(&from_account_state)
                     .unwrap()
@@ -219,7 +221,7 @@ impl Transaction {
 
                 let to = transfer.to;
                 let mut to_account_state = AccountState::get_current_state(&to, &db);
-                to_account_state.balance = to_account_state.balance + value;                
+                to_account_state.balance = to_account_state.balance + value;
                 let to_key = format!("balance_{}", to).into_bytes();
                 let to_serialized_balance = serde_json::to_string(&to_account_state)
                     .unwrap()

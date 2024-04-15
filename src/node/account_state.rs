@@ -5,13 +5,15 @@ use serde::{Deserialize, Serialize};
 pub struct AccountState {
     pub public_key: String,
     pub balance: f64,
+    pub nonce: u64,
 }
 
 impl AccountState {
-    fn new_account_state(public_key: &String, balance: f64) -> AccountState {
+    fn new_account_state(public_key: &String) -> AccountState {
         AccountState {
             public_key: public_key.to_string(),
-            balance: balance,
+            balance: 0.0,
+            nonce: 0,
         }
     }
 
@@ -23,7 +25,7 @@ impl AccountState {
                 let account_state: AccountState = serde_json::from_str(&account_state_str).unwrap();
                 account_state
             }
-            Ok(None) => Self::new_account_state(public_key, 0.0),
+            Ok(None) => Self::new_account_state(public_key),
             Err(_) => todo!(),
         }
     }
