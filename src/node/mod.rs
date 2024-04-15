@@ -12,4 +12,4 @@ pub mod ride_payment;
 pub mod function_call;
 pub mod database;
 pub mod signature_keys;
-pub mod account_balanace;
+pub mod account_state;

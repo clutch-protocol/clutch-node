@@ -1,6 +1,6 @@
 use super::database::Database;
 use super::signature_keys::{self, SignatureKeys};
-use crate::node::account_balanace::AccountBalance;
+use crate::node::account_state::AccountState;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
 use crate::node::transfer::Transfer;
 use serde::{Deserialize, Serialize};
@@ -144,7 +144,7 @@ impl Transaction {
                 let from = &self.from;
                 let value = transfer.value;
 
-                let from_balance = AccountBalance::get_current_balance(&from, &db);
+                let from_balance = AccountState::get_current_state(&from, &db);
                 if from_balance < value {
                     println!(
                         "Error: Insufficient balance.From:{} Required: {}, Available: {}",
@@ -210,16 +210,16 @@ impl Transaction {
                 let value = transfer.value;
 
                 let from = &self.from;
-                let from_balance = AccountBalance::get_current_balance(&from, &db) - value;
-                let from_account_balance = AccountBalance::new_account_balance(&from, from_balance);
+                let from_balance = AccountState::get_current_state(&from, &db) - value;
+                let from_account_balance = AccountState::new_account_state(&from, from_balance);
                 let from_key = format!("balance_{}", from).into_bytes();
                 let from_serialized_balance = serde_json::to_string(&from_account_balance)
                     .unwrap()
                     .into_bytes();
 
                 let to = transfer.to;
-                let to_balance = AccountBalance::get_current_balance(&to, &db) + value;
-                let to_account_balance = AccountBalance::new_account_balance(&to, to_balance);
+                let to_balance = AccountState::get_current_state(&to, &db) + value;
+                let to_account_balance = AccountState::new_account_state(&to, to_balance);
                 let to_key = format!("balance_{}", to).into_bytes();
                 let to_serialized_balance = serde_json::to_string(&to_account_balance)
                     .unwrap()
