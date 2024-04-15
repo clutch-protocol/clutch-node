@@ -214,7 +214,7 @@ impl Transaction {
                 let from = &self.from;
                 let mut from_account_state = AccountState::get_current_state(&from, &db);
                 from_account_state.balance = from_account_state.balance - value;
-                let from_key = format!("balance_{}", from).into_bytes();
+                let from_key = format!("account_state_{}", from).into_bytes();
                 let from_serialized_balance = serde_json::to_string(&from_account_state)
                     .unwrap()
                     .into_bytes();
@@ -222,7 +222,7 @@ impl Transaction {
                 let to = transfer.to;
                 let mut to_account_state = AccountState::get_current_state(&to, &db);
                 to_account_state.balance = to_account_state.balance + value;
-                let to_key = format!("balance_{}", to).into_bytes();
+                let to_key = format!("account_state_{}", to).into_bytes();
                 let to_serialized_balance = serde_json::to_string(&to_account_state)
                     .unwrap()
                     .into_bytes();
