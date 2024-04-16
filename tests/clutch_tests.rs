@@ -14,7 +14,7 @@ fn test() {
     let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
 
     let block1 = transfer_block(1);
-    blockchain.block_import(block1);    
+    blockchain.block_import(block1);
 
     println!("Blockchain: {:#?}", blockchain);
     blockchain.cleanup_if_developer_mode();
@@ -23,7 +23,7 @@ fn test() {
 fn transfer_block(index: usize) -> Block {
     let transfer = transfer::Transfer {
         to: TO.to_string(),
-        value: 110.0,
+        value: 100.0,
     };
 
     let transfer_request_transcation = transaction::Transaction::new_transaction(
@@ -36,7 +36,6 @@ fn transfer_block(index: usize) -> Block {
     let transfer_request_block = Block::new_block(index, vec![transfer_request_transcation]);
     transfer_request_block
 }
-
 
 fn ride_request_block(index: usize) -> Block {
     let ride_request = ride_request::RideRequest {

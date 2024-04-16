@@ -18,7 +18,7 @@ impl AccountState {
     }
 
     pub fn get_current_state(public_key: &String, db: &Database) -> AccountState {
-        let key = format!("balance_{}", public_key).into_bytes();
+        let key = format!("account_state_{}", public_key).into_bytes();
         match db.get(&key) {
             Ok(Some(value)) => {
                 let account_state_str = String::from_utf8(value).unwrap();

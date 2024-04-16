@@ -1,4 +1,4 @@
-use super::database::Database;
+use super::database::{Database};
 use super::signature_keys::{self, SignatureKeys};
 use crate::node::account_state::AccountState;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
@@ -140,6 +140,33 @@ impl Transaction {
             return false;
         }
 
+        if !self.verify_state(&from_account_state){            
+            return false;
+        }
+
+        true
+    }
+
+    fn verify_signature(&self) -> bool {
+        let from_public_key = &self.from;
+        let data = self.hash.as_bytes();
+        let r = &self.signature_r;
+        let s = &self.signature_s;
+        let v = self.signature_v;
+
+        SignatureKeys::verify(from_public_key, data, r, s, v)
+    }
+
+    fn verify_nonce(&self, last_nonce: u64) -> bool {
+        let nonce = self.nonce;
+        if nonce != last_nonce + 1 {
+            return false;
+        }
+
+        true
+    }
+
+    fn verify_state(&self, from_account_state: &AccountState) -> bool {
         let is_valid_tx = match self.data.function_call_type {
             FunctionCallType::Transfer => {
                 let transfer: Transfer = serde_json::from_str(&self.data.arguments).unwrap();
@@ -181,27 +208,6 @@ impl Transaction {
             }
             _ => false, // Add more types as needed
         };
-
-        // If all transactions are valid, return true
-        is_valid_tx
-    }
-
-    fn verify_signature(&self) -> bool {
-        let from_public_key = &self.from;
-        let data = self.hash.as_bytes();
-        let r = &self.signature_r;
-        let s = &self.signature_s;
-        let v = self.signature_v;
-
-        SignatureKeys::verify(from_public_key, data, r, s, v)
-    }
-
-    fn verify_nonce(&self, last_nonce: u64) -> bool {
-        let nonce = self.nonce;
-        if nonce != last_nonce + 1 {
-            return false;
-        }
-
         true
     }
 
@@ -209,7 +215,7 @@ impl Transaction {
         match self.data.function_call_type {
             FunctionCallType::Transfer => {
                 let transfer: Transfer = serde_json::from_str(&self.data.arguments).unwrap();
-                let value = transfer.value;
+                let value = transfer.value;                
 
                 let from = &self.from;
                 let mut from_account_state = AccountState::get_current_state(&from, &db);

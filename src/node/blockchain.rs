@@ -19,8 +19,8 @@ impl Blockchain {
             developer_mode: developer_mode,
         };
 
-        blockchain.latest_block_index = Blockchain::get_latest_block_index(&blockchain);
         blockchain.genesis_block_import();
+        blockchain.latest_block_index = Blockchain::get_latest_block_index(&blockchain);
         blockchain
     }
 
@@ -90,7 +90,7 @@ impl Blockchain {
                     for update in updates {
                         for (key, value) in update {
                             keys.push(key);
-                            values.push(value);
+                            values.push(value);                            
                         }
                     }
                 }
