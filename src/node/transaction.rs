@@ -169,7 +169,7 @@ impl Transaction {
     }
 
     fn verify_state(&self, from_account_state: &AccountState) -> bool {
-        let is_valid_tx = match self.data.function_call_type {
+        return match self.data.function_call_type {
             FunctionCallType::Transfer => Transfer::verify_state(&self, from_account_state),
             FunctionCallType::RideRequest => RideRequest::verify_state(&self, from_account_state),
             FunctionCallType::RideOffer => {
@@ -195,7 +195,6 @@ impl Transaction {
             }
             _ => false, // Add more types as needed
         };
-        true
     }
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
