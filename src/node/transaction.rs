@@ -171,10 +171,7 @@ impl Transaction {
     fn verify_state(&self, from_account_state: &AccountState) -> bool {
         let is_valid_tx = match self.data.function_call_type {
             FunctionCallType::Transfer => Transfer::verify_state(&self, from_account_state),
-            FunctionCallType::RideRequest => {
-                // Validation logic for RideRequest
-                true
-            }
+            FunctionCallType::RideRequest => RideRequest::verify_state(&self, from_account_state),
             FunctionCallType::RideOffer => {
                 // Validation logic for RideOffer
                 true
@@ -203,18 +200,9 @@ impl Transaction {
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         match self.data.function_call_type {
-            FunctionCallType::Transfer => Transfer::state_transaction_transfer(&self, &db),
-            FunctionCallType::RideRequest => self.state_transaction_ride_request(db),
+            FunctionCallType::Transfer => Transfer::state_transaction(&self, &db),
+            FunctionCallType::RideRequest => RideRequest::state_transaction(&self, db),
             _ => vec![None],
         }
-    }
-
-    fn state_transaction_ride_request(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
-        let ride_request: RideRequest = serde_json::from_str(&self.data.arguments).unwrap();
-        let from = &self.from;
-        let ride_request_key = format!("ride_request_{}", from).into_bytes();
-        let ride_request_value = serde_json::to_string(&ride_request).unwrap().into_bytes();
-
-        vec![Some((ride_request_key, ride_request_value))]
     }
 }

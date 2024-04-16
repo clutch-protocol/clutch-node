@@ -1,7 +1,8 @@
 use crate::node::account_state::AccountState;
-use serde::{Deserialize, Serialize};
+use crate::node::transaction::Transaction;
+use crate::node::database::Database;
 
-use super::{database::Database, transaction::Transaction};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Transfer {
@@ -24,7 +25,7 @@ impl Transfer {
         true
     }
 
-    pub fn state_transaction_transfer(
+    pub fn state_transaction(
         transaction: &Transaction,
         db: &Database,
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
