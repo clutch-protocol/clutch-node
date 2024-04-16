@@ -6,6 +6,7 @@ use crate::node::ride_request::RideRequest;
 use crate::node::transfer::Transfer;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::fmt::format;
 use std::vec;
 
 const FROM_GENESIS: &str = "0xGENESIS";
@@ -249,6 +250,10 @@ impl Transaction {
 
     fn state_transaction_ride_request(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         let ride_request: RideRequest = serde_json::from_str(&self.data.arguments).unwrap();
-        vec![]
+        let from = &self.from;
+        let ride_request_key = format!("ride_request_{}", from).into_bytes();
+        let ride_request_value = serde_json::to_string(&ride_request).unwrap().into_bytes();
+
+        vec![Some((ride_request_key, ride_request_value))]
     }
 }
