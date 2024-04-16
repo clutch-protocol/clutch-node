@@ -239,6 +239,10 @@ impl Transaction {
                     Some((to_key, to_serialized_balance)),
                 ]
             }
+            FunctionCallType::RideRequest => {
+
+                vec![]
+            }
             _ => vec![None],
         }
     }
