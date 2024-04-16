@@ -16,6 +16,9 @@ fn test() {
     let block1 = transfer_block(1);
     blockchain.block_import(block1);
 
+    let block2= ride_request_block(2);
+    blockchain.block_import(block2);
+
     println!("Blockchain: {:#?}", blockchain);
     blockchain.cleanup_if_developer_mode();
 }

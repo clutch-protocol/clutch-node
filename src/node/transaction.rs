@@ -1,4 +1,4 @@
-use super::database::{Database};
+use super::database::Database;
 use super::signature_keys::{self, SignatureKeys};
 use crate::node::account_state::AccountState;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
@@ -140,7 +140,7 @@ impl Transaction {
             return false;
         }
 
-        if !self.verify_state(&from_account_state){            
+        if !self.verify_state(&from_account_state) {
             return false;
         }
 
@@ -215,11 +215,12 @@ impl Transaction {
         match self.data.function_call_type {
             FunctionCallType::Transfer => {
                 let transfer: Transfer = serde_json::from_str(&self.data.arguments).unwrap();
-                let value = transfer.value;                
+                let value = transfer.value;
 
                 let from = &self.from;
                 let mut from_account_state = AccountState::get_current_state(&from, &db);
                 from_account_state.balance = from_account_state.balance - value;
+                from_account_state.nonce = from_account_state.nonce + 1;
                 let from_key = format!("account_state_{}", from).into_bytes();
                 let from_serialized_balance = serde_json::to_string(&from_account_state)
                     .unwrap()
