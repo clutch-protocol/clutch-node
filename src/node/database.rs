@@ -1,5 +1,5 @@
 use rocksdb::{
-    ColumnFamilyDescriptor, DBWithThreadMode,, Options, SingleThreaded, WriteBatch, DB,
+    ColumnFamilyDescriptor, DBWithThreadMode, IteratorMode, Options, SingleThreaded, WriteBatch, DB,
 };
 use std::env;
 
