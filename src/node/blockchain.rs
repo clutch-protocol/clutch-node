@@ -108,7 +108,7 @@ impl Blockchain {
         match self.db.write(operations) {
             Ok(_) => {
                 println!(
-                    "add_block_to_chain successfully. block index:{}",
+                    "add_block_to_chain successfully. block index: {}",
                     block.index
                 );
 
