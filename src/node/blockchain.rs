@@ -13,7 +13,7 @@ impl Blockchain {
         let db = Database::new_db(&name);
         let mut blockchain = Blockchain {
             name: name,
-            db: db,          
+            db: db,
             developer_mode: developer_mode,
         };
 
@@ -32,9 +32,9 @@ impl Blockchain {
         }
     }
 
-    pub fn cleanup_if_developer_mode(&mut self) {       
+    pub fn cleanup_if_developer_mode(&mut self) {
         if self.developer_mode {
-            self.db.close();            
+            self.db.close();
             match self.db.delete_database(self.name.as_str()) {
                 Ok(_) => println!("Developer mode: Database cleaned up successfully."),
                 Err(e) => println!("Error cleaning up database: {}", e),
@@ -58,6 +58,10 @@ impl Blockchain {
         }
 
         self.add_block_to_chain(block);
+    }
+
+    pub fn get_blocks(&self) {
+        
     }
 
     fn genesis_block_import(&mut self) {
@@ -97,7 +101,7 @@ impl Blockchain {
                     for update in updates {
                         for (key, value) in update {
                             keys.push(key);
-                            values.push(value);                            
+                            values.push(value);
                         }
                     }
                 }
@@ -122,5 +126,4 @@ impl Blockchain {
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
         }
     }
-
 }
