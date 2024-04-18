@@ -86,7 +86,7 @@ impl Database {
             Some(db) => {
                 let cf_handle = db.cf_handle(cf_name).ok_or(format!("Column family '{}' not found", cf_name))?;
                 let mut keys = Vec::new();
-                let mut iter = db.prefix_iterator_cf(cf_handle, ""); // Using prefix_iterator_cf with empty prefix to get all keys
+                let iter = db.prefix_iterator_cf(cf_handle, ""); // Using prefix_iterator_cf with empty prefix to get all keys
                 
                 for item in iter {
                     match item {
