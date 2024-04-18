@@ -1,4 +1,6 @@
-use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, Options, SingleThreaded, WriteBatch, DB};
+use rocksdb::{
+    ColumnFamilyDescriptor, DBWithThreadMode, IteratorMode, Options, SingleThreaded, WriteBatch, DB,
+};
 use std::env;
 
 #[derive(Debug)]
@@ -43,7 +45,7 @@ impl Database {
         let mut batch = WriteBatch::default();
 
         for (key, value) in operations {
-            batch.put(key, value); 
+            batch.put(key, value);
         }
 
         match &self.db {
@@ -57,9 +59,52 @@ impl Database {
     }
 
     pub fn delete_database(&self, name: &str) -> Result<(), String> {
-        let db_path = Database::db_path(&name);   
-             
-        DB::destroy(&Options::default(), db_path).map_err(|e| e.to_string())?;
+        let db_path = Database::db_path(&name);
+
+        DB::destroy(&Options::default(), db_path).map_err(|e| e.to_string())?;        
         Ok(())
+    }
+
+    pub fn prefix_iterator(&self, prefix: &str) -> Result<Vec<String>, String> {
+        match &self.db {
+            Some(db) => {
+                let mut keys = Vec::new();
+                let byte_prefix = prefix.as_bytes();
+                let iter = db.prefix_iterator(byte_prefix);
+                for item in iter {
+                    match item {
+                        Ok((key, _value)) => {
+                            if let Ok(key_str) = String::from_utf8(key.to_vec()) {
+                                keys.push(key_str);
+                            }
+                        }
+                        Err(e) => return Err(e.to_string()), // Handling iterator errors
+                    }
+                }
+                Ok(keys)
+            }
+            None => Err("Database connection is closed".to_string()),
+        }
+    }
+
+    pub fn iterator(&self) -> Result<Vec<String>, String> {
+        match &self.db {
+            Some(db) => {
+                let mut keys = Vec::new();                
+                let iter = db.iterator(IteratorMode::End);
+                for item in iter {
+                    match item {
+                        Ok((key, _value)) => {
+                            if let Ok(key_str) = String::from_utf8(key.to_vec()) {
+                                keys.push(key_str);
+                            }
+                        }
+                        Err(e) => return Err(e.to_string()), // Handling iterator errors
+                    }
+                }
+                Ok(keys)
+            }
+            None => Err("Database connection is closed".to_string()),
+        }
     }
 }

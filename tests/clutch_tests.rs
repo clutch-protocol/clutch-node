@@ -30,6 +30,7 @@ fn test() {
         blockchain.name,
         blockchain.get_latest_block_index()
     );
+    blockchain.get_blocks();
     blockchain.cleanup_if_developer_mode();
 }
 

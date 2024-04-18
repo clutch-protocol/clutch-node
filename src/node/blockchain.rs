@@ -22,7 +22,7 @@ impl Blockchain {
     }
 
     pub fn get_latest_block_index(&self) -> usize {
-        match self.db.get(b"block_latest_block_index") {
+        match self.db.get(b"blockchain_latest_block_index") {
             Ok(Some(value)) => {
                 let index_str = String::from_utf8(value).unwrap();
                 index_str.parse::<usize>().unwrap()
@@ -61,7 +61,14 @@ impl Blockchain {
     }
 
     pub fn get_blocks(&self) {
-        
+        let prefix = "blocks";
+        let keys = &self.db.iterator();
+        match keys {
+            Ok(values) => for value in values {
+                println!("key: {}",value)
+            },
+            Err(_) => todo!(),
+        }
     }
 
     fn genesis_block_import(&mut self) {
