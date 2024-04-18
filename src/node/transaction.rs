@@ -5,6 +5,7 @@ use crate::node::account_state::AccountState;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
 use crate::node::ride_request::RideRequest;
 use crate::node::transfer::Transfer;
+use serde::de::value;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fmt::format;
@@ -133,13 +134,7 @@ impl Transaction {
             return false;
         }
 
-        let from_account_state = AccountState::get_current_state(&self.from, &db);
-
-        if !self.verify_nonce(from_account_state.nonce) {
-            println!(
-                "Verification failed: Incorrect nonce for transaction from '{}'. Expected: {}, got: {}.",
-                self.from, from_account_state.nonce + 1, self.nonce
-            );
+        if !self.verify_nonce(&db) {
             return false;
         }
 
@@ -160,9 +155,15 @@ impl Transaction {
         SignatureKeys::verify(from_public_key, data, r, s, v)
     }
 
-    fn verify_nonce(&self, last_nonce: u64) -> bool {
+    fn verify_nonce(&self, db: &Database) -> bool {
+        let last_nonce = AccountState::get_current_nonce(&self.from, &db);
+
         let nonce = self.nonce;
         if nonce != last_nonce + 1 {
+            println!(
+                "Verification failed: Incorrect nonce for transaction from '{}'. Expected: {}, got: {}.",
+                self.from, last_nonce + 1, self.nonce
+            );
             return false;
         }
 
@@ -173,20 +174,24 @@ impl Transaction {
         return match self.data.function_call_type {
             FunctionCallType::Transfer => Transfer::verify_state(&self, db),
             FunctionCallType::RideRequest => RideRequest::verify_state(&self, db),
-            FunctionCallType::RideOffer => RideOffer::verify_state(&self, db),            
-            _ => true, 
+            FunctionCallType::RideOffer => RideOffer::verify_state(&self, db),
+            _ => true,
         };
     }
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
-        // let mut from_account_state = AccountState::get_current_state(&from, &db);
-        // from_account_state.nonce = from_account_state.nonce + 1;
-        
-        match self.data.function_call_type {
+        let states = match self.data.function_call_type {
             FunctionCallType::Transfer => Transfer::state_transaction(&self, &db),
             FunctionCallType::RideRequest => RideRequest::state_transaction(&self, db),
             FunctionCallType::RideOffer => RideOffer::state_transaction(&self, db),
             _ => vec![None],
-        }
+        };
+
+        let (nonce_key, nonce_serialized) =
+            AccountState::increase_account_nonce_key(&self.from, db);
+
+        let mut results = states;
+        results.push(Some((nonce_key, nonce_serialized)));
+        results
     }
 }

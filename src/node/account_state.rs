@@ -5,15 +5,13 @@ use serde::{Deserialize, Serialize};
 pub struct AccountState {
     pub public_key: String,
     pub balance: f64,
-    pub nonce: u64,
 }
 
 impl AccountState {
     fn new_account_state(public_key: &String) -> AccountState {
         AccountState {
             public_key: public_key.to_string(),
-            balance: 0.0,
-            nonce: 0,
+            balance: 0.0,            
         }
     }
 
@@ -42,5 +40,24 @@ impl AccountState {
             .unwrap()
             .into_bytes();
         (from_key, from_serialized_balance)
+    }
+
+    pub fn get_current_nonce(public_key: &String, db: &Database) -> u64 {
+        let key = format!("account_nonce_{}", public_key).into_bytes();
+        match db.get(&key) {
+            Ok(Some(value)) => {
+                let bytes_array: [u8; 8] = value.try_into().expect("Slice with incorrect length");
+                u64::from_be_bytes(bytes_array)
+            }
+            Ok(None) => 0, // No value found, returning default nonce
+            Err(_) => todo!(),
+        }
+    }
+
+    pub fn increase_account_nonce_key(public_key: &String, db: &Database) -> (Vec<u8>, Vec<u8>) {
+        let nonce = AccountState::get_current_nonce(public_key, db) + 1;
+        let account_nonce_key = format!("account_nonce_{}", public_key).into_bytes();
+        let account_nonce_serlized = nonce.to_be_bytes().to_vec();
+        (account_nonce_key, account_nonce_serlized)
     }
 }
