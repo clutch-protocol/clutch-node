@@ -5,7 +5,6 @@ use crate::node::database::Database;
 pub struct Blockchain {
     pub name: String,
     db: Database,
-    latest_block_index: usize,
     developer_mode: bool,
 }
 
@@ -14,13 +13,11 @@ impl Blockchain {
         let db = Database::new_db(&name);
         let mut blockchain = Blockchain {
             name: name,
-            db: db,
-            latest_block_index: 0,
+            db: db,          
             developer_mode: developer_mode,
         };
 
         blockchain.genesis_block_import();
-        blockchain.latest_block_index = Blockchain::get_latest_block_index(&blockchain);
         blockchain
     }
 
@@ -121,8 +118,6 @@ impl Blockchain {
                     "add_block_to_chain successfully. block index: {}",
                     block.index
                 );
-
-                self.latest_block_index = block.index;
             }
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
         }

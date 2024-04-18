@@ -25,7 +25,11 @@ fn test() {
     let block_3 = ride_offer_block(3);
     blockchain.block_import(block_3);
 
-    println!("Blockchain: {:#?}", blockchain);
+    println!(
+        "Blockchain name: {:#?}, latest block index: {}",
+        blockchain.name,
+        blockchain.get_latest_block_index()
+    );
     blockchain.cleanup_if_developer_mode();
 }
 
