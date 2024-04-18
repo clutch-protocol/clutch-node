@@ -29,4 +29,18 @@ impl AccountState {
             Err(_) => todo!(),
         }
     }
+
+    pub fn update_account_state_key(
+        public_key: &String,
+        balance_increment: f64,
+        db: &Database,
+    ) -> (Vec<u8>, Vec<u8>) {
+        let mut from_account_state = AccountState::get_current_state(&public_key, &db);
+        from_account_state.balance += balance_increment;
+        let from_key = format!("account_state_{}", public_key).into_bytes();
+        let from_serialized_balance = serde_json::to_string(&from_account_state)
+            .unwrap()
+            .into_bytes();
+        (from_key, from_serialized_balance)
+    }
 }

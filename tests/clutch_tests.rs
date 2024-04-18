@@ -1,5 +1,8 @@
+use std::vec;
+
 use clutch_node::node::blockchain::Blockchain;
 use clutch_node::node::function_call::FunctionCallType;
+use clutch_node::node::ride_offer::RideOffer;
 use clutch_node::node::{block::Block, *};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
@@ -13,11 +16,14 @@ const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
 fn test() {
     let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
 
-    let block1 = transfer_block(1);
-    blockchain.block_import(block1);
+    let block_1 = transfer_block(1);
+    blockchain.block_import(block_1);
 
-    let block2= ride_request_block(2);
-    blockchain.block_import(block2);
+    // let block_2 = ride_request_block(2);
+    // blockchain.block_import(block_2);
+
+    // let block_3 = ride_offer_block(3);
+    // blockchain.block_import(block_3);
 
     println!("Blockchain: {:#?}", blockchain);
     blockchain.cleanup_if_developer_mode();
@@ -36,8 +42,8 @@ fn transfer_block(index: usize) -> Block {
         FROM_SECRET_KEY.to_string(),
         transfer,
     );
-    let transfer_request_block = Block::new_block(index, vec![transfer_request_transcation]);
-    transfer_request_block
+
+    Block::new_block(index, vec![transfer_request_transcation])
 }
 
 fn ride_request_block(index: usize) -> Block {
@@ -59,6 +65,23 @@ fn ride_request_block(index: usize) -> Block {
         FROM_SECRET_KEY.to_string(),
         ride_request,
     );
-    let ride_request_block = Block::new_block(index, vec![ride_request_transcation]);
-    ride_request_block
+
+    Block::new_block(index, vec![ride_request_transcation])
+}
+
+fn ride_offer_block(index: usize) -> Block {
+    let ride_offer = ride_offer::RideOffer {
+        fare: 1000,
+        ride_request_transaction_hash: String::new(),
+    };
+
+    let ride_offer_transaction = transaction::Transaction::new_transaction(
+        FROM_ADDRESS_KEY.to_string(),
+        3,
+        FunctionCallType::RideOffer,
+        FROM_SECRET_KEY.to_string(),
+        ride_offer,
+    );
+
+    Block::new_block(index, vec![ride_offer_transaction])
 }

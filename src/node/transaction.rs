@@ -1,4 +1,5 @@
 use super::database::Database;
+use super::ride_offer::RideOffer;
 use super::signature_keys::{self, SignatureKeys};
 use crate::node::account_state::AccountState;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
@@ -142,7 +143,7 @@ impl Transaction {
             return false;
         }
 
-        if !self.verify_state(&from_account_state) {
+        if !self.verify_state(&db) {
             return false;
         }
 
@@ -168,39 +169,23 @@ impl Transaction {
         true
     }
 
-    fn verify_state(&self, from_account_state: &AccountState) -> bool {
+    fn verify_state(&self, db: &Database) -> bool {
         return match self.data.function_call_type {
-            FunctionCallType::Transfer => Transfer::verify_state(&self, from_account_state),
-            FunctionCallType::RideRequest => RideRequest::verify_state(&self, from_account_state),
-            FunctionCallType::RideOffer => {
-                // Validation logic for RideOffer
-                true
-            }
-            FunctionCallType::RideAcceptance => {
-                // Validation logic for RideAcceptance
-                true
-            }
-            FunctionCallType::ConfirmArrival => {
-                // Validation logic for ConfirmArrival
-                true
-            }
-            FunctionCallType::ComplainArrival => {
-                // Validation logic for ComplainArrival
-                true
-            }
-            FunctionCallType::RidePayment => {
-                // Validation logic for RidePayment
-                // This might include checking the ride status, confirming the fare, etc.
-                true
-            }
-            _ => false, // Add more types as needed
+            FunctionCallType::Transfer => Transfer::verify_state(&self, db),
+            FunctionCallType::RideRequest => RideRequest::verify_state(&self, db),
+            FunctionCallType::RideOffer => RideOffer::verify_state(&self, db),            
+            _ => true, 
         };
     }
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
+        // let mut from_account_state = AccountState::get_current_state(&from, &db);
+        // from_account_state.nonce = from_account_state.nonce + 1;
+        
         match self.data.function_call_type {
             FunctionCallType::Transfer => Transfer::state_transaction(&self, &db),
             FunctionCallType::RideRequest => RideRequest::state_transaction(&self, db),
+            FunctionCallType::RideOffer => RideOffer::state_transaction(&self, db),
             _ => vec![None],
         }
     }

@@ -1,4 +1,3 @@
-use crate::node::account_state::AccountState;
 use crate::node::coordinate::Coordinates;
 use crate::node::database::Database;
 use crate::node::transaction::Transaction;
@@ -12,7 +11,7 @@ pub struct RideRequest {
 }
 
 impl RideRequest {
-    pub fn verify_state(transaction: &Transaction, from_account_state: &AccountState) -> bool {
+    pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
         true
     }
 
