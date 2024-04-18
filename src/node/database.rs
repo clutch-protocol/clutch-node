@@ -66,6 +66,7 @@ impl Database {
     }
 
     pub fn prefix_iterator(&self, prefix: &str) -> Result<Vec<String>, String> {
+        println!("prefix: {}",prefix);
         match &self.db {
             Some(db) => {
                 let mut keys = Vec::new();

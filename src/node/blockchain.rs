@@ -61,8 +61,8 @@ impl Blockchain {
     }
 
     pub fn get_blocks(&self) {
-        let prefix = "blocks";
-        let keys = &self.db.iterator();
+        let prefix = "block_";
+        let keys = &self.db.prefix_iterator(prefix);
         match keys {
             Ok(values) => for value in values {
                 println!("key: {}",value)
