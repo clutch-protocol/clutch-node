@@ -22,7 +22,7 @@ impl Blockchain {
     }
 
     pub fn get_latest_block_index(&self) -> usize {
-        match self.db.get(b"blockchain_latest_block_index") {
+        match self.db.get("block", b"blockchain_latest_block_index") {
             Ok(Some(value)) => {
                 let index_str = String::from_utf8(value).unwrap();
                 index_str.parse::<usize>().unwrap()
@@ -62,17 +62,17 @@ impl Blockchain {
 
     pub fn get_blocks(&self) {
         let prefix = "block_";
-        let keys = &self.db.prefix_iterator(prefix);
-        match keys {
-            Ok(values) => for value in values {
-                println!("key: {}",value)
-            },
-            Err(_) => todo!(),
-        }
+        // let keys = &self.db.prefix_iterator(prefix);
+        // match keys {
+        //     Ok(values) => for value in values {
+        //         println!("key: {}",value)
+        //     },
+        //     Err(_) => todo!(),
+        // }
     }
 
     fn genesis_block_import(&mut self) {
-        match self.db.get(b"block_0") {
+        match self.db.get("block", b"block_0") {
             Ok(Some(_)) => {
                 println!("Genesis block already exists.");
             }
@@ -86,50 +86,53 @@ impl Blockchain {
     }
 
     fn add_block_to_chain(&mut self, block: Block) {
-        let mut keys: Vec<Vec<u8>> = Vec::new();
-        let mut values: Vec<Vec<u8>> = Vec::new();
+        // Storage for keys and values
+        let mut cf_storage: Vec<String> = Vec::new();
+        let mut keys_storage: Vec<Vec<u8>> = Vec::new();
+        let mut values_storage: Vec<Vec<u8>> = Vec::new();
 
-        //State block
-        match block.state_block() {
-            Some((block_keys, block_values)) => {
-                keys.extend(block_keys);
-                values.extend(block_values);
-            }
-            None => {
-                println!("Failed to serialize block for storage.");
-                return;
-            }
-        };
+        let mut operations: Vec<(&str, &[u8], &[u8])> = Vec::new();
 
-        //State transactions
+        // Handle block state
+        if let Some((block_keys, block_values)) = block.state_block() {
+            for (key, value) in block_keys.into_iter().zip(block_values.into_iter()) {
+                cf_storage.push("block".to_string());
+                keys_storage.push(key);
+                values_storage.push(value);
+            }
+        } else {
+            println!("Failed to serialize block for storage.");
+            return;
+        }
+
+        // Handle state transactions
         for tx in block.transactions.iter() {
-            match tx.state_transaction(&self.db) {
-                updates => {
-                    for update in updates {
-                        for (key, value) in update {
-                            keys.push(key);
-                            values.push(value);
-                        }
-                    }
+            let updates = tx.state_transaction(&self.db); // This returns Vec<Option<(Vec<u8>, Vec<u8>)>>
+
+            for update in updates {
+                if let Some((key, value)) = update {
+                    cf_storage.push("state".to_string());
+                    keys_storage.push(key);
+                    values_storage.push(value);
                 }
-                _ => println!("Error processing transaction states"),
             }
         }
 
-        //Map operations
-        let mut operations: Vec<(&[u8], &[u8])> = Vec::new();
-        for (key, value) in keys.iter().zip(values.iter()) {
-            operations.push((key, value));
+        // Prepare operations for database write
+        for (key, cf_name) in keys_storage
+            .iter()
+            .zip(values_storage.iter())
+            .zip(cf_storage.iter())
+        {
+            operations.push((cf_name, key.0, key.1));
         }
 
-        //Update Database
+        // Update the database
         match self.db.write(operations) {
-            Ok(_) => {
-                println!(
-                    "add_block_to_chain successfully. block index: {}",
-                    block.index
-                );
-            }
+            Ok(_) => println!(
+                "add_block_to_chain successfully. block index: {}",
+                block.index
+            ),
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
         }
     }

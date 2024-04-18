@@ -11,13 +11,13 @@ impl AccountState {
     fn new_account_state(public_key: &String) -> AccountState {
         AccountState {
             public_key: public_key.to_string(),
-            balance: 0.0,            
+            balance: 0.0,
         }
     }
 
     pub fn get_current_state(public_key: &String, db: &Database) -> AccountState {
         let key = format!("account_state_{}", public_key).into_bytes();
-        match db.get(&key) {
+        match db.get("state", &key) {
             Ok(Some(value)) => {
                 let account_state_str = String::from_utf8(value).unwrap();
                 let account_state: AccountState = serde_json::from_str(&account_state_str).unwrap();
@@ -44,7 +44,7 @@ impl AccountState {
 
     pub fn get_current_nonce(public_key: &String, db: &Database) -> u64 {
         let key = format!("account_nonce_{}", public_key).into_bytes();
-        match db.get(&key) {
+        match db.get("state", &key) {
             Ok(Some(value)) => {
                 let bytes_array: [u8; 8] = value.try_into().expect("Slice with incorrect length");
                 u64::from_be_bytes(bytes_array)

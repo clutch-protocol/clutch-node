@@ -23,33 +23,48 @@ impl Database {
         options.create_if_missing(true);
         options.create_missing_column_families(true);
 
-        let db =
-            DB::open_default(&db_path).expect("Failed to open database with default column family");
+        let mut cf_descriptors = vec![
+            ColumnFamilyDescriptor::new("block", Options::default()),
+            ColumnFamilyDescriptor::new("state", Options::default()),
+        ];
+
+        let db = DBWithThreadMode::<SingleThreaded>::open_cf_descriptors(&options, &db_path, cf_descriptors)
+            .expect("Failed to open database with specified column families");
 
         Database { db: Some(db) }
     }
-    pub fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, String> {
+
+    pub fn get(&self, cf_name: &str, key: &[u8]) -> Result<Option<Vec<u8>>, String> {
         match &self.db {
-            Some(db) => db.get(key).map_err(|e| e.to_string()),
-            None => Err("Database connection is closed".to_string()),
-        }
-    }
-    pub fn put(&self, key: &[u8], value: &[u8]) -> Result<(), String> {
-        match &self.db {
-            Some(db) => db.put(key, value).map_err(|e| e.to_string()),
+            Some(db) => {
+                let cf_handle = db.cf_handle(cf_name).ok_or("Column family not found")?;
+                db.get_cf(cf_handle, key).map_err(|e| e.to_string())
+            },
             None => Err("Database connection is closed".to_string()),
         }
     }
 
-    pub fn write(&self, operations: Vec<(&[u8], &[u8])>) -> Result<(), String> {
+    pub fn put(&self, cf_name: &str, key: &[u8], value: &[u8]) -> Result<(), String> {
+        match &self.db {
+            Some(db) => {
+                let cf_handle = db.cf_handle(cf_name).ok_or("Column family not found")?;
+                db.put_cf(cf_handle, key, value).map_err(|e| e.to_string())
+            },
+            None => Err("Database connection is closed".to_string()),
+        }
+    }
+
+    pub fn write(&self, operations: Vec<(&str, &[u8], &[u8])>) -> Result<(), String> {
         let mut batch = WriteBatch::default();
-
-        for (key, value) in operations {
-            batch.put(key, value);
-        }
-
+    
         match &self.db {
-            Some(db) => db.write(batch).map_err(|e| e.to_string()),
+            Some(db) => {
+                for (cf_name, key, value) in operations {
+                    let cf_handle = db.cf_handle(cf_name).ok_or(format!("Column family {} not found", cf_name))?;
+                    batch.put_cf(cf_handle, key, value);
+                }
+                db.write(batch).map_err(|e| e.to_string())
+            },
             None => Err("Database connection is closed".to_string()),
         }
     }
@@ -61,7 +76,7 @@ impl Database {
     pub fn delete_database(&self, name: &str) -> Result<(), String> {
         let db_path = Database::db_path(&name);
 
-        DB::destroy(&Options::default(), db_path).map_err(|e| e.to_string())?;        
+        DB::destroy(&Options::default(), db_path).map_err(|e| e.to_string())?;
         Ok(())
     }
 }
