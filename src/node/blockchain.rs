@@ -63,10 +63,13 @@ impl Blockchain {
     }
 
     pub fn get_blocks(&self) {
-        match self.db.get_keys_by_cf_name("block") {
-            Ok(keys) => {
-                for key in keys {
-                    println!("{:?}", String::from_utf8(key.to_vec()).unwrap());
+        match self.db.get_keys_values_by_cf_name("block") {
+            Ok(entries) => {
+                for (key, value) in entries  {
+                    let key_str = String::from_utf8(key).unwrap_or_else(|_| "Invalid UTF-8".to_string());
+                    let value_str = String::from_utf8(value).unwrap_or_else(|_| "Invalid UTF-8".to_string());
+
+                    println!("Key: {}, Value: {}", key_str, value_str);
                 }
             }
             Err(_) => todo!(),

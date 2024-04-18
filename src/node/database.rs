@@ -29,8 +29,12 @@ impl Database {
             ColumnFamilyDescriptor::new("blockchain", Options::default()),
         ];
 
-        let db = DBWithThreadMode::<SingleThreaded>::open_cf_descriptors(&options, &db_path, cf_descriptors)
-            .expect("Failed to open database with specified column families");
+        let db = DBWithThreadMode::<SingleThreaded>::open_cf_descriptors(
+            &options,
+            &db_path,
+            cf_descriptors,
+        )
+        .expect("Failed to open database with specified column families");
 
         Database { db: Some(db) }
     }
@@ -40,7 +44,7 @@ impl Database {
             Some(db) => {
                 let cf_handle = db.cf_handle(cf_name).ok_or("Column family not found")?;
                 db.get_cf(cf_handle, key).map_err(|e| e.to_string())
-            },
+            }
             None => Err("Database connection is closed".to_string()),
         }
     }
@@ -50,22 +54,24 @@ impl Database {
             Some(db) => {
                 let cf_handle = db.cf_handle(cf_name).ok_or("Column family not found")?;
                 db.put_cf(cf_handle, key, value).map_err(|e| e.to_string())
-            },
+            }
             None => Err("Database connection is closed".to_string()),
         }
     }
 
     pub fn write(&self, operations: Vec<(&str, &[u8], &[u8])>) -> Result<(), String> {
         let mut batch = WriteBatch::default();
-    
+
         match &self.db {
             Some(db) => {
                 for (cf_name, key, value) in operations {
-                    let cf_handle = db.cf_handle(cf_name).ok_or(format!("Column family {} not found", cf_name))?;
+                    let cf_handle = db
+                        .cf_handle(cf_name)
+                        .ok_or(format!("Column family {} not found", cf_name))?;
                     batch.put_cf(cf_handle, key, value);
                 }
                 db.write(batch).map_err(|e| e.to_string())
-            },
+            }
             None => Err("Database connection is closed".to_string()),
         }
     }
@@ -84,10 +90,12 @@ impl Database {
     pub fn get_keys_by_cf_name(&self, cf_name: &str) -> Result<Vec<Vec<u8>>, String> {
         match &self.db {
             Some(db) => {
-                let cf_handle = db.cf_handle(cf_name).ok_or(format!("Column family '{}' not found", cf_name))?;
+                let cf_handle = db
+                    .cf_handle(cf_name)
+                    .ok_or(format!("Column family '{}' not found", cf_name))?;
                 let mut keys = Vec::new();
                 let iter = db.prefix_iterator_cf(cf_handle, ""); // Using prefix_iterator_cf with empty prefix to get all keys
-                
+
                 for item in iter {
                     match item {
                         Ok((key, _)) => keys.push(key.to_vec()), // Collect keys, ignore values
@@ -95,7 +103,31 @@ impl Database {
                     }
                 }
                 Ok(keys)
-            },
+            }
+            None => Err("Database connection is closed".to_string()),
+        }
+    }
+
+    pub fn get_keys_values_by_cf_name(
+        &self,
+        cf_name: &str,
+    ) -> Result<Vec<(Vec<u8>, Vec<u8>)>, String> {
+        match &self.db {
+            Some(db) => {
+                let cf_handle = db
+                    .cf_handle(cf_name)
+                    .ok_or(format!("Column family '{}' not found", cf_name))?;
+                let mut entries = Vec::new();
+                let iter = db.prefix_iterator_cf(cf_handle, ""); // Using prefix_iterator_cf with empty prefix to get all entries
+
+                for item in iter {
+                    match item {
+                        Ok((key, value)) => entries.push((key.to_vec(), value.to_vec())), // Collect keys and values
+                        Err(e) => return Err(e.to_string()),
+                    }
+                }
+                Ok(entries)
+            }
             None => Err("Database connection is closed".to_string()),
         }
     }
