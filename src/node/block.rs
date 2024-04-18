@@ -78,9 +78,16 @@ impl Block {
         let block_key = format!("block_{}", self.index).into_bytes();
         let block_value = serde_json::to_string(self).unwrap().into_bytes();
         keys.push(block_key);
-        values.push(block_value);
+        values.push(block_value);      
 
-        // Save the latest block index to the database
+        Some((keys,values))
+    }
+
+    pub fn state_blockchain(&self) -> Option<(Vec<Vec<u8>>,Vec<Vec<u8>>)>{        
+        let mut keys: Vec<Vec<u8>> = Vec::new();
+        let mut values: Vec<Vec<u8>> = Vec::new();
+       
+        // Save the latest block index to the blockchain
         let latest_index_key = b"blockchain_latest_block_index";
         let latest_index_value = self.index.to_string().into_bytes();
 
@@ -89,4 +96,5 @@ impl Block {
 
         Some((keys,values))
     }
+
 }

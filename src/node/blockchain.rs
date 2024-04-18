@@ -1,3 +1,5 @@
+use sha3::digest::crypto_common::Key;
+
 use crate::node::block::Block;
 use crate::node::database::Database;
 
@@ -22,7 +24,7 @@ impl Blockchain {
     }
 
     pub fn get_latest_block_index(&self) -> usize {
-        match self.db.get("block", b"blockchain_latest_block_index") {
+        match self.db.get("blockchain", b"blockchain_latest_block_index") {
             Ok(Some(value)) => {
                 let index_str = String::from_utf8(value).unwrap();
                 index_str.parse::<usize>().unwrap()
@@ -61,14 +63,14 @@ impl Blockchain {
     }
 
     pub fn get_blocks(&self) {
-        let prefix = "block_";
-        // let keys = &self.db.prefix_iterator(prefix);
-        // match keys {
-        //     Ok(values) => for value in values {
-        //         println!("key: {}",value)
-        //     },
-        //     Err(_) => todo!(),
-        // }
+        match self.db.get_keys_by_cf_name("block") {
+            Ok(keys) => {
+                for key in keys {
+                    println!("{:?}", String::from_utf8(key.to_vec()).unwrap());
+                }
+            }
+            Err(_) => todo!(),
+        }
     }
 
     fn genesis_block_import(&mut self) {
@@ -97,6 +99,18 @@ impl Blockchain {
         if let Some((block_keys, block_values)) = block.state_block() {
             for (key, value) in block_keys.into_iter().zip(block_values.into_iter()) {
                 cf_storage.push("block".to_string());
+                keys_storage.push(key);
+                values_storage.push(value);
+            }
+        } else {
+            println!("Failed to serialize block for storage.");
+            return;
+        }
+
+        // Handle Blockchain state
+        if let Some((block_keys, block_values)) = block.state_blockchain() {
+            for (key, value) in block_keys.into_iter().zip(block_values.into_iter()) {
+                cf_storage.push("blockchain".to_string());
                 keys_storage.push(key);
                 values_storage.push(value);
             }
