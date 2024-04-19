@@ -17,21 +17,36 @@ fn test() {
     let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
 
     let block_1 = transfer_block(1);
-    blockchain.block_import(block_1);
+    blockchain.block_import(&block_1);
 
     let block_2 = ride_request_block(2);
-    blockchain.block_import(block_2);
+    blockchain.block_import(&block_2);
 
     let block_3 = ride_offer_block(3);
-    blockchain.block_import(block_3);
+    blockchain.block_import(&block_3);
 
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
         blockchain.name,
-        blockchain.get_latest_block_index()
+        blockchain.get_latest_block_index(),
     );
-    blockchain.get_blocks();
+
+    print_blocks(&blockchain);
+
     blockchain.cleanup_if_developer_mode();
+}
+
+fn print_blocks(blockchain: &Blockchain) {    
+    match blockchain.get_blocks() {
+        Ok(blocks) => {
+            for block in blocks {
+                print!("{:?}", block);
+            }
+        }
+        Err(e) => {            
+            println!("Failed to retrieve blocks: {}", e);
+        }
+    }
 }
 
 fn transfer_block(index: usize) -> Block {

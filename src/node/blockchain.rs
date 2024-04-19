@@ -44,7 +44,7 @@ impl Blockchain {
         }
     }
 
-    pub fn block_import(&mut self, block: Block) {
+    pub fn block_import(&mut self, block: &Block) {
         let is_valid_block = block.validate_block(self);
         if !is_valid_block {
             println!("Block is invalid and will not be added.");
@@ -62,17 +62,26 @@ impl Blockchain {
         self.add_block_to_chain(block);
     }
 
-    pub fn get_blocks(&self) {
+    pub fn get_blocks(&self) -> Result<Vec<Block>, String> {
         match self.db.get_keys_values_by_cf_name("block") {
             Ok(entries) => {
-                for (key, value) in entries  {
-                    let key_str = String::from_utf8(key).unwrap_or_else(|_| "Invalid UTF-8".to_string());
-                    let value_str = String::from_utf8(value).unwrap_or_else(|_| "Invalid UTF-8".to_string());
+                let mut blocks = Vec::new(); // Vector to store the blocks
 
-                    println!("Key: {}, Value: {}", key_str, value_str);
+                for (key, value) in entries {
+                    match serde_json::from_slice::<Block>(&value) {
+                        Ok(block) => {
+                            blocks.push(block); // Add the deserialized block to the vector
+                        }
+                        Err(e) => {
+                            return Err(format!("Failed to deserialize block: {}", e));
+                            // Return an error if deserialization fails
+                        }
+                    }
                 }
+
+                Ok(blocks) // Return the vector of blocks
             }
-            Err(_) => todo!(),
+            Err(e) => Err(format!("Failed to retrieve blocks: {}", e)), // Return an error if the database access fails
         }
     }
 
@@ -84,13 +93,13 @@ impl Blockchain {
             Ok(None) => {
                 println!("Genesis block does not exist, creating new one...");
                 let genesis_block = Block::new_genesis_block();
-                self.add_block_to_chain(genesis_block);
+                self.add_block_to_chain(&genesis_block);
             }
             Err(e) => panic!("Failed to check for genesis block: {}", e),
         }
     }
 
-    fn add_block_to_chain(&mut self, block: Block) {
+    fn add_block_to_chain(&mut self, block: &Block) {
         // Storage for keys and values
         let mut cf_storage: Vec<String> = Vec::new();
         let mut keys_storage: Vec<Vec<u8>> = Vec::new();
