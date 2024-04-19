@@ -1,4 +1,7 @@
 use std::vec;
+use std::fs::File;
+use std::io::Write; // To use the write! macro for writing to a file
+use std::path::Path;
 
 use clutch_node::node::blockchain::Blockchain;
 use clutch_node::node::function_call::FunctionCallType;
@@ -22,8 +25,8 @@ fn test() {
     let block_2 = ride_request_block(2);
     blockchain.block_import(&block_2);
 
-    let block_3 = ride_offer_block(3);
-    blockchain.block_import(&block_3);
+    // let block_3 = ride_offer_block(3);
+    // blockchain.block_import(&block_3);
 
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
@@ -31,19 +34,40 @@ fn test() {
         blockchain.get_latest_block_index(),
     );
 
-    print_blocks(&blockchain);
+    save_blocks_to_file(&blockchain);
 
     blockchain.cleanup_if_developer_mode();
 }
 
-fn print_blocks(blockchain: &Blockchain) {    
+fn save_blocks_to_file(blockchain: &Blockchain) {
+    let path = Path::new("blcoks.json");
+    let mut file = match File::create(&path) {
+        Ok(file) => file,
+        Err(e) => {
+            println!("Failed to create file: {}", e);
+            return;
+        }
+    };
+
     match blockchain.get_blocks() {
         Ok(blocks) => {
             for block in blocks {
-                print!("{:?}", block);
+                match serde_json::to_string_pretty(&block) {
+                    Ok(json_str) => {
+                        if let Err(e) = writeln!(file, "{}", json_str) {
+                            println!("Failed to write to file: {}", e);
+                            return;
+                        }
+                    }
+                    Err(e) => {
+                        println!("Failed to serialize block: {}", e);
+                        return;
+                    }
+                }
             }
+            println!("Blocks have been successfully saved to '{}'.", path.display());
         }
-        Err(e) => {            
+        Err(e) => {
             println!("Failed to retrieve blocks: {}", e);
         }
     }
