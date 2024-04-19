@@ -16,7 +16,7 @@ const FROM_SECRET_KEY: &str = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df
 const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
 
 const RIDE_REQUEST_TX_HASH: &str =
-    "3efc5b9d75edabd04a1dec34d8befcae0c50cb5e37e526c8b6f9c40b9daad1e5";
+    "02724637e27d8aba2057605a6f6d10607b5921cee81ffc9980484fb5b555f183";
 
 #[test]
 fn test() {

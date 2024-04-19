@@ -132,7 +132,7 @@ impl Blockchain {
 
         // Handle state transactions
         for tx in block.transactions.iter() {
-            let updates = tx.state_transaction(&self.db); // This returns Vec<Option<(Vec<u8>, Vec<u8>)>>
+            let updates = tx.state_transaction(&self.db);
 
             for update in updates {
                 if let Some((key, value)) = update {
