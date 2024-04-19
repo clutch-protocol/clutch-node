@@ -39,4 +39,22 @@ impl RideOffer {
 
         vec![Some((ride_offer_key, ride_offer_value))]
     }
+
+    pub fn get_ride_offer(tx_hash: &str, db: &Database) -> Result<RideOffer, String> {
+        let key = format!("ride_offer_{}", tx_hash).into_bytes();
+        match db.get("state", &key) {
+            Ok(Some(value)) => {
+                let account_state_str = match String::from_utf8(value) {
+                    Ok(v) => v,
+                    Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
+                };
+                match serde_json::from_str(&account_state_str) {
+                    Ok(ride_offer) => Ok(ride_offer),
+                    Err(_) => Err("Failed to deserialize RideOffer".to_string()),
+                }
+            }
+            Ok(None) => Err("No ride offer found for the given transaction hash".to_string()),
+            Err(_) => Err("Database error occurred".to_string()),
+        }
+    }
 }
