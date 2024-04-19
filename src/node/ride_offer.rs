@@ -1,6 +1,8 @@
-use serde::{Deserialize, Serialize};
+use serde::{de::value, Deserialize, Serialize};
 
 use crate::node::{account_state::AccountState, database::Database, transaction::Transaction};
+
+use super::ride_request::{self, RideRequest};
 
 #[derive(Serialize, Deserialize)]
 pub struct RideOffer {
@@ -12,8 +14,18 @@ impl RideOffer {
     pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
-        
-        true
+        match RideRequest::get_ride_request(&ride_request_tx_hash, db) {
+            Ok(ride_request) => {
+                return true;
+            }
+            Err(_) => {
+                println!(
+                    "No ride request found for the given transaction hash: {}",
+                    ride_request_tx_hash
+                );
+                return false;
+            }
+        }
     }
 
     pub fn state_transaction(
