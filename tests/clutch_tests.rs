@@ -28,7 +28,7 @@ fn test() {
     let block_2 = ride_request_block(2);
     blockchain.block_import(&block_2);
 
-    let block_3 = ride_offer_block(3, RIDE_REQUEST_TX_HASH);
+    let block_3 = ride_offer_block(3);
     blockchain.block_import(&block_3);
 
     println!(
@@ -119,7 +119,7 @@ fn ride_request_block(index: usize) -> Block {
     Block::new_block(index, vec![ride_request_transcation])
 }
 
-fn ride_offer_block(index: usize, ride_request_tx_hash: &str) -> Block {
+fn ride_offer_block(index: usize) -> Block {
     let ride_offer = ride_offer::RideOffer {
         fare: 1000,
         ride_request_transaction_hash: RIDE_REQUEST_TX_HASH.to_string(),
