@@ -1,7 +1,7 @@
-use std::vec;
 use std::fs::File;
 use std::io::Write; // To use the write! macro for writing to a file
 use std::path::Path;
+use std::vec;
 
 use clutch_node::node::blockchain::Blockchain;
 use clutch_node::node::function_call::FunctionCallType;
@@ -15,6 +15,9 @@ const FROM_SECRET_KEY: &str = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df
 
 const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
 
+const RIDE_REQUEST_TX_HASH: &str =
+    "3efc5b9d75edabd04a1dec34d8befcae0c50cb5e37e526c8b6f9c40b9daad1e5";
+
 #[test]
 fn test() {
     let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
@@ -25,8 +28,8 @@ fn test() {
     let block_2 = ride_request_block(2);
     blockchain.block_import(&block_2);
 
-    // let block_3 = ride_offer_block(3);
-    // blockchain.block_import(&block_3);
+    let block_3 = ride_offer_block(3, RIDE_REQUEST_TX_HASH);
+    blockchain.block_import(&block_3);
 
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
@@ -65,7 +68,10 @@ fn save_blocks_to_file(blockchain: &Blockchain) {
                     }
                 }
             }
-            println!("Blocks have been successfully saved to '{}'.", path.display());
+            println!(
+                "Blocks have been successfully saved to '{}'.",
+                path.display()
+            );
         }
         Err(e) => {
             println!("Failed to retrieve blocks: {}", e);
@@ -113,10 +119,10 @@ fn ride_request_block(index: usize) -> Block {
     Block::new_block(index, vec![ride_request_transcation])
 }
 
-fn ride_offer_block(index: usize) -> Block {
+fn ride_offer_block(index: usize, ride_request_tx_hash: &str) -> Block {
     let ride_offer = ride_offer::RideOffer {
         fare: 1000,
-        ride_request_transaction_hash: String::new(),
+        ride_request_transaction_hash: RIDE_REQUEST_TX_HASH.to_string(),
     };
 
     let ride_offer_transaction = transaction::Transaction::new_transaction(
