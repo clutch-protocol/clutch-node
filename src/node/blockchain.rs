@@ -65,23 +65,22 @@ impl Blockchain {
     pub fn get_blocks(&self) -> Result<Vec<Block>, String> {
         match self.db.get_keys_values_by_cf_name("block") {
             Ok(entries) => {
-                let mut blocks = Vec::new(); // Vector to store the blocks
+                let mut blocks = Vec::new(); 
 
                 for (key, value) in entries {
                     match serde_json::from_slice::<Block>(&value) {
                         Ok(block) => {
-                            blocks.push(block); // Add the deserialized block to the vector
+                            blocks.push(block);
                         }
                         Err(e) => {
-                            return Err(format!("Failed to deserialize block: {}", e));
-                            // Return an error if deserialization fails
+                            return Err(format!("Failed to deserialize block: {}", e));                          
                         }
                     }
                 }
 
-                Ok(blocks) // Return the vector of blocks
+                Ok(blocks) 
             }
-            Err(e) => Err(format!("Failed to retrieve blocks: {}", e)), // Return an error if the database access fails
+            Err(e) => Err(format!("Failed to retrieve blocks: {}", e)), 
         }
     }
 
