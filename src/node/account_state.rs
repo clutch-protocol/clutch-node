@@ -8,7 +8,7 @@ pub struct AccountState {
 }
 
 impl AccountState {
-    fn new_account_state(public_key: &String) -> AccountState {
+    fn new_account_state(public_key: &str) -> AccountState {
         AccountState {
             public_key: public_key.to_string(),
             balance: 0.0,
@@ -16,7 +16,7 @@ impl AccountState {
     }
 
     pub fn get_current_state(public_key: &String, db: &Database) -> AccountState {
-        let key = format!("account_state_{}", public_key).into_bytes();
+        let key = Self::construct_account_state_key(public_key);
         match db.get("state", &key) {
             Ok(Some(value)) => {
                 let account_state_str = String::from_utf8(value).unwrap();
@@ -28,6 +28,10 @@ impl AccountState {
         }
     }
 
+    fn construct_account_state_key(public_key: &str) -> Vec<u8> {
+        format!("account_state_{}", public_key).into_bytes()
+    }
+
     pub fn update_account_state_key(
         public_key: &String,
         balance_increment: f64,
@@ -35,7 +39,7 @@ impl AccountState {
     ) -> (Vec<u8>, Vec<u8>) {
         let mut from_account_state = AccountState::get_current_state(&public_key, &db);
         from_account_state.balance += balance_increment;
-        let from_key = format!("account_state_{}", public_key).into_bytes();
+        let from_key = Self::construct_account_state_key(public_key);
         let from_serialized_balance = serde_json::to_string(&from_account_state)
             .unwrap()
             .into_bytes();
@@ -43,7 +47,7 @@ impl AccountState {
     }
 
     pub fn get_current_nonce(public_key: &String, db: &Database) -> u64 {
-        let key = format!("account_nonce_{}", public_key).into_bytes();
+        let key = Self::construct_account_nonce_key(public_key);
         match db.get("state", &key) {
             Ok(Some(value)) => {
                 let bytes_array: [u8; 8] = value.try_into().expect("Slice with incorrect length");
@@ -54,9 +58,13 @@ impl AccountState {
         }
     }
 
+    fn construct_account_nonce_key(public_key: &str) -> Vec<u8> {
+        format!("account_nonce_{}", public_key).into_bytes()
+    }
+
     pub fn increase_account_nonce_key(public_key: &String, db: &Database) -> (Vec<u8>, Vec<u8>) {
         let nonce = AccountState::get_current_nonce(public_key, db) + 1;
-        let account_nonce_key = format!("account_nonce_{}", public_key).into_bytes();
+        let account_nonce_key = Self::construct_account_nonce_key(public_key);
         let account_nonce_serlized = nonce.to_be_bytes().to_vec();
         (account_nonce_key, account_nonce_serlized)
     }
