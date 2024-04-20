@@ -34,9 +34,9 @@ impl RideAcceptance {
         let ride_acceptance: RideAcceptance =
             serde_json::from_str(&transaction.data.arguments).unwrap();
         let tx_hash = &transaction.hash;
-        let ride_offer_key = format!("ride_acceptance_{}", tx_hash).into_bytes();
-        let ride_offer_value = serde_json::to_string(&ride_acceptance).unwrap().into_bytes();
+        let ride_acceptance_key = format!("ride_acceptance_{}", tx_hash).into_bytes();
+        let ride_acceptance_value = serde_json::to_string(&ride_acceptance).unwrap().into_bytes();
 
-        vec![Some((ride_offer_key, ride_offer_value))]
+        vec![Some((ride_acceptance_key, ride_acceptance_value))]
     }
 }
