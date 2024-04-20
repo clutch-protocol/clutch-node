@@ -34,14 +34,14 @@ impl RideOffer {
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let tx_hash = &transaction.hash;
-        let ride_offer_key = format!("ride_offer_{}", tx_hash).into_bytes();
+        let ride_offer_key = Self::construct_ride_offer_key(tx_hash);
         let ride_offer_value = serde_json::to_string(&ride_offer).unwrap().into_bytes();
 
         vec![Some((ride_offer_key, ride_offer_value))]
     }
 
     pub fn get_ride_offer(tx_hash: &str, db: &Database) -> Result<RideOffer, String> {
-        let key = format!("ride_offer_{}", tx_hash).into_bytes();
+        let key = Self::construct_ride_offer_key(tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => {
                 let account_state_str = match String::from_utf8(value) {
@@ -56,5 +56,9 @@ impl RideOffer {
             Ok(None) => Err("No ride offer found for the given transaction hash".to_string()),
             Err(_) => Err("Database error occurred".to_string()),
         }
+    }
+
+    fn construct_ride_offer_key(tx_hash: &str) -> Vec<u8> {
+        format!("ride_offer_{}", tx_hash).into_bytes()
     }
 }
