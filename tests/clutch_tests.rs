@@ -15,8 +15,8 @@ const FROM_SECRET_KEY: &str = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df
 
 const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
 
-const RIDE_REQUEST_TX_HASH: &str =
-    "02724637e27d8aba2057605a6f6d10607b5921cee81ffc9980484fb5b555f183";
+const RIDE_REQUEST_TX_HASH: &str ="02724637e27d8aba2057605a6f6d10607b5921cee81ffc9980484fb5b555f183";
+const RIDE_OFFER_TX_HASH: &str = "658fc260635e3b24426af540c9951930f1f172a22ab60e8e9d326b4c61d2b84c";
 
 #[test]
 fn test() {
@@ -30,6 +30,9 @@ fn test() {
 
     let block_3 = ride_offer_block(3);
     blockchain.block_import(&block_3);
+
+    let block_4 = ride_acceptance_block(4);
+    blockchain.block_import(&block_4);
 
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
@@ -134,4 +137,20 @@ fn ride_offer_block(index: usize) -> Block {
     );
 
     Block::new_block(index, vec![ride_offer_transaction])
+}
+
+fn ride_acceptance_block(index: usize) -> Block {
+    let ride_acceptance = ride_acceptance::RideAcceptance {
+        ride_offer_transaction_hash: RIDE_OFFER_TX_HASH.to_string(),
+    };
+
+    let ride_acceptance_transaction = transaction::Transaction::new_transaction(
+        FROM_ADDRESS_KEY.to_string(),
+        4,
+        FunctionCallType::RideAcceptance,
+        FROM_SECRET_KEY.to_string(),
+        ride_acceptance,
+    );
+
+    Block::new_block(index, vec![ride_acceptance_transaction])
 }
