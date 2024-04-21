@@ -47,11 +47,25 @@ impl RideRequest {
         }
     }
 
+    pub fn get_ride(ride_request_tx_hash: &str, db: &Database) -> Result<Option<String>, String> {
+        let key = Self::construct_ride_request_acceptance_key(ride_request_tx_hash);
+        match db.get("state", &key) {
+            Ok(Some(value)) => {
+                match String::from_utf8(value) {
+                    Ok(v) => Ok(Some(v)),
+                    Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
+                }             
+            }
+            Ok(None) => Ok(None), // No data found.
+            Err(_) => Err("Database error occurred".to_string()),
+        }
+    }
+
     fn construct_ride_request_key(ride_request_tx_hash: &str) -> Vec<u8> {
         format!("ride_request_{}", ride_request_tx_hash).into_bytes()
     }
 
-    pub fn construct_ride_request_acceptance_key(ride_request_tx_hash: &str, ride_tx_hash: &str) -> Vec<u8> {
-        format!("ride_request_{}:ride:{}", ride_request_tx_hash, ride_tx_hash).into_bytes()
+    pub fn construct_ride_request_acceptance_key(ride_request_tx_hash: &str) -> Vec<u8> {
+        format!("ride_request_{}:ride:", ride_request_tx_hash).into_bytes()
     }
 }

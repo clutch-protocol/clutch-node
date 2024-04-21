@@ -15,8 +15,12 @@ impl RideOffer {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
         match RideRequest::get_ride_request(&ride_request_tx_hash, db) {
-            Ok(ride_request) => {
-                return true;
+            Ok(ride_request) => {                
+                match RideRequest::get_ride(&ride_request_tx_hash, &db) {
+                    Ok(None) => true,
+                    Ok(Some(ride_tx_hash)) => false,
+                    Err(_) => false,
+                }            
             }
             Err(_) => {
                 println!(

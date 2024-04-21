@@ -47,8 +47,7 @@ impl RideAcceptance {
             .into_bytes();
 
         let ride_request_acceptance_key = RideRequest::construct_ride_request_acceptance_key(
-            &ride_request_tx_hash,
-            &ride_tx_hash,
+            &ride_request_tx_hash            
         );
         let ride_request_acceptance_value =
             serde_json::to_string(&ride_tx_hash).unwrap().into_bytes();
