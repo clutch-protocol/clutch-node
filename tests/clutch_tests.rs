@@ -26,8 +26,10 @@ fn test() {
     blockchain.block_import(&transfer_block(1));
     blockchain.block_import(&ride_request_block(2));
     blockchain.block_import(&ride_offer_block(3, 3));
-    blockchain.block_import(&ride_acceptance_block(4));
-    // blockchain.block_import(&ride_offer_block(5, 5));    
+    blockchain.block_import(&ride_acceptance_block(4,4));
+
+    blockchain.block_import(&ride_acceptance_block(5,5)); //handle this 
+    // blockchain.block_import(&ride_offer_block(5, 5));
 
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
@@ -134,14 +136,14 @@ fn ride_offer_block(index: usize, nonce: u64) -> Block {
     Block::new_block(index, vec![ride_offer_transaction])
 }
 
-fn ride_acceptance_block(index: usize) -> Block {
+fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
     let ride_acceptance = ride_acceptance::RideAcceptance {
         ride_offer_transaction_hash: RIDE_OFFER_TX_HASH.to_string(),
     };
 
     let ride_acceptance_transaction = transaction::Transaction::new_transaction(
         FROM_ADDRESS_KEY.to_string(),
-        4,
+        nonce,
         FunctionCallType::RideAcceptance,
         FROM_SECRET_KEY.to_string(),
         ride_acceptance,
