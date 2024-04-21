@@ -29,8 +29,8 @@ impl RideRequest {
         vec![Some((ride_request_key, ride_request_value))]
     }
 
-    pub fn get_ride_request(tx_hash: &str, db: &Database) -> Result<RideRequest, String> {
-        let key = Self::construct_ride_request_key(tx_hash);
+    pub fn get_ride_request(ride_request_tx_hash: &str, db: &Database) -> Result<RideRequest, String> {
+        let key = Self::construct_ride_request_key(ride_request_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => {
                 let account_state_str = match String::from_utf8(value) {
@@ -47,8 +47,8 @@ impl RideRequest {
         }
     }
 
-    fn construct_ride_request_key(tx_hash: &str) -> Vec<u8> {
-        format!("ride_request_{}", tx_hash).into_bytes()
+    fn construct_ride_request_key(ride_request_tx_hash: &str) -> Vec<u8> {
+        format!("ride_request_{}", ride_request_tx_hash).into_bytes()
     }
 
     pub fn construct_ride_request_acceptance_key(ride_request_tx_hash: &str, ride_tx_hash: &str) -> Vec<u8> {

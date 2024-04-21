@@ -40,8 +40,8 @@ impl RideOffer {
         vec![Some((ride_offer_key, ride_offer_value))]
     }
 
-    pub fn get_ride_offer(tx_hash: &str, db: &Database) -> Result<RideOffer, String> {
-        let key = Self::construct_ride_offer_key(tx_hash);
+    pub fn get_ride_offer(ride_offer_tx_hash: &str, db: &Database) -> Result<RideOffer, String> {
+        let key = Self::construct_ride_offer_key(ride_offer_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => {
                 let account_state_str = match String::from_utf8(value) {
