@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::node::{ride_acceptance, ride_request::RideRequest};
+
 use super::{database::Database, ride_offer::RideOffer, transaction::Transaction};
 
 #[derive(Serialize, Deserialize)]
@@ -32,16 +34,38 @@ impl RideAcceptance {
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         let ride_acceptance: RideAcceptance =
             serde_json::from_str(&transaction.data.arguments).unwrap();
-        let tx_hash = &transaction.hash;
-        let ride_acceptance_key = Self::construct_ride_acceptance_key(&tx_hash);
-        let ride_acceptance_value = serde_json::to_string(&ride_acceptance)
+
+        let ride_offer_tx_hash = &ride_acceptance.ride_offer_transaction_hash;
+        let ride_request_tx_hash = &RideOffer::get_ride_offer(&ride_offer_tx_hash, db)
+            .unwrap()
+            .ride_request_transaction_hash;
+        let ride_tx_hash = &transaction.hash;
+
+        let ride_key = Self::construct_ride_key(&ride_tx_hash);
+        let ride_value = serde_json::to_string(&ride_acceptance)
             .unwrap()
             .into_bytes();
 
-        vec![Some((ride_acceptance_key, ride_acceptance_value))]
+        let ride_request_acceptance_key = RideRequest::construct_ride_request_acceptance_key(
+            &ride_request_tx_hash,
+            &ride_tx_hash,
+        );
+        let ride_request_acceptance_value =
+            serde_json::to_string(&ride_tx_hash).unwrap().into_bytes();
+
+        let ride_offer_acceptance_key =
+            RideOffer::construct_ride_offer_acceptance_key(&ride_offer_tx_hash, &ride_tx_hash);
+        let ride_offer_acceptance_value =
+            serde_json::to_string(&ride_tx_hash).unwrap().into_bytes();
+
+        vec![
+            Some((ride_key, ride_value)),
+            Some((ride_offer_acceptance_key, ride_offer_acceptance_value)),
+            Some((ride_request_acceptance_key, ride_request_acceptance_value)),
+        ]
     }
 
-    fn construct_ride_acceptance_key(tx_hash: &str) -> Vec<u8> {
+    fn construct_ride_key(tx_hash: &str) -> Vec<u8> {
         format!("ride_{}", tx_hash).into_bytes()
     }
 }

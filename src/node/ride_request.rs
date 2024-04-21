@@ -50,4 +50,8 @@ impl RideRequest {
     fn construct_ride_request_key(tx_hash: &str) -> Vec<u8> {
         format!("ride_request_{}", tx_hash).into_bytes()
     }
+
+    pub fn construct_ride_request_acceptance_key(ride_request_tx_hash: &str, ride_tx_hash: &str) -> Vec<u8> {
+        format!("ride_request_{}:ride:{}", ride_request_tx_hash, ride_tx_hash).into_bytes()
+    }
 }
