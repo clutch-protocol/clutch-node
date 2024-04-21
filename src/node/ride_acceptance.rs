@@ -42,6 +42,6 @@ impl RideAcceptance {
     }
 
     fn construct_ride_acceptance_key(tx_hash: &str) -> Vec<u8> {
-        format!("ride_acceptance_{}", tx_hash).into_bytes()
+        format!("ride_{}", tx_hash).into_bytes()
     }
 }
