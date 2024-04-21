@@ -27,9 +27,7 @@ fn test() {
     blockchain.block_import(&ride_request_block(2));
     blockchain.block_import(&ride_offer_block(3, 3));
     blockchain.block_import(&ride_acceptance_block(4));
-    // blockchain.block_import(&ride_offer_block(5, 5));
-
-    // blockchain.block_import(&ride_offer_block(5, 5));
+    // blockchain.block_import(&ride_offer_block(5, 5));    
 
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
