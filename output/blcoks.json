@@ -122,3 +122,22 @@
     }
   ]
 }
+{
+  "index": 4,
+  "previous_hash": "0x",
+  "hash": "db50e8c65a624014ad01c6e0069b633aa563ad24821926db066aa17bad3fe84d",
+  "transactions": [
+    {
+      "from": "0xdeb4cfb63db134698e1879ea24904df074726cc0",
+      "data": {
+        "function_call_type": "RideAcceptance",
+        "arguments": "{\"ride_offer_transaction_hash\":\"538b37743e2d67874a489f1d025a63a8ba9a35eef5cf869763b27931858e2c18\"}"
+      },
+      "nonce": 4,
+      "signature_r": "407c488d72bfbfa0d7dd9a996072d1199ad67ff972e1bb70b556fd7e6944171f",
+      "signature_s": "21354da5baba7489042bc13a2f924ea70580bde4b0929b9101d5592fe94c8f08",
+      "signature_v": 27,
+      "hash": "265af5514089b3fb079299587cdd80db3f8a6b192d11bab78f7508d2e8a2eaf4"
+    }
+  ]
+}

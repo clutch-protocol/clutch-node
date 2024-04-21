@@ -62,7 +62,8 @@ impl RideOffer {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let tx_hash = &transaction.hash;
         let ride_offer_key = Self::construct_ride_offer_key(tx_hash);
-        let ride_offer_value = serde_json::to_string(&ride_offer).unwrap().into_bytes();        
+        let ride_offer_value = serde_json::to_string(&ride_offer).unwrap().into_bytes();
+
         vec![Some((ride_offer_key, ride_offer_value))]
     }
 
@@ -79,7 +80,9 @@ impl RideOffer {
                     Err(_) => Err("Failed to deserialize RideOffer".to_string()),
                 }
             }
-            Ok(None) => Err("No ride offer found for the given transaction hash".to_string()),
+            Ok(None) => {                
+                Err("No ride offer found for the given transaction hash".to_string())
+            },
             Err(_) => Err("Database error occurred".to_string()),
         }
     }
