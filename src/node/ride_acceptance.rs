@@ -18,10 +18,11 @@ impl RideAcceptance {
             Ok(ride_offer) => {
                 return true;
             }
-            Err(_) => {
+            Err(e) => {
                 println!(
-                    "No ride offer found for the given transaction hash: {}",
-                    ride_offer_tx_hash
+                    "No ride offer found for the given transaction hash: {},ex:{}",
+                    ride_offer_tx_hash,
+                    e
                 );
                 return false;
             }
@@ -39,16 +40,15 @@ impl RideAcceptance {
         let ride_request_tx_hash = &RideOffer::get_ride_offer(&ride_offer_tx_hash, db)
             .unwrap()
             .ride_request_transaction_hash;
-        let ride_tx_hash = &transaction.hash;
 
+        let ride_tx_hash = &transaction.hash;
         let ride_key = Self::construct_ride_key(&ride_tx_hash);
         let ride_value = serde_json::to_string(&ride_acceptance)
             .unwrap()
             .into_bytes();
 
-        let ride_request_acceptance_key = RideRequest::construct_ride_request_acceptance_key(
-            &ride_request_tx_hash            
-        );
+        let ride_request_acceptance_key =
+            RideRequest::construct_ride_request_acceptance_key(&ride_request_tx_hash);
         let ride_request_acceptance_value =
             serde_json::to_string(&ride_tx_hash).unwrap().into_bytes();
 

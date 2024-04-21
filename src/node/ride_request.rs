@@ -29,7 +29,10 @@ impl RideRequest {
         vec![Some((ride_request_key, ride_request_value))]
     }
 
-    pub fn get_ride_request(ride_request_tx_hash: &str, db: &Database) -> Result<RideRequest, String> {
+    pub fn get_ride_request(
+        ride_request_tx_hash: &str,
+        db: &Database,
+    ) -> Result<RideRequest, String> {
         let key = Self::construct_ride_request_key(ride_request_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => {
@@ -50,13 +53,14 @@ impl RideRequest {
     pub fn get_ride(ride_request_tx_hash: &str, db: &Database) -> Result<Option<String>, String> {
         let key = Self::construct_ride_request_acceptance_key(ride_request_tx_hash);
         match db.get("state", &key) {
-            Ok(Some(value)) => {
-                match String::from_utf8(value) {
-                    Ok(v) => Ok(Some(v)),
-                    Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
-                }             
+            Ok(Some(value)) => match String::from_utf8(value) {
+                Ok(v) => Ok(Some(v)),
+                Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
+            },
+            Ok(None) => {
+                // println!(" No data found.{}", &ride_request_tx_hash);
+                Ok(None) 
             }
-            Ok(None) => Ok(None), // No data found.
             Err(_) => Err("Database error occurred".to_string()),
         }
     }
@@ -66,6 +70,8 @@ impl RideRequest {
     }
 
     pub fn construct_ride_request_acceptance_key(ride_request_tx_hash: &str) -> Vec<u8> {
-        format!("ride_request_{}:ride:", ride_request_tx_hash).into_bytes()
+        let key = format!("ride_request_{}:ride", ride_request_tx_hash);
+        // println!("key:{}",key);
+        key.into_bytes()
     }
 }

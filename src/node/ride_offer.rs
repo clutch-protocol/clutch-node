@@ -14,29 +14,45 @@ impl RideOffer {
     pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
-        
-        match RideRequest::get_ride_request(&ride_request_tx_hash, db) {
-            Ok(ride_request) => {                
-                match RideRequest::get_ride(&ride_request_tx_hash, &db) {
-                    Ok(None) => true,
-                    Ok(Some(ride_tx_hash)) => {
-                        println!(
-                            "Ride request has a ride: {}",
-                            ride_tx_hash
-                        );
-                        return  false;
-                    },
-                    Err(_) => false,
-                }            
+
+        let has_exsist_ride_request: bool =
+            match RideRequest::get_ride_request(&ride_request_tx_hash, db) {
+                Ok(ride_request) => true,
+                Err(_) => {
+                    println!(
+                        "No ride request found for the given transaction hash: {}",
+                        ride_request_tx_hash
+                    );
+                    false
+                }
+            };
+
+        if !has_exsist_ride_request {
+            println!("has_exsist_ride_request: {}", has_exsist_ride_request);
+            return false;
+        }
+
+        let has_ride = match RideRequest::get_ride(&ride_request_tx_hash, &db) {
+            Ok(None) => false,
+            Ok(Some(ride_tx_hash)) => {
+                println!("Ride request has a ride: {}", ride_tx_hash);
+                true
             }
             Err(_) => {
                 println!(
-                    "No ride request found for the given transaction hash: {}",
+                    "No ride found for the given ride request transaction hash: {}",
                     ride_request_tx_hash
                 );
-                return false;
+                false
             }
+        };
+
+        if has_ride {
+            println!("has_ride: {}", has_ride);
+            return false;
         }
+
+        return true;
     }
 
     pub fn state_transaction(
@@ -46,8 +62,7 @@ impl RideOffer {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let tx_hash = &transaction.hash;
         let ride_offer_key = Self::construct_ride_offer_key(tx_hash);
-        let ride_offer_value = serde_json::to_string(&ride_offer).unwrap().into_bytes();
-
+        let ride_offer_value = serde_json::to_string(&ride_offer).unwrap().into_bytes();        
         vec![Some((ride_offer_key, ride_offer_value))]
     }
 
@@ -73,7 +88,10 @@ impl RideOffer {
         format!("ride_offer_{}", ride_offer_tx_hash).into_bytes()
     }
 
-    pub fn construct_ride_offer_acceptance_key(ride_offer_tx_hash: &str, ride_tx_hash: &str) -> Vec<u8> {
+    pub fn construct_ride_offer_acceptance_key(
+        ride_offer_tx_hash: &str,
+        ride_tx_hash: &str,
+    ) -> Vec<u8> {
         format!("ride_offer_{}:ride:{}", ride_offer_tx_hash, ride_tx_hash).into_bytes()
     }
 }

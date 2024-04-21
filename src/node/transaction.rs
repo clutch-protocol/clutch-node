@@ -1,4 +1,5 @@
 use super::database::Database;
+use super::ride_acceptance::RideAcceptance;
 use super::ride_offer::RideOffer;
 use super::signature_keys::{self, SignatureKeys};
 use crate::node::account_state::AccountState;
@@ -175,7 +176,8 @@ impl Transaction {
             FunctionCallType::Transfer => Transfer::verify_state(&self, db),
             FunctionCallType::RideRequest => RideRequest::verify_state(&self, db),
             FunctionCallType::RideOffer => RideOffer::verify_state(&self, db),
-            _ => true,
+            FunctionCallType::RideAcceptance => RideAcceptance::verify_state(&self, db),
+            _ => false,
         };
     }
 
@@ -184,6 +186,7 @@ impl Transaction {
             FunctionCallType::Transfer => Transfer::state_transaction(&self, &db),
             FunctionCallType::RideRequest => RideRequest::state_transaction(&self, db),
             FunctionCallType::RideOffer => RideOffer::state_transaction(&self, db),
+            FunctionCallType::RideAcceptance => RideAcceptance::state_transaction(&self, db),
             _ => vec![None],
         };
 
