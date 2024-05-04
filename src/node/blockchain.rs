@@ -120,7 +120,7 @@ impl Blockchain {
             return;
         }
 
-        // Handle Blockchain state
+        // Handle Blockchain State
         if let Some((block_keys, block_values)) = block.state_blockchain() {
             for (key, value) in block_keys.into_iter().zip(block_values.into_iter()) {
                 cf_storage.push("blockchain".to_string());
@@ -132,7 +132,7 @@ impl Blockchain {
             return;
         }
 
-        // Handle state transactions
+        // Handle transactions State 
         for tx in block.transactions.iter() {
             let updates = tx.state_transaction(&self.db);
 
