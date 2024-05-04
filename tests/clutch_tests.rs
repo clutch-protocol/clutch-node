@@ -26,7 +26,7 @@ fn test() {
     blockchain.block_import(&transfer_block(1));
     blockchain.block_import(&ride_request_block(2));
     blockchain.block_import(&ride_offer_block(3, 3));
-    blockchain.block_import(&ride_acceptance_block(4,4));    
+    blockchain.block_import(&ride_acceptance_block(4, 4));
 
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
@@ -50,19 +50,17 @@ fn save_blocks_to_file(blockchain: &Blockchain) {
     };
 
     match blockchain.get_blocks() {
-        Ok(blocks) => {
-            for block in blocks {
-                match serde_json::to_string_pretty(&block) {
-                    Ok(json_str) => {
-                        if let Err(e) = writeln!(file, "{}", json_str) {
-                            println!("Failed to write to file: {}", e);
-                            return;
-                        }
-                    }
-                    Err(e) => {
-                        println!("Failed to serialize block: {}", e);
+        Ok(blocks) => {            
+            match serde_json::to_string_pretty(&blocks) {
+                Ok(json_str) => {
+                    if let Err(e) = writeln!(file, "{}", json_str) {
+                        println!("Failed to write to file: {}", e);
                         return;
                     }
+                }
+                Err(e) => {
+                    println!("Failed to serialize block: {}", e);
+                    return;
                 }
             }
             println!(
