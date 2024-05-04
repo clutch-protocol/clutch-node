@@ -15,24 +15,37 @@ impl RideOffer {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
 
-        let has_exsist_ride_request: bool =
-            match RideRequest::get_ride_request(&ride_request_tx_hash, db) {
-                Ok(ride_request) => true,
-                Err(_) => {
-                    println!(
-                        "No ride request found for the given transaction hash: {}",
-                        ride_request_tx_hash
-                    );
-                    false
-                }
-            };
-
-        if !has_exsist_ride_request {
-            println!("has_exsist_ride_request: {}", has_exsist_ride_request);
+        let exsist_ride_request: bool =
+            RideOffer::check_ride_request_exsist(&ride_request_tx_hash, &db);
+        if !exsist_ride_request {
+            println!("has_exsist_ride_request: {}", exsist_ride_request);
             return false;
         }
 
-        let has_ride = match RideRequest::get_ride(&ride_request_tx_hash, &db) {
+        let has_ride = RideOffer::check_has_ride(&ride_request_tx_hash, &db);
+        if has_ride {
+            println!("has_ride: {}", has_ride);
+            return false;
+        }
+
+        return true;
+    }
+
+    fn check_ride_request_exsist(ride_request_tx_hash: &str, db: &Database) -> bool {
+        match RideRequest::get_ride_request(&ride_request_tx_hash, db) {
+            Ok(ride_request) => true,
+            Err(_) => {
+                println!(
+                    "No ride request found for the given transaction hash: {}",
+                    ride_request_tx_hash
+                );
+                false
+            }
+        }
+    }
+
+    fn check_has_ride(ride_request_tx_hash: &str, db: &Database) -> bool {
+        match RideRequest::get_ride(&ride_request_tx_hash, &db) {
             Ok(None) => false,
             Ok(Some(ride_tx_hash)) => {
                 println!("Ride request has a ride: {}", ride_tx_hash);
@@ -45,14 +58,7 @@ impl RideOffer {
                 );
                 false
             }
-        };
-
-        if has_ride {
-            println!("has_ride: {}", has_ride);
-            return false;
         }
-
-        return true;
     }
 
     pub fn state_transaction(
@@ -80,9 +86,7 @@ impl RideOffer {
                     Err(_) => Err("Failed to deserialize RideOffer".to_string()),
                 }
             }
-            Ok(None) => {                
-                Err("No ride offer found for the given transaction hash".to_string())
-            },
+            Ok(None) => Err("No ride offer found for the given transaction hash".to_string()),
             Err(_) => Err("Database error occurred".to_string()),
         }
     }
