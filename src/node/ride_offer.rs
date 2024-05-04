@@ -22,7 +22,7 @@ impl RideOffer {
             return false;
         }
 
-        let has_ride = RideOffer::check_has_ride(&ride_request_tx_hash, &db);
+        let has_ride = RideOffer::check_has_ride_by_ride_request(&ride_request_tx_hash, &db);
         if has_ride {
             println!("has_ride: {}", has_ride);
             return false;
@@ -44,7 +44,7 @@ impl RideOffer {
         }
     }
 
-    fn check_has_ride(ride_request_tx_hash: &str, db: &Database) -> bool {
+    fn check_has_ride_by_ride_request(ride_request_tx_hash: &str, db: &Database) -> bool {
         match RideRequest::get_ride(&ride_request_tx_hash, &db) {
             Ok(None) => false,
             Ok(Some(ride_tx_hash)) => {
