@@ -44,28 +44,30 @@ impl Blockchain {
         }
     }
 
-    pub fn block_import(&mut self, block: &Block) {
+    pub fn block_import(&mut self, block: &Block) -> Result<(), String> {
         let is_valid_block = block.validate_block(self);
         if !is_valid_block {
-            println!("Block is invalid and will not be added.");
-            return;
+            return Err(String::from("Block is invalid and will not be added."));
         }
 
         for tx in block.transactions.iter() {
             let is_valid_tx = tx.validate_transaction(&self.db);
             if !is_valid_tx {
-                println!("Block contains invalid transactions and will not be added.");
-                return;
+                return Err(String::from(
+                    "Block contains invalid transactions and will not be added.",
+                ));
             }
         }
 
         self.add_block_to_chain(block);
+
+        Ok(())
     }
 
     pub fn get_blocks(&self) -> Result<Vec<Block>, String> {
         match self.db.get_keys_values_by_cf_name("block") {
             Ok(entries) => {
-                let mut blocks = Vec::new(); 
+                let mut blocks = Vec::new();
 
                 for (key, value) in entries {
                     match serde_json::from_slice::<Block>(&value) {
@@ -73,14 +75,14 @@ impl Blockchain {
                             blocks.push(block);
                         }
                         Err(e) => {
-                            return Err(format!("Failed to deserialize block: {}", e));                          
+                            return Err(format!("Failed to deserialize block: {}", e));
                         }
                     }
                 }
 
-                Ok(blocks) 
+                Ok(blocks)
             }
-            Err(e) => Err(format!("Failed to retrieve blocks: {}", e)), 
+            Err(e) => Err(format!("Failed to retrieve blocks: {}", e)),
         }
     }
 
