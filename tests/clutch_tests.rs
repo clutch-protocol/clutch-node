@@ -31,7 +31,7 @@ fn test() {
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
         blockchain.name,
-        blockchain.get_latest_block_index(),
+        blockchain.get_latest_block().unwrap().index,
     );
 
     save_blocks_to_file(&blockchain);

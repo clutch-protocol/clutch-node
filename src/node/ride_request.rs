@@ -1,5 +1,3 @@
-use std::result;
-
 use crate::node::coordinate::Coordinates;
 use crate::node::database::Database;
 use crate::node::transaction::Transaction;

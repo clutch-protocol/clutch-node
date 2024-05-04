@@ -1,5 +1,4 @@
-use sha3::digest::crypto_common::Key;
-
+use serde::{Deserialize, Serialize};
 use crate::node::block::Block;
 use crate::node::database::Database;
 
@@ -23,13 +22,14 @@ impl Blockchain {
         blockchain
     }
 
-    pub fn get_latest_block_index(&self) -> usize {
-        match self.db.get("blockchain", b"blockchain_latest_block_index") {
+    pub fn get_latest_block(&self) -> Option<Block> {
+        match self.db.get("blockchain", b"blockchain_latest_block") {
             Ok(Some(value)) => {
-                let index_str = String::from_utf8(value).unwrap();
-                index_str.parse::<usize>().unwrap()
+                let block_str = String::from_utf8(value).unwrap();
+                let block:Block= serde_json::from_str(&block_str).unwrap();
+                Some(block)
             }
-            Ok(None) => 0,
+            Ok(None) => None,
             Err(_) => panic!("Failed to retrieve the latest block index"),
         }
     }

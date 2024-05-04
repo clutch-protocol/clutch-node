@@ -56,8 +56,11 @@ impl Block {
     }
 
     pub fn validate_block(&self, blockchain: &Blockchain) -> bool {
-        let latest_block_index = blockchain.get_latest_block_index();
-
+        let latest_block_index = match blockchain.get_latest_block() {
+            Some(block) => block.index,
+            None => 0,
+        };
+        
         if self.index != latest_block_index + 1 {
             println!(
                 "Invalid block: The block index should be {}, but it was {}.",
@@ -70,7 +73,7 @@ impl Block {
         true
     }
 
-    pub fn state_block(&self) -> Option<(Vec<Vec<u8>>,Vec<Vec<u8>>)>{        
+    pub fn state_block(&self) -> Option<(Vec<Vec<u8>>, Vec<Vec<u8>>)> {
         let mut keys: Vec<Vec<u8>> = Vec::new();
         let mut values: Vec<Vec<u8>> = Vec::new();
 
@@ -78,23 +81,22 @@ impl Block {
         let block_key = format!("block_{}", self.index).into_bytes();
         let block_value = serde_json::to_string(self).unwrap().into_bytes();
         keys.push(block_key);
-        values.push(block_value);      
+        values.push(block_value);
 
-        Some((keys,values))
+        Some((keys, values))
     }
 
-    pub fn state_blockchain(&self) -> Option<(Vec<Vec<u8>>,Vec<Vec<u8>>)>{        
+    pub fn state_blockchain(&self) -> Option<(Vec<Vec<u8>>, Vec<Vec<u8>>)> {
         let mut keys: Vec<Vec<u8>> = Vec::new();
         let mut values: Vec<Vec<u8>> = Vec::new();
-       
+
         // Save the latest block index to the blockchain
-        let latest_index_key = b"blockchain_latest_block_index";
-        let latest_index_value = self.index.to_string().into_bytes();
+        let blockchain_latest_block_key = b"blockchain_latest_block";
+        let blockchain_latest_block_value = serde_json::to_string(self).unwrap().into_bytes();
 
-        keys.push(latest_index_key.to_vec());
-        values.push(latest_index_value);
+        keys.push(blockchain_latest_block_key.to_vec());
+        values.push(blockchain_latest_block_value);
 
-        Some((keys,values))
+        Some((keys, values))
     }
-
 }
