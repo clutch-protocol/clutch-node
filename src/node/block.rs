@@ -43,10 +43,10 @@ impl Block {
         genesis_block
     }
 
-    pub fn new_block(index: usize, transactions: Vec<Transaction>) -> Block {
+    pub fn new_block(index: usize, previous_hash: String, transactions: Vec<Transaction>) -> Block {
         let mut block = Block {
             hash: String::new(),
-            previous_hash: "0x".to_string(),
+            previous_hash: previous_hash,
             index: index,
             transactions: transactions,
         };
@@ -56,21 +56,29 @@ impl Block {
     }
 
     pub fn validate_block(&self, blockchain: &Blockchain) -> bool {
-        let latest_block_index = match blockchain.get_latest_block() {
-            Some(block) => block.index,
-            None => 0,
-        };
-        
-        if self.index != latest_block_index + 1 {
-            println!(
-                "Invalid block: The block index should be {}, but it was {}.",
-                latest_block_index + 1,
-                self.index
-            );
-            return false;
-        }
+        match blockchain.get_latest_block() {
+            Some(latest_block) => {
+                if self.index != latest_block.index + 1 {
+                    println!(
+                        "Invalid block: The block index should be {}, but it was {}.",
+                        latest_block.index + 1,
+                        self.index
+                    );
+                    return false;
+                }
 
-        true
+                if self.previous_hash != latest_block.hash {
+                    println!(
+                        "Invalid block: The previous hash should be {}, but it was {}.",
+                        latest_block.hash, self.previous_hash
+                    );
+                    return false;
+                }
+
+                return true;
+            }
+            None => true,
+        }
     }
 
     pub fn state_block(&self) -> Option<(Vec<Vec<u8>>, Vec<Vec<u8>>)> {

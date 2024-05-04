@@ -23,10 +23,10 @@ const RIDE_OFFER_TX_HASH: &str = "538b37743e2d67874a489f1d025a63a8ba9a35eef5cf86
 fn test() {
     let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
 
-    blockchain.block_import(&transfer_block(1));
-    blockchain.block_import(&ride_request_block(2));
-    blockchain.block_import(&ride_offer_block(3, 3));
-    blockchain.block_import(&ride_acceptance_block(4, 4));
+    block_import(&mut blockchain, &mut transfer_block(1));
+    block_import(&mut blockchain, &mut ride_request_block(2));
+    block_import(&mut blockchain, &mut ride_offer_block(3, 3));
+    block_import(&mut blockchain, &mut ride_acceptance_block(4, 4));
 
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
@@ -36,6 +36,11 @@ fn test() {
 
     save_blocks_to_file(&blockchain);
     blockchain.cleanup_if_developer_mode();
+}
+
+fn block_import(blockchain: &mut Blockchain, block: &mut Block) {
+    block.previous_hash = blockchain.get_latest_block().unwrap().hash;
+    blockchain.block_import(block);
 }
 
 fn save_blocks_to_file(blockchain: &Blockchain) {
@@ -49,7 +54,7 @@ fn save_blocks_to_file(blockchain: &Blockchain) {
     };
 
     match blockchain.get_blocks() {
-        Ok(blocks) => {            
+        Ok(blocks) => {
             match serde_json::to_string_pretty(&blocks) {
                 Ok(json_str) => {
                     if let Err(e) = writeln!(file, "{}", json_str) {
@@ -87,7 +92,11 @@ fn transfer_block(index: usize) -> Block {
         transfer,
     );
 
-    Block::new_block(index, vec![transfer_request_transcation])
+    Block::new_block(
+        index,
+        "50c2a0a779b3eb3d6c2421422f92a8d4257e203bfe19dbf521172ad39e1d07ea".to_string(),
+        vec![transfer_request_transcation],
+    )
 }
 
 fn ride_request_block(index: usize) -> Block {
@@ -110,7 +119,11 @@ fn ride_request_block(index: usize) -> Block {
         ride_request,
     );
 
-    Block::new_block(index, vec![ride_request_transcation])
+    Block::new_block(
+        index,
+        "50c2a0a779b3eb3d6c2421422f92a8d4257e203bfe19dbf521172ad39e1d07ea".to_string(),
+        vec![ride_request_transcation],
+    )
 }
 
 fn ride_offer_block(index: usize, nonce: u64) -> Block {
@@ -127,7 +140,11 @@ fn ride_offer_block(index: usize, nonce: u64) -> Block {
         ride_offer,
     );
 
-    Block::new_block(index, vec![ride_offer_transaction])
+    Block::new_block(
+        index,
+        "50c2a0a779b3eb3d6c2421422f92a8d4257e203bfe19dbf521172ad39e1d07ea".to_string(),
+        vec![ride_offer_transaction],
+    )
 }
 
 fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
@@ -143,5 +160,9 @@ fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
         ride_acceptance,
     );
 
-    Block::new_block(index, vec![ride_acceptance_transaction])
+    Block::new_block(
+        index,
+        "50c2a0a779b3eb3d6c2421422f92a8d4257e203bfe19dbf521172ad39e1d07ea".to_string(),
+        vec![ride_acceptance_transaction],
+    )
 }
