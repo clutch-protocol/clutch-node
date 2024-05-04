@@ -11,18 +11,28 @@ pub struct RideAcceptance {
 
 impl RideAcceptance {
     pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
-        let ride_acceptanc: RideAcceptance = serde_json::from_str(&transaction.data.arguments).unwrap();            
+        let ride_acceptanc: RideAcceptance =
+            serde_json::from_str(&transaction.data.arguments).unwrap();
+        let ride_offer_transaction_hash = &ride_acceptanc.ride_offer_transaction_hash;
+        
+        let exist_ride_offer= RideAcceptance::check_exist_ride_offer(&ride_offer_transaction_hash, &db);
+        if !exist_ride_offer {
+            println!("has_exsist_ride_offer: {}", exist_ride_offer);
+            return false;
+        }
 
-        let ride_offer_tx_hash = &ride_acceptanc.ride_offer_transaction_hash;        
-        match RideOffer::get_ride_offer(&ride_offer_tx_hash, db) {
+        return  true;
+    }
+
+    fn check_exist_ride_offer(ride_offer_transaction_hash: &str, db: &Database) -> bool {
+        match RideOffer::get_ride_offer(&ride_offer_transaction_hash, db) {
             Ok(ride_offer) => {
                 return true;
             }
             Err(e) => {
                 println!(
                     "No ride offer found for the given transaction hash: {},ex:{}",
-                    ride_offer_tx_hash,
-                    e
+                    ride_offer_transaction_hash, e
                 );
                 return false;
             }

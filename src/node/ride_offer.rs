@@ -15,10 +15,10 @@ impl RideOffer {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
 
-        let exsist_ride_request: bool =
-            RideOffer::check_ride_request_exsist(&ride_request_tx_hash, &db);
-        if !exsist_ride_request {
-            println!("has_exsist_ride_request: {}", exsist_ride_request);
+        let exist_ride_request: bool =
+            RideOffer::check_ride_request_exist(&ride_request_tx_hash, &db);
+        if !exist_ride_request {
+            println!("has_exsist_ride_request: {}", exist_ride_request);
             return false;
         }
 
@@ -31,7 +31,7 @@ impl RideOffer {
         return true;
     }
 
-    fn check_ride_request_exsist(ride_request_tx_hash: &str, db: &Database) -> bool {
+    fn check_ride_request_exist(ride_request_tx_hash: &str, db: &Database) -> bool {
         match RideRequest::get_ride_request(&ride_request_tx_hash, db) {
             Ok(ride_request) => true,
             Err(_) => {
