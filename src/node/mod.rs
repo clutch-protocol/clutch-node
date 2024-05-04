@@ -13,3 +13,4 @@ pub mod function_call;
 pub mod database;
 pub mod signature_keys;
 pub mod account_state;
+pub mod ride_pay;
