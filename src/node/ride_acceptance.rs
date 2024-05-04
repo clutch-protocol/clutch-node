@@ -99,7 +99,7 @@ impl RideAcceptance {
         ]
     }
 
-    fn construct_ride_key(tx_hash: &str) -> Vec<u8> {
+    pub fn construct_ride_key(tx_hash: &str) -> Vec<u8> {
         format!("ride_{}", tx_hash).into_bytes()
     }
 }
