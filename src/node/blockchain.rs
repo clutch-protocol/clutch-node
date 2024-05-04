@@ -157,7 +157,8 @@ impl Blockchain {
         // Update the database
         match self.db.write(operations) {
             Ok(_) => println!(
-                "add_block_to_chain successfully. block index: {}",
+                "add_block_to_chain successfully. block hash: {}. block index: {}",
+                block.hash,
                 block.index
             ),
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
