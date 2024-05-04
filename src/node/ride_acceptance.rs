@@ -14,14 +14,22 @@ impl RideAcceptance {
         let ride_acceptanc: RideAcceptance =
             serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_offer_transaction_hash = &ride_acceptanc.ride_offer_transaction_hash;
-        
-        let exist_ride_offer= RideAcceptance::check_exist_ride_offer(&ride_offer_transaction_hash, &db);
+
+        let exist_ride_offer =
+            RideAcceptance::check_exist_ride_offer(&ride_offer_transaction_hash, &db);
         if !exist_ride_offer {
             println!("has_exsist_ride_offer: {}", exist_ride_offer);
             return false;
         }
 
-        return  true;
+        let has_ride =
+            RideAcceptance::check_has_ride_by_ride_offer(&ride_offer_transaction_hash, &db);
+        if has_ride {
+            println!("has_ride: {}", has_ride);
+            return false;
+        }
+
+        return true;
     }
 
     fn check_exist_ride_offer(ride_offer_transaction_hash: &str, db: &Database) -> bool {
@@ -35,6 +43,23 @@ impl RideAcceptance {
                     ride_offer_transaction_hash, e
                 );
                 return false;
+            }
+        }
+    }
+
+    fn check_has_ride_by_ride_offer(ride_offer_transaction_hash: &str, db: &Database) -> bool {
+        match RideOffer::get_ride(&ride_offer_transaction_hash, &db) {
+            Ok(None) => false,
+            Ok(Some(ride_tx_hash)) => {
+                println!("Ride Offer has a ride: {}", ride_tx_hash);
+                true
+            }
+            Err(_) => {
+                println!(
+                    "No ride found for the given ride Offer transaction hash: {}",
+                    ride_offer_transaction_hash
+                );
+                false
             }
         }
     }
@@ -63,14 +88,14 @@ impl RideAcceptance {
             serde_json::to_string(&ride_tx_hash).unwrap().into_bytes();
 
         let ride_offer_acceptance_key =
-            RideOffer::construct_ride_offer_acceptance_key(&ride_offer_tx_hash, &ride_tx_hash);
+            RideOffer::construct_ride_offer_acceptance_key(&ride_offer_tx_hash);
         let ride_offer_acceptance_value =
             serde_json::to_string(&ride_tx_hash).unwrap().into_bytes();
 
         vec![
             Some((ride_key, ride_value)),
-            Some((ride_offer_acceptance_key, ride_offer_acceptance_value)),
             Some((ride_request_acceptance_key, ride_request_acceptance_value)),
+            Some((ride_offer_acceptance_key, ride_offer_acceptance_value)),
         ]
     }
 

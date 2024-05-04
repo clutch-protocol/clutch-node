@@ -141,22 +141,3 @@
     }
   ]
 }
-{
-  "index": 5,
-  "previous_hash": "0x",
-  "hash": "0ecc93434b7de3f4e57c7af381466d98f456d6bda2810c722054874013beaff5",
-  "transactions": [
-    {
-      "from": "0xdeb4cfb63db134698e1879ea24904df074726cc0",
-      "data": {
-        "function_call_type": "RideAcceptance",
-        "arguments": "{\"ride_offer_transaction_hash\":\"538b37743e2d67874a489f1d025a63a8ba9a35eef5cf869763b27931858e2c18\"}"
-      },
-      "nonce": 5,
-      "signature_r": "3a397f94a62aa45e55c9a6d291f187a985edf337ed1da27e8c0a83e26af762a2",
-      "signature_s": "1fa96cc8c589c85515372dd180764fc71c3ab609fe9d8d5bfd9dcd5b2a26b1a9",
-      "signature_v": 27,
-      "hash": "5fd368314e5413d828a717cf5892ca5349cd2ff343307318a26ae4582d5668ba"
-    }
-  ]
-}
