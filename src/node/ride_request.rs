@@ -70,8 +70,7 @@ impl RideRequest {
     }
 
     pub fn construct_ride_request_acceptance_key(ride_request_tx_hash: &str) -> Vec<u8> {
-        let key = format!("ride_request_{}:ride", ride_request_tx_hash);
-        // println!("key:{}",key);
+        let key = format!("ride_request_{}:ride", ride_request_tx_hash);        
         key.into_bytes()
     }
 }
