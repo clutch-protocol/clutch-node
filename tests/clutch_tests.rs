@@ -35,7 +35,6 @@ fn test() {
     );
 
     save_blocks_to_file(&blockchain);
-
     blockchain.cleanup_if_developer_mode();
 }
 
