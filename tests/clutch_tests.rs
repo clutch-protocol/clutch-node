@@ -23,24 +23,41 @@ const RIDE_OFFER_TX_HASH: &str = "538b37743e2d67874a489f1d025a63a8ba9a35eef5cf86
 fn test() {
     let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
 
-    block_import(&mut blockchain, &mut transfer_block(1));
-    block_import(&mut blockchain, &mut ride_request_block(2));
-    block_import(&mut blockchain, &mut ride_offer_block(3, 3));
-    block_import(&mut blockchain, &mut ride_acceptance_block(4, 4));
+     // Import multiple blocks using an array of closure functions
+     let blocks = [
+        || transfer_block(1),
+        || ride_request_block(2),
+        || ride_offer_block(3, 3),
+        || ride_acceptance_block(4, 4),
+    ];
 
+    // Iterate over the block creation functions, modify and import each block
+    for block_creator in blocks.iter() {
+        let mut block = block_creator();
+        if let Err(e) = import_block(&mut blockchain, &mut block) {
+            println!("Error importing block: {}", e);
+            return;  // Optionally return early if a block fails to import
+        }
+    }
+
+    // Output the blockchain status
+    let latest_block = blockchain.get_latest_block().expect("Failed to get the latest block");
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
         blockchain.name,
-        blockchain.get_latest_block().unwrap().index,
+        latest_block.index,
     );
 
+    // Save and cleanup tasks
     save_blocks_to_file(&blockchain);
     blockchain.cleanup_if_developer_mode();
+
 }
 
-fn block_import(blockchain: &mut Blockchain, block: &mut Block) {
-    block.previous_hash = blockchain.get_latest_block().unwrap().hash;
-    blockchain.block_import(block);
+fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), String> {
+    // Update the previous hash and import the block
+    block.previous_hash = blockchain.get_latest_block().expect("Failed to get the latest block").hash;        
+    blockchain.block_import(block)
 }
 
 fn save_blocks_to_file(blockchain: &Blockchain) {
