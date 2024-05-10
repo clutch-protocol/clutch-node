@@ -24,7 +24,22 @@ impl RideAcceptance {
         if let Ok(Some(ride_offer)) = RideOffer::get_ride_offer(ride_offer_transaction_hash, db) {
             let fare = &ride_offer.fare;
             let from = &transaction.from;
-            
+
+            if let Ok(Some(from)) =
+                RideRequest::get_from(&ride_offer.ride_request_transaction_hash, &db)
+            {
+                if &from.to_string() != &transaction.from {
+                    println!("Ride request 'from' field does not match the transaction 'from' field. Expected '{}', found '{}'.", transaction.from, from);
+                    return false;
+                }
+            } else {
+                println!(
+                    "Failed to retrieve 'from' field for ride request with transaction hash '{}'.",
+                    ride_offer.ride_request_transaction_hash
+                );
+                return false;
+            }
+
             let passenger_account_state = AccountState::get_current_state(from, &db);
             if &passenger_account_state.balance < fare {
                 println!(
