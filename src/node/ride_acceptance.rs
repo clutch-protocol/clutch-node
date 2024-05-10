@@ -29,7 +29,7 @@ impl RideAcceptance {
                 RideRequest::get_from(&ride_offer.ride_request_transaction_hash, &db)
             {
                 if &from.to_string() != &transaction.from {
-                    println!("Ride request 'from' field does not match the transaction 'from' field. Expected '{}', found '{}'.", transaction.from, from);
+                    println!("Ride request 'from' field does not match the transaction 'from' field. Expected: {}, found: {}.", transaction.from, from);
                     return false;
                 }
             } else {

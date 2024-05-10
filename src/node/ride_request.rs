@@ -60,7 +60,7 @@ impl RideRequest {
         let key = Self::construct_ride_request_acceptance_key(ride_request_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => match String::from_utf8(value) {
-                Ok(v) => Ok(Some(v)),
+                Ok(ride_tx_has) => Ok(Some(ride_tx_has)),
                 Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
             },
             Ok(None) => Ok(None),
@@ -72,7 +72,7 @@ impl RideRequest {
         let key = Self::construct_ride_request_from_key(ride_request_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => match String::from_utf8(value) {
-                Ok(v) => Ok(Some(v)),
+                Ok(from) => Ok(Some(from)),
                 Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
             },
             Ok(None) => Ok(None),
