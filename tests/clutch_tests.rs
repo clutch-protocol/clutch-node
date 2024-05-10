@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::Write; 
+use std::io::Write;
 use std::path::Path;
 use std::vec;
 
@@ -11,7 +11,8 @@ const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
 const FROM_SECRET_KEY: &str = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df2f81f48e9f2748f";
 const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
-const RIDE_REQUEST_TX_HASH: &str = "02724637e27d8aba2057605a6f6d10607b5921cee81ffc9980484fb5b555f183";    
+const RIDE_REQUEST_TX_HASH: &str =
+    "02724637e27d8aba2057605a6f6d10607b5921cee81ffc9980484fb5b555f183";
 const RIDE_OFFER_TX_HASH: &str = "bfc655f837861f5a33d1101d2800bbb5f07185df62a39fcf9e637d8c811d85fe";
 
 #[test]
@@ -23,12 +24,12 @@ fn test() {
         || transfer_block(1),
         || ride_request_block(2),
         || ride_offer_block(3, 3),
-        || ride_acceptance_block(4, 4),        
+        || ride_acceptance_block(4, 4),
     ];
 
     // Iterate over the block creation functions, modify and import each block
     for block_creator in blocks.iter() {
-        let mut block = block_creator();        
+        let mut block = block_creator();
         if let Err(e) = import_block(&mut blockchain, &mut block) {
             println!("Error importing block: {}", e);
             continue;
@@ -39,10 +40,15 @@ fn test() {
     let latest_block = blockchain
         .get_latest_block()
         .expect("Failed to get the latest block");
+
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
         blockchain.name, latest_block.index,
     );
+
+    // Output the from account status
+    let from_account_state = blockchain.get_current_state(&FROM_ADDRESS_KEY.to_string());
+    println!("From account state: {:#?}", from_account_state);
 
     // Save and cleanup tasks
     save_blocks_to_file(&blockchain);
@@ -96,7 +102,7 @@ fn save_blocks_to_file(blockchain: &Blockchain) {
 fn transfer_block(index: usize) -> Block {
     let transfer = transfer::Transfer {
         to: TO.to_string(),
-        value: 100,
+        value: 10,
     };
 
     let transfer_request_transcation = transaction::Transaction::new_transaction(

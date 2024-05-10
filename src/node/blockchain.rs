@@ -1,6 +1,8 @@
 use crate::node::block::Block;
 use crate::node::database::Database;
 
+use super::account_state::AccountState;
+
 #[derive(Debug)]
 pub struct Blockchain {
     pub name: String,
@@ -23,6 +25,10 @@ impl Blockchain {
 
     pub fn get_latest_block(&self) -> Option<Block> {
         Block::get_latest_block(&self.db)
+    }
+
+    pub fn get_current_state(&self, public_key: &String) -> AccountState {
+        AccountState::get_current_state(public_key, &self.db)
     }
 
     pub fn cleanup_if_developer_mode(&mut self) {
