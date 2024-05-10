@@ -77,11 +77,11 @@ impl RideOffer {
         let key = Self::construct_ride_offer_key(ride_offer_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => {
-                let account_state_str = match String::from_utf8(value) {
+                let ride_offer_str = match String::from_utf8(value) {
                     Ok(v) => v,
                     Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
                 };
-                match serde_json::from_str(&account_state_str) {
+                match serde_json::from_str(&ride_offer_str) {
                     Ok(ride_offer) => Ok(ride_offer),
                     Err(_) => Err("Failed to deserialize RideOffer".to_string()),
                 }
