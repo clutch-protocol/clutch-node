@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct RidePay {
-    pub ride_transaction_hash: String,
+    pub ride_acceptance_transaction_hash: String,
     pub fare: u64,
 }
 
