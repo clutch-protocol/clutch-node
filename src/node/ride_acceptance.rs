@@ -24,8 +24,8 @@ impl RideAcceptance {
         if let Ok(Some(ride_offer)) = RideOffer::get_ride_offer(ride_offer_transaction_hash, db) {
             let fare = &ride_offer.fare;
             let from = &transaction.from;
+            
             let passenger_account_state = AccountState::get_current_state(from, &db);
-
             if &passenger_account_state.balance < fare {
                 println!(
                     "The account balance is insufficient to cover the fare for the requested ride. \
