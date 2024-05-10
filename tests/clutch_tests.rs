@@ -28,7 +28,7 @@ fn test() {
 
     // Iterate over the block creation functions, modify and import each block
     for block_creator in blocks.iter() {
-        let mut block = block_creator();
+        let mut block = block_creator();        
         if let Err(e) = import_block(&mut blockchain, &mut block) {
             println!("Error importing block: {}", e);
             continue;

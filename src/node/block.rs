@@ -1,4 +1,4 @@
-use crate::node::blockchain::Blockchain;
+use crate::node::database::Database;
 use crate::node::transaction::Transaction;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -55,8 +55,20 @@ impl Block {
         block
     }
 
-    pub fn validate_block(&self, blockchain: &Blockchain) -> bool {
-        match blockchain.get_latest_block() {
+    pub fn get_latest_block(db: &Database) -> Option<Block> {
+        match db.get("blockchain", b"blockchain_latest_block") {
+            Ok(Some(value)) => {
+                let block_str = String::from_utf8(value).unwrap();
+                let block: Block = serde_json::from_str(&block_str).unwrap();
+                Some(block)
+            }
+            Ok(None) => None,
+            Err(_) => panic!("Failed to retrieve the latest block index"),
+        }
+    }
+
+    pub fn validate_block(&self, db: &Database) -> bool {
+        match Block::get_latest_block(db) {
             Some(latest_block) => {
                 if self.index != latest_block.index + 1 {
                     println!(

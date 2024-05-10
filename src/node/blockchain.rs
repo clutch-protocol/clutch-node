@@ -22,15 +22,7 @@ impl Blockchain {
     }
 
     pub fn get_latest_block(&self) -> Option<Block> {
-        match self.db.get("blockchain", b"blockchain_latest_block") {
-            Ok(Some(value)) => {
-                let block_str = String::from_utf8(value).unwrap();
-                let block:Block= serde_json::from_str(&block_str).unwrap();
-                Some(block)
-            }
-            Ok(None) => None,
-            Err(_) => panic!("Failed to retrieve the latest block index"),
-        }
+        Block::get_latest_block(&self.db)
     }
 
     pub fn cleanup_if_developer_mode(&mut self) {
@@ -44,7 +36,7 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block: &Block) -> Result<(), String> {
-        let is_valid_block = block.validate_block(self);
+        let is_valid_block = block.validate_block(&self.db);
         if !is_valid_block {
             return Err(String::from("Block is invalid and will not be added."));
         }
@@ -131,7 +123,7 @@ impl Blockchain {
             return;
         }
 
-        // Handle transactions State 
+        // Handle transactions State
         for tx in block.transactions.iter() {
             let updates = tx.state_transaction(&self.db);
 
@@ -157,8 +149,7 @@ impl Blockchain {
         match self.db.write(operations) {
             Ok(_) => println!(
                 "add_block_to_chain successfully. block hash: {}. block index: {}",
-                block.hash,
-                block.index
+                block.hash, block.index
             ),
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
         }
