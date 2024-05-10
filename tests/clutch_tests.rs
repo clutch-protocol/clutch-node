@@ -8,15 +8,11 @@ use clutch_node::node::function_call::FunctionCallType;
 use clutch_node::node::{block::Block, *};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
-// const FROM_PUBLIC_KEY: &str = "04a5ddc16b93f7e744fbab3c025cf99a0ef00113c6727353a3dff406fb4d136a06d73244619adc980818931da1b053462ef5af5e121cb5616be45325edd9b0be15";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
 const FROM_SECRET_KEY: &str = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df2f81f48e9f2748f";
-
 const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
-
-const RIDE_REQUEST_TX_HASH: &str =
-    "02724637e27d8aba2057605a6f6d10607b5921cee81ffc9980484fb5b555f183";
-const RIDE_OFFER_TX_HASH: &str = "538b37743e2d67874a489f1d025a63a8ba9a35eef5cf869763b27931858e2c18";
+const RIDE_REQUEST_TX_HASH: &str = "02724637e27d8aba2057605a6f6d10607b5921cee81ffc9980484fb5b555f183";    
+const RIDE_OFFER_TX_HASH: &str = "bfc655f837861f5a33d1101d2800bbb5f07185df62a39fcf9e637d8c811d85fe";
 
 #[test]
 fn test() {
@@ -100,7 +96,7 @@ fn save_blocks_to_file(blockchain: &Blockchain) {
 fn transfer_block(index: usize) -> Block {
     let transfer = transfer::Transfer {
         to: TO.to_string(),
-        value: 100.0,
+        value: 100,
     };
 
     let transfer_request_transcation = transaction::Transaction::new_transaction(
@@ -139,7 +135,7 @@ fn ride_request_block(index: usize) -> Block {
 
 fn ride_offer_block(index: usize, nonce: u64) -> Block {
     let ride_offer = ride_offer::RideOffer {
-        fare: 1000,
+        fare: 25,
         ride_request_transaction_hash: RIDE_REQUEST_TX_HASH.to_string(),
     };
 

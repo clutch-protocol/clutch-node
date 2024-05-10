@@ -66,7 +66,7 @@ impl Transaction {
             from_secret_key.to_string(),
             Transfer {
                 to: "0xdeb4cfb63db134698e1879ea24904df074726cc0".to_string(),
-                value: 150.0,
+                value: 150,
             },
         );
         let tx2 = Self::new_transaction(
@@ -76,7 +76,7 @@ impl Transaction {
             from_secret_key.to_string(),
             Transfer {
                 to: "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2".to_string(),
-                value: 90.0,
+                value: 90,
             },
         );
         let tx3 = Self::new_transaction(
@@ -86,7 +86,7 @@ impl Transaction {
             from_secret_key.to_string(),
             Transfer {
                 to: "0xac20ff4e42ff243046faaf032068762dd2c018dc".to_string(),
-                value: 80.0,
+                value: 80,
             },
         );
         let tx4 = Self::new_transaction(
@@ -96,7 +96,7 @@ impl Transaction {
             from_secret_key.to_string(),
             Transfer {
                 to: "0xa91101310bee451ca0e219aba08d8d4dd929f16c".to_string(),
-                value: 20.0,
+                value: 20,
             },
         );
         let tx5 = Self::new_transaction(
@@ -106,7 +106,7 @@ impl Transaction {
             from_secret_key.to_string(),
             Transfer {
                 to: "0x37adf81cb1f18762042e5da03a55f1e54ba66870".to_string(),
-                value: 45.0,
+                value: 45,
             },
         );
 

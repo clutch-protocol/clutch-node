@@ -4,14 +4,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AccountState {
     pub public_key: String,
-    pub balance: f64,
+    pub balance: u64,
 }
 
 impl AccountState {
     fn new_account_state(public_key: &str) -> AccountState {
         AccountState {
             public_key: public_key.to_string(),
-            balance: 0.0,
+            balance: 0,
         }
     }
 
@@ -34,11 +34,12 @@ impl AccountState {
 
     pub fn update_account_state_key(
         public_key: &String,
-        balance_increment: f64,
+        balance_change: i64,
         db: &Database,
     ) -> (Vec<u8>, Vec<u8>) {
         let mut from_account_state = AccountState::get_current_state(&public_key, &db);
-        from_account_state.balance += balance_increment;
+        from_account_state.balance = (from_account_state.balance as i64 + balance_change) as u64;
+
         let from_key = Self::construct_account_state_key(public_key);
         let from_serialized_balance = serde_json::to_string(&from_account_state)
             .unwrap()

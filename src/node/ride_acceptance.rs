@@ -1,11 +1,7 @@
+use crate::node::{account_state::AccountState, ride_request::RideRequest};
 use serde::{Deserialize, Serialize};
-use crate::node::ride_request::RideRequest;
 
-use super::{
-    database::Database,
-    ride_offer::RideOffer,
-    transaction::Transaction,
-};
+use super::{database::Database, ride_offer::RideOffer, transaction::Transaction};
 
 #[derive(Serialize, Deserialize)]
 pub struct RideAcceptance {
@@ -22,12 +18,27 @@ impl RideAcceptance {
             return false;
         }
 
-        let ride_acceptanc = ride_acceptanc.unwrap(); // Safe to unwrap now.
+        let ride_acceptanc = ride_acceptanc.unwrap();
         let ride_offer_transaction_hash = &ride_acceptanc.ride_offer_transaction_hash;
 
         if let Ok(Some(ride_offer)) = RideOffer::get_ride_offer(ride_offer_transaction_hash, db) {
+            let fare = &ride_offer.fare;
+            let from = &transaction.from;
+            let from_account_state = AccountState::get_current_state(from, &db);
+
+            if &from_account_state.balance < fare {
+                println!(
+                    "The account balance is insufficient to cover the fare for the requested ride. \
+                     Account balance is: {}, fare: {}",
+                    from_account_state.balance, fare
+                );
+
+                return false;
+            }
+
             // Check if there is any ride linked to this ride offer's request.
-            if let Ok(Some(_)) = RideRequest::get_ride(&ride_offer.ride_request_transaction_hash, db)                
+            if let Ok(Some(_)) =
+                RideRequest::get_ride(&ride_offer.ride_request_transaction_hash, db)
             {
                 println!("A ride for the requested ride offer already exists.");
                 return false;

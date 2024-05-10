@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Transfer {
     pub to: String,
-    pub value: f64,
+    pub value: u64,
 }
 
 impl Transfer {
@@ -32,7 +32,7 @@ impl Transfer {
         db: &Database,
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         let transfer: Transfer = serde_json::from_str(&transaction.data.arguments).unwrap();
-        let transfer_value = transfer.value;
+        let transfer_value: i64 = transfer.value as i64;
 
         let (from_account_state_key, from_account_state_value) =
             AccountState::update_account_state_key(&transaction.from, -transfer_value, db);
