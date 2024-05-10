@@ -1,17 +1,15 @@
-use backtrace::Backtrace;
 use hex::FromHex;
 use rand::rngs::OsRng;
 use secp256k1::{
-    ecdsa::RecoverableSignature, ecdsa::RecoveryId, ecdsa::Signature, Message, PublicKey,
-    Secp256k1, SecretKey,
+    ecdsa::RecoverableSignature, ecdsa::RecoveryId, Message, PublicKey, Secp256k1, SecretKey,
 };
 use sha3::{Digest, Keccak256};
 
 #[derive(Debug)]
 pub struct SignatureKeys {
-    secret_key: String,
-    public_key: String,
-    address_key: String,
+    pub secret_key: String,
+    pub public_key: String,
+    pub address_key: String,
 }
 
 impl SignatureKeys {
@@ -93,8 +91,6 @@ impl SignatureKeys {
 
 #[cfg(test)]
 mod tests {
-    use crate::node::signature_keys;
-
     use super::*;
 
     #[test]

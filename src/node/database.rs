@@ -1,6 +1,4 @@
-use rocksdb::{
-    ColumnFamilyDescriptor, DBWithThreadMode, IteratorMode, Options, SingleThreaded, WriteBatch, DB,
-};
+use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, Options, SingleThreaded, WriteBatch, DB};
 use std::env;
 
 #[derive(Debug)]
@@ -23,7 +21,7 @@ impl Database {
         options.create_if_missing(true);
         options.create_missing_column_families(true);
 
-        let mut cf_descriptors = vec![
+        let cf_descriptors = vec![
             ColumnFamilyDescriptor::new("block", Options::default()),
             ColumnFamilyDescriptor::new("state", Options::default()),
             ColumnFamilyDescriptor::new("blockchain", Options::default()),

@@ -1,10 +1,9 @@
-use serde::{de::value, Deserialize, Serialize};
-
+use serde::{Deserialize, Serialize};
 use crate::node::ride_request::RideRequest;
 
 use super::{
     database::Database,
-    ride_offer::{self, RideOffer},
+    ride_offer::RideOffer,
     transaction::Transaction,
 };
 

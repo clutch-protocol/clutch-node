@@ -1,8 +1,6 @@
-use serde::{de::value, Deserialize, Serialize};
-
-use crate::node::{account_state::AccountState, database::Database, transaction::Transaction};
-
-use super::ride_request::{self, RideRequest};
+use serde::{Deserialize, Serialize};
+use crate::node::{database::Database, transaction::Transaction};
+use super::ride_request::RideRequest;
 
 #[derive(Serialize, Deserialize)]
 pub struct RideOffer {
@@ -15,7 +13,7 @@ impl RideOffer {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
 
-        if let Ok(Some(ride_request)) = RideRequest::get_ride_request(&ride_request_tx_hash, db) {
+        if let Ok(Some(_)) = RideRequest::get_ride_request(&ride_request_tx_hash, db) {
             // Check if there is any ride linked to this ride offer's request.
             if let Ok(Some(_)) = RideRequest::get_ride(&ride_request_tx_hash, db) {
                 println!("A ride for the requested ride offer already exists.");
@@ -31,7 +29,7 @@ impl RideOffer {
 
     pub fn state_transaction(
         transaction: &Transaction,
-        db: &Database,
+        _db: &Database,
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let tx_hash = &transaction.hash;

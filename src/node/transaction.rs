@@ -1,15 +1,12 @@
 use super::database::Database;
 use super::ride_acceptance::RideAcceptance;
-use super::ride_offer::RideOffer;
-use super::signature_keys::{self, SignatureKeys};
+use super::{ride_offer::RideOffer, signature_keys::{self, SignatureKeys}};
 use crate::node::account_state::AccountState;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
 use crate::node::ride_request::RideRequest;
 use crate::node::transfer::Transfer;
-use serde::de::value;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::fmt::format;
 use std::vec;
 
 const FROM_GENESIS: &str = "0xGENESIS";

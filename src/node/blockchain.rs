@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use crate::node::block::Block;
 use crate::node::database::Database;
 
@@ -69,7 +68,7 @@ impl Blockchain {
             Ok(entries) => {
                 let mut blocks = Vec::new();
 
-                for (key, value) in entries {
+                for (_key, value) in entries {
                     match serde_json::from_slice::<Block>(&value) {
                         Ok(block) => {
                             blocks.push(block);

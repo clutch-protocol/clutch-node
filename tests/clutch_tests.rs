@@ -1,11 +1,10 @@
 use std::fs::File;
-use std::io::Write; // To use the write! macro for writing to a file
+use std::io::Write; 
 use std::path::Path;
 use std::vec;
 
 use clutch_node::node::blockchain::Blockchain;
 use clutch_node::node::function_call::FunctionCallType;
-use clutch_node::node::ride_offer::RideOffer;
 use clutch_node::node::{block::Block, *};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
