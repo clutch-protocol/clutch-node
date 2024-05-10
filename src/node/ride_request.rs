@@ -20,8 +20,8 @@ impl RideRequest {
         _db: &Database,
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         let ride_request: RideRequest = serde_json::from_str(&transaction.data.arguments).unwrap();
-        let tx_hash = &transaction.hash;
-        let ride_request_key = Self::construct_ride_request_key(tx_hash);
+        let ride_request_tx_hash = &transaction.hash;
+        let ride_request_key = Self::construct_ride_request_key(ride_request_tx_hash);
         let ride_request_value = serde_json::to_string(&ride_request).unwrap().into_bytes();
 
         vec![Some((ride_request_key, ride_request_value))]
