@@ -24,13 +24,13 @@ impl RideAcceptance {
         if let Ok(Some(ride_offer)) = RideOffer::get_ride_offer(ride_offer_transaction_hash, db) {
             let fare = &ride_offer.fare;
             let from = &transaction.from;
-            let from_account_state = AccountState::get_current_state(from, &db);
+            let passenger_account_state = AccountState::get_current_state(from, &db);
 
-            if &from_account_state.balance < fare {
+            if &passenger_account_state.balance < fare {
                 println!(
                     "The account balance is insufficient to cover the fare for the requested ride. \
                      Account balance is: {}, fare: {}",
-                    from_account_state.balance, fare
+                    passenger_account_state.balance, fare
                 );
 
                 return false;
@@ -86,10 +86,19 @@ impl RideAcceptance {
         let ride_offer_acceptance_value =
             serde_json::to_string(&ride_tx_hash).unwrap().into_bytes();
 
+        let ride_offer = RideOffer::get_ride_offer(&ride_offer_tx_hash, db)
+            .unwrap()
+            .unwrap();
+
+        let transfer_value: i64 = ride_offer.fare as i64;
+        let (passenger_account_state_key, passenger_account_state_value) =
+            AccountState::update_account_state_key(&transaction.from, -transfer_value, db);
+
         vec![
             Some((ride_key, ride_value)),
             Some((ride_request_acceptance_key, ride_request_acceptance_value)),
             Some((ride_offer_acceptance_key, ride_offer_acceptance_value)),
+            Some((passenger_account_state_key, passenger_account_state_value)),
         ]
     }
 
