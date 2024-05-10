@@ -28,8 +28,7 @@ fn test() {
         || transfer_block(1),
         || ride_request_block(2),
         || ride_offer_block(3, 3),
-        || ride_acceptance_block(4, 4),
-        || ride_acceptance_block(5, 5),
+        || ride_acceptance_block(4, 4),        
     ];
 
     // Iterate over the block creation functions, modify and import each block

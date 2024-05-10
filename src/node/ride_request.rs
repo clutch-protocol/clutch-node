@@ -30,7 +30,7 @@ impl RideRequest {
     pub fn get_ride_request(
         ride_request_tx_hash: &str,
         db: &Database,
-    ) -> Result<RideRequest, String> {
+    ) -> Result<Option<RideRequest>, String> {
         let key = Self::construct_ride_request_key(ride_request_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => {
@@ -43,7 +43,7 @@ impl RideRequest {
                     Err(_) => Err("Failed to deserialize RideRequest".to_string()),
                 }
             }
-            Ok(None) => Err("No ride request found for the given transaction hash".to_string()),
+            Ok(None) => Ok(None),
             Err(_) => Err("Database error occurred".to_string()),
         }
     }
@@ -57,7 +57,7 @@ impl RideRequest {
             },
             Ok(None) => {
                 // println!(" No data found.{}", &ride_request_tx_hash);
-                Ok(None) 
+                Ok(None)
             }
             Err(_) => Err("Database error occurred".to_string()),
         }
@@ -68,7 +68,7 @@ impl RideRequest {
     }
 
     pub fn construct_ride_request_acceptance_key(ride_request_tx_hash: &str) -> Vec<u8> {
-        let key = format!("ride_request_{}:ride", ride_request_tx_hash);        
+        let key = format!("ride_request_{}:ride", ride_request_tx_hash);
         key.into_bytes()
     }
 }

@@ -15,50 +15,18 @@ impl RideOffer {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
 
-        let exist_ride_request: bool =
-            RideOffer::check_ride_request_exist(&ride_request_tx_hash, &db);
-        if !exist_ride_request {
-            println!("has_exsist_ride_request: {}", exist_ride_request);
+        if let Ok(Some(ride_request)) = RideRequest::get_ride_request(&ride_request_tx_hash, db) {
+            // Check if there is any ride linked to this ride offer's request.
+            if let Ok(Some(_)) = RideRequest::get_ride(&ride_request_tx_hash, db) {
+                println!("A ride for the requested ride offer already exists.");
+                return false;
+            }
+        } else {
+            println!("Ride offer does not exist or failed to retrieve.");
             return false;
         }
 
-        let has_ride = RideOffer::check_has_ride_by_ride_request(&ride_request_tx_hash, &db);
-        if has_ride {
-            println!("has_ride: {}", has_ride);
-            return false;
-        }
-
-        return true;
-    }
-
-    fn check_ride_request_exist(ride_request_tx_hash: &str, db: &Database) -> bool {
-        match RideRequest::get_ride_request(&ride_request_tx_hash, db) {
-            Ok(ride_request) => true,
-            Err(_) => {
-                println!(
-                    "No ride request found for the given transaction hash: {}",
-                    ride_request_tx_hash
-                );
-                false
-            }
-        }
-    }
-
-    fn check_has_ride_by_ride_request(ride_request_tx_hash: &str, db: &Database) -> bool {
-        match RideRequest::get_ride(&ride_request_tx_hash, &db) {
-            Ok(None) => false,
-            Ok(Some(ride_tx_hash)) => {
-                println!("Ride request has a ride: {}", ride_tx_hash);
-                true
-            }
-            Err(_) => {
-                println!(
-                    "No ride found for the given ride request transaction hash: {}",
-                    ride_request_tx_hash
-                );
-                false
-            }
-        }
+        true
     }
 
     pub fn state_transaction(
@@ -73,7 +41,10 @@ impl RideOffer {
         vec![Some((ride_offer_key, ride_offer_value))]
     }
 
-    pub fn get_ride_offer(ride_offer_tx_hash: &str, db: &Database) -> Result<Option<RideOffer>, String> {
+    pub fn get_ride_offer(
+        ride_offer_tx_hash: &str,
+        db: &Database,
+    ) -> Result<Option<RideOffer>, String> {
         let key = Self::construct_ride_offer_key(ride_offer_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => {
