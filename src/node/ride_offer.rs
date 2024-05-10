@@ -73,7 +73,7 @@ impl RideOffer {
         vec![Some((ride_offer_key, ride_offer_value))]
     }
 
-    pub fn get_ride_offer(ride_offer_tx_hash: &str, db: &Database) -> Result<RideOffer, String> {
+    pub fn get_ride_offer(ride_offer_tx_hash: &str, db: &Database) -> Result<Option<RideOffer>, String> {
         let key = Self::construct_ride_offer_key(ride_offer_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => {
@@ -86,7 +86,7 @@ impl RideOffer {
                     Err(_) => Err("Failed to deserialize RideOffer".to_string()),
                 }
             }
-            Ok(None) => Err("No ride offer found for the given transaction hash".to_string()),
+            Ok(None) => Ok(None),
             Err(_) => Err("Database error occurred".to_string()),
         }
     }

@@ -23,12 +23,13 @@ const RIDE_OFFER_TX_HASH: &str = "538b37743e2d67874a489f1d025a63a8ba9a35eef5cf86
 fn test() {
     let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
 
-     // Import multiple blocks using an array of closure functions
-     let blocks = [
+    // Import multiple blocks using an array of closure functions
+    let blocks = [
         || transfer_block(1),
         || ride_request_block(2),
         || ride_offer_block(3, 3),
         || ride_acceptance_block(4, 4),
+        || ride_acceptance_block(5, 5),
     ];
 
     // Iterate over the block creation functions, modify and import each block
@@ -36,27 +37,30 @@ fn test() {
         let mut block = block_creator();
         if let Err(e) = import_block(&mut blockchain, &mut block) {
             println!("Error importing block: {}", e);
-            return;  // Optionally return early if a block fails to import
+            continue;
         }
     }
 
     // Output the blockchain status
-    let latest_block = blockchain.get_latest_block().expect("Failed to get the latest block");
+    let latest_block = blockchain
+        .get_latest_block()
+        .expect("Failed to get the latest block");
     println!(
         "Blockchain name: {:#?}, latest block index: {}",
-        blockchain.name,
-        latest_block.index,
+        blockchain.name, latest_block.index,
     );
 
     // Save and cleanup tasks
     save_blocks_to_file(&blockchain);
     blockchain.cleanup_if_developer_mode();
-
 }
 
 fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), String> {
     // Update the previous hash and import the block
-    block.previous_hash = blockchain.get_latest_block().expect("Failed to get the latest block").hash;        
+    block.previous_hash = blockchain
+        .get_latest_block()
+        .expect("Failed to get the latest block")
+        .hash;
     blockchain.block_import(block)
 }
 
@@ -109,11 +113,7 @@ fn transfer_block(index: usize) -> Block {
         transfer,
     );
 
-    Block::new_block(
-        index,
-        "50c2a0a779b3eb3d6c2421422f92a8d4257e203bfe19dbf521172ad39e1d07ea".to_string(),
-        vec![transfer_request_transcation],
-    )
+    Block::new_block(index, String::new(), vec![transfer_request_transcation])
 }
 
 fn ride_request_block(index: usize) -> Block {
@@ -136,11 +136,7 @@ fn ride_request_block(index: usize) -> Block {
         ride_request,
     );
 
-    Block::new_block(
-        index,
-        "50c2a0a779b3eb3d6c2421422f92a8d4257e203bfe19dbf521172ad39e1d07ea".to_string(),
-        vec![ride_request_transcation],
-    )
+    Block::new_block(index, String::new(), vec![ride_request_transcation])
 }
 
 fn ride_offer_block(index: usize, nonce: u64) -> Block {
@@ -157,11 +153,7 @@ fn ride_offer_block(index: usize, nonce: u64) -> Block {
         ride_offer,
     );
 
-    Block::new_block(
-        index,
-        "50c2a0a779b3eb3d6c2421422f92a8d4257e203bfe19dbf521172ad39e1d07ea".to_string(),
-        vec![ride_offer_transaction],
-    )
+    Block::new_block(index, String::new(), vec![ride_offer_transaction])
 }
 
 fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
@@ -177,9 +169,5 @@ fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
         ride_acceptance,
     );
 
-    Block::new_block(
-        index,
-        "50c2a0a779b3eb3d6c2421422f92a8d4257e203bfe19dbf521172ad39e1d07ea".to_string(),
-        vec![ride_acceptance_transaction],
-    )
+    Block::new_block(index, String::new(), vec![ride_acceptance_transaction])
 }
