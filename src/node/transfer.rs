@@ -34,16 +34,16 @@ impl Transfer {
         let transfer: Transfer = serde_json::from_str(&transaction.data.arguments).unwrap();
         let transfer_value = transfer.value;
 
-        let from = &transaction.from;
-        let (from_key, from_serialized_state) =
-            AccountState::update_account_state_key(from, -transfer_value, db);
+        let (from_account_state_key, from_account_state_value) =
+            AccountState::update_account_state_key(&transaction.from, -transfer_value, db);
 
         let to = &transfer.to;
-        let (to_key, to_serialized_state) = AccountState::update_account_state_key(to, transfer_value, db);
+        let (to_account_state_key, to_account_state_value) =
+            AccountState::update_account_state_key(to, transfer_value, db);
 
         vec![
-            Some((from_key, from_serialized_state)),
-            Some((to_key, to_serialized_state)),
+            Some((from_account_state_key, from_account_state_value)),
+            Some((to_account_state_key, to_account_state_value)),
         ]
     }
 }
