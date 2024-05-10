@@ -21,10 +21,18 @@ impl RideRequest {
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         let ride_request: RideRequest = serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_request_tx_hash = &transaction.hash;
+        let from = &transaction.from;
+
         let ride_request_key = Self::construct_ride_request_key(ride_request_tx_hash);
         let ride_request_value = serde_json::to_string(&ride_request).unwrap().into_bytes();
 
-        vec![Some((ride_request_key, ride_request_value))]
+        let ride_request_from_key = Self::construct_ride_request_from_key(&ride_request_tx_hash);
+        let ride_request_from_value = serde_json::to_string(&from).unwrap().into_bytes();
+
+        vec![
+            Some((ride_request_key, ride_request_value)),
+            Some((ride_request_from_key, ride_request_from_value)),
+        ]
     }
 
     pub fn get_ride_request(
@@ -65,6 +73,11 @@ impl RideRequest {
 
     fn construct_ride_request_key(ride_request_tx_hash: &str) -> Vec<u8> {
         format!("ride_request_{}", ride_request_tx_hash).into_bytes()
+    }
+
+    pub fn construct_ride_request_from_key(ride_request_tx_hash: &str) -> Vec<u8> {
+        let key = format!("ride_request_{}:from", ride_request_tx_hash);
+        key.into_bytes()
     }
 
     pub fn construct_ride_request_acceptance_key(ride_request_tx_hash: &str) -> Vec<u8> {
