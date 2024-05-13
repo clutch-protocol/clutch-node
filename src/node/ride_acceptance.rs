@@ -79,27 +79,30 @@ impl RideAcceptance {
         let ride_acceptance: RideAcceptance =
             serde_json::from_str(&transaction.data.arguments).unwrap();
 
+        let ride_acceptance_tx_hash = &transaction.hash;
+        
         let ride_offer_tx_hash = &ride_acceptance.ride_offer_transaction_hash;
         let ride_request_tx_hash = &RideOffer::get_ride_offer(&ride_offer_tx_hash, db)
             .unwrap()
             .unwrap()
             .ride_request_transaction_hash;
 
-        let ride_tx_hash = &transaction.hash;
-        let ride_key = Self::construct_ride_key(&ride_tx_hash);
+        let ride_key = Self::construct_ride_key(&ride_acceptance_tx_hash);
         let ride_value = serde_json::to_string(&ride_acceptance)
             .unwrap()
             .into_bytes();
 
         let ride_request_acceptance_key =
             RideRequest::construct_ride_request_acceptance_key(&ride_request_tx_hash);
-        let ride_request_acceptance_value =
-            serde_json::to_string(&ride_tx_hash).unwrap().into_bytes();
+        let ride_request_acceptance_value = serde_json::to_string(&ride_acceptance_tx_hash)
+            .unwrap()
+            .into_bytes();
 
         let ride_offer_acceptance_key =
             RideOffer::construct_ride_offer_acceptance_key(&ride_offer_tx_hash);
-        let ride_offer_acceptance_value =
-            serde_json::to_string(&ride_tx_hash).unwrap().into_bytes();
+        let ride_offer_acceptance_value = serde_json::to_string(&ride_acceptance_tx_hash)
+            .unwrap()
+            .into_bytes();
 
         let ride_offer = RideOffer::get_ride_offer(&ride_offer_tx_hash, db)
             .unwrap()

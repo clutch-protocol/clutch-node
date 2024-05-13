@@ -16,8 +16,8 @@ impl RidePay {
         transaction: &Transaction,
         _db: &Database,
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
-        let _ride_pay: RidePay = serde_json::from_str(&transaction.data.arguments).unwrap();
-
+        let ride_pay: RidePay = serde_json::from_str(&transaction.data.arguments).unwrap();
+        let ride_acceptance_tx_hash = ride_pay.ride_acceptance_transaction_hash;
 
         vec![]
     }

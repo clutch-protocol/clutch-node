@@ -32,8 +32,9 @@ impl RideOffer {
         _db: &Database,
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
-        let tx_hash = &transaction.hash;
-        let ride_offer_key = Self::construct_ride_offer_key(tx_hash);
+        let ride_offer_tx_hash = &transaction.hash;
+
+        let ride_offer_key = Self::construct_ride_offer_key(ride_offer_tx_hash);
         let ride_offer_value = serde_json::to_string(&ride_offer).unwrap().into_bytes();
 
         vec![Some((ride_offer_key, ride_offer_value))]
