@@ -1,3 +1,5 @@
+use crate::node::ride_acceptance::{self, RideAcceptance};
+
 use super::{database::Database, transaction::Transaction};
 use serde::{Deserialize, Serialize};
 
@@ -14,11 +16,12 @@ impl RidePay {
 
     pub fn state_transaction(
         transaction: &Transaction,
-        _db: &Database,
+        db: &Database,
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
         let ride_pay: RidePay = serde_json::from_str(&transaction.data.arguments).unwrap();
         let ride_acceptance_tx_hash = ride_pay.ride_acceptance_transaction_hash;
-
+        let ride_acceptance = RideAcceptance::get_ride(&ride_acceptance_tx_hash, &db);
+        
         vec![]
     }
 
