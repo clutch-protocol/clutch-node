@@ -10,26 +10,26 @@ pub struct RideAcceptance {
 
 impl RideAcceptance {
     pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
-        let ride_acceptanc: Result<RideAcceptance, _> =
+        let ride_acceptance: Result<RideAcceptance, _> =
             serde_json::from_str(&transaction.data.arguments);
 
-        if ride_acceptanc.is_err() {
+        if ride_acceptance.is_err() {
             println!("Failed to deserialize transaction data.");
             return false;
         }
 
-        let ride_acceptanc = ride_acceptanc.unwrap();
-        let ride_offer_transaction_hash = &ride_acceptanc.ride_offer_transaction_hash;
+        let ride_acceptance = ride_acceptance.unwrap();
+        let ride_offer_transaction_hash = &ride_acceptance.ride_offer_transaction_hash;
 
         if let Ok(Some(ride_offer)) = RideOffer::get_ride_offer(ride_offer_transaction_hash, db) {
             let fare = &ride_offer.fare;
             let from = &transaction.from;
 
-            if let Ok(Some(from)) =
+            if let Ok(Some(passenger)) =
                 RideRequest::get_from(&ride_offer.ride_request_transaction_hash, &db)
             {
-                if &from.to_string() != &transaction.from {
-                    println!("Ride request 'from' field does not match the transaction 'from' field. Expected: {}, found: {}.", transaction.from, from);
+                if &passenger.to_string() != &transaction.from {
+                    println!("Ride request 'from' field does not match the transaction 'from' field. Expected: {}, found: {}.", transaction.from, passenger);
                     return false;
                 }
             } else {

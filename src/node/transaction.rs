@@ -1,10 +1,18 @@
-use super::database::Database;
-use super::ride_acceptance::RideAcceptance;
-use super::{ride_offer::RideOffer, signature_keys::{self, SignatureKeys}};
-use crate::node::account_state::AccountState;
-use crate::node::function_call::{FunctionCall, FunctionCallType};
-use crate::node::ride_request::RideRequest;
-use crate::node::transfer::Transfer;
+
+use super::{
+    ride_offer::RideOffer,
+    signature_keys::{self, SignatureKeys},
+};
+use crate::node::{
+    account_state::AccountState,
+    function_call::{FunctionCall, FunctionCallType},
+    ride_request::RideRequest,
+    transfer::Transfer,
+    ride_acceptance::RideAcceptance,
+    ride_pay::RidePay,
+    database::Database
+};
+
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::vec;
@@ -174,6 +182,7 @@ impl Transaction {
             FunctionCallType::RideRequest => RideRequest::verify_state(&self, db),
             FunctionCallType::RideOffer => RideOffer::verify_state(&self, db),
             FunctionCallType::RideAcceptance => RideAcceptance::verify_state(&self, db),
+            FunctionCallType::RidePay => RidePay::verify_state(&self, db),
             _ => false,
         };
     }
@@ -184,6 +193,7 @@ impl Transaction {
             FunctionCallType::RideRequest => RideRequest::state_transaction(&self, db),
             FunctionCallType::RideOffer => RideOffer::state_transaction(&self, db),
             FunctionCallType::RideAcceptance => RideAcceptance::state_transaction(&self, db),
+            FunctionCallType::RidePay => RidePay::state_transaction(&self, db),
             _ => vec![None],
         };
 

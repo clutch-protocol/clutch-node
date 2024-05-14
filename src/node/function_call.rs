@@ -14,9 +14,9 @@ pub enum FunctionCallType{
     RideRequest,
     RideOffer,
     RideAcceptance,
+    RidePay,
     ConfirmArrival,
     ComplainArrival,
-    RidePayment,
 }
 
 impl fmt::Display for FunctionCallType {
