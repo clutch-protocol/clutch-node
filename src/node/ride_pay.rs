@@ -62,9 +62,8 @@ impl RidePay {
             .unwrap()
             .unwrap()
             .ride_offer_transaction_hash;
-
-        let ride_offer = RideOffer::get_ride_offer(&ride_offer_tx_hash, &db);
-        let ride_fare = ride_offer.unwrap().unwrap().fare;
+        
+        let ride_fare = ride_pay.fare;
         let driver = RideOffer::get_from(&ride_offer_tx_hash, &db)
             .unwrap()
             .unwrap();
