@@ -2,7 +2,7 @@ use crate::node::{
     account_state::AccountState, ride_acceptance::RideAcceptance, ride_offer::RideOffer,
 };
 
-use super::{database::Database, ride_offer, transaction::Transaction};
+use super::{database::Database, transaction::Transaction};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
