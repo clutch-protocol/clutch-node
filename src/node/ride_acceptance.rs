@@ -80,7 +80,7 @@ impl RideAcceptance {
             serde_json::from_str(&transaction.data.arguments).unwrap();
 
         let ride_acceptance_tx_hash = &transaction.hash;
-        
+
         let ride_offer_tx_hash = &ride_acceptance.ride_offer_transaction_hash;
         let ride_request_tx_hash = &RideOffer::get_ride_offer(&ride_offer_tx_hash, db)
             .unwrap()
@@ -120,13 +120,22 @@ impl RideAcceptance {
         ]
     }
 
-    pub fn get_ride(ride_acceptance_tx_hash: &str, db: &Database) -> Result<Option<String>, String> {
+    pub fn get_ride_acceptance(
+        ride_acceptance_tx_hash: &str,
+        db: &Database,
+    ) -> Result<Option<RideAcceptance>, String> {
         let key = Self::construct_ride_key(ride_acceptance_tx_hash);
         match db.get("state", &key) {
-            Ok(Some(value)) => match String::from_utf8(value) {
-                Ok(ride_tx_has) => Ok(Some(ride_tx_has)),
-                Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
-            },
+            Ok(Some(value)) => {
+                let ride_acceptance_str = match String::from_utf8(value) {
+                    Ok(v) => v,
+                    Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
+                };
+                match serde_json::from_str(&ride_acceptance_str) {
+                    Ok(ride_acceptance) => Ok(ride_acceptance),
+                    Err(_) => Err("Failed to deserialize RideOffer".to_string()),
+                }
+            }
             Ok(None) => Ok(None),
             Err(_) => Err("Database error occurred".to_string()),
         }
