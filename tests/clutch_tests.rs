@@ -3,9 +3,9 @@ use std::io::Write;
 use std::path::Path;
 use std::vec;
 
-use clutch_node::node::blockchain::Blockchain;
-use clutch_node::node::function_call::FunctionCallType;
-use clutch_node::node::{block::Block, *};
+use clutch_node::node::{
+    block::Block, blockchain::Blockchain, function_call::FunctionCallType, *,
+};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
@@ -14,6 +14,8 @@ const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
 const RIDE_REQUEST_TX_HASH: &str =
     "02724637e27d8aba2057605a6f6d10607b5921cee81ffc9980484fb5b555f183";
 const RIDE_OFFER_TX_HASH: &str = "bfc655f837861f5a33d1101d2800bbb5f07185df62a39fcf9e637d8c811d85fe";
+const RIDE_ACCEPTANCE_TX_HASH: &str =
+    "725555d18b0f8a0a211bb6aa7b2bc2a06587e92311294fa3aef83612468ddf65";
 
 #[test]
 fn test() {
@@ -25,6 +27,8 @@ fn test() {
         || ride_request_block(2),
         || ride_offer_block(3, 3),
         || ride_acceptance_block(4, 4),
+        || ride_pay_block(5, 5),
+        || ride_pay_block(6, 6),
     ];
 
     // Iterate over the block creation functions, modify and import each block
@@ -170,4 +174,21 @@ fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
     );
 
     Block::new_block(index, String::new(), vec![ride_acceptance_transaction])
+}
+
+fn ride_pay_block(index: usize, nonce: u64) -> Block {
+    let ride_pay = ride_pay::RidePay {
+        fare: 25,
+        ride_acceptance_transaction_hash: RIDE_ACCEPTANCE_TX_HASH.to_string(),
+    };
+
+    let ride_pay_transaction = transaction::Transaction::new_transaction(
+        FROM_ADDRESS_KEY.to_string(),
+        nonce,
+        FunctionCallType::RidePay,
+        FROM_SECRET_KEY.to_string(),
+        ride_pay,
+    );
+
+    Block::new_block(index, String::new(), vec![ride_pay_transaction])
 }
