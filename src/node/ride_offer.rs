@@ -20,7 +20,7 @@ impl RideOffer {
                 return false;
             }
         } else {
-            println!("Ride offer does not exist or failed to retrieve.");
+            println!("Ride request does not exist or failed to retrieve.");
             return false;
         }
 

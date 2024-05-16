@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct RideRequest {
     pub pickup_location: Coordinates,
     pub dropoff_location: Coordinates,
+    pub fare: u64,
 }
 
 impl RideRequest {

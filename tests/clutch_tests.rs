@@ -10,10 +10,10 @@ const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
 const FROM_SECRET_KEY: &str = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df2f81f48e9f2748f";
 const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
 const RIDE_REQUEST_TX_HASH: &str =
-    "02724637e27d8aba2057605a6f6d10607b5921cee81ffc9980484fb5b555f183";
-const RIDE_OFFER_TX_HASH: &str = "bfc655f837861f5a33d1101d2800bbb5f07185df62a39fcf9e637d8c811d85fe";
+    "939368c8bc84dc2b10286a420ee7100568d4c36a7f6308d1c4b29f0f77b4e83b";
+const RIDE_OFFER_TX_HASH: &str = "b32250c25c42cd25f9b9af99285fe9ec434ed260e5b426dac47dd820fedd06b5";
 const RIDE_ACCEPTANCE_TX_HASH: &str =
-    "725555d18b0f8a0a211bb6aa7b2bc2a06587e92311294fa3aef83612468ddf65";
+    "d269c2ec9d03df1450e7330c776dd814cbafb61a6652a68c945be1c185508f65";
 
 #[test]
 fn test() {
@@ -21,12 +21,13 @@ fn test() {
 
     // Import multiple blocks using an array of closure functions
     let blocks = [
-        || transfer_block(1),
-        || ride_request_block(2,2),
-        || ride_offer_block(3, 3),
+        || transfer_block(1, 1, 10),
+        || ride_request_block(2, 2, 20),
+        || ride_offer_block(3, 3, 30),
         || ride_acceptance_block(4, 4),
-        || ride_pay_block(5, 5, 12),
-        || ride_pay_block(6, 6, 13),
+        || ride_pay_block(5, 5, 5),
+        || ride_pay_block(6, 6, 10),
+        || ride_pay_block(7, 7, 15),
     ];
 
     // Iterate over the block creation functions, modify and import each block
@@ -101,15 +102,15 @@ fn save_blocks_to_file(blockchain: &Blockchain) {
     }
 }
 
-fn transfer_block(index: usize) -> Block {
+fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
     let transfer = transfer::Transfer {
         to: TO.to_string(),
-        value: 10,
+        value: transfer_value,
     };
 
     let transfer_request_transcation = transaction::Transaction::new_transaction(
         FROM_ADDRESS_KEY.to_string(),
-        1,
+        nonce,
         FunctionCallType::Transfer,
         FROM_SECRET_KEY.to_string(),
         transfer,
@@ -118,8 +119,9 @@ fn transfer_block(index: usize) -> Block {
     Block::new_block(index, String::new(), vec![transfer_request_transcation])
 }
 
-fn ride_request_block(index: usize, nonce: u64) -> Block {
+fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {
     let ride_request = ride_request::RideRequest {
+        fare: fare,
         pickup_location: coordinate::Coordinates {
             latitude: 35.55841414973938,
             longitude: 51.23861773552397,
@@ -141,9 +143,9 @@ fn ride_request_block(index: usize, nonce: u64) -> Block {
     Block::new_block(index, String::new(), vec![ride_request_transcation])
 }
 
-fn ride_offer_block(index: usize, nonce: u64) -> Block {
+fn ride_offer_block(index: usize, nonce: u64, fare: u64) -> Block {
     let ride_offer = ride_offer::RideOffer {
-        fare: 25,
+        fare: fare,
         ride_request_transaction_hash: RIDE_REQUEST_TX_HASH.to_string(),
     };
 
