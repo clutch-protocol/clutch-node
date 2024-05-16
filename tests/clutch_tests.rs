@@ -3,9 +3,7 @@ use std::io::Write;
 use std::path::Path;
 use std::vec;
 
-use clutch_node::node::{
-    block::Block, blockchain::Blockchain, function_call::FunctionCallType, *,
-};
+use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
@@ -24,11 +22,11 @@ fn test() {
     // Import multiple blocks using an array of closure functions
     let blocks = [
         || transfer_block(1),
-        || ride_request_block(2),
+        || ride_request_block(2,2),
         || ride_offer_block(3, 3),
         || ride_acceptance_block(4, 4),
-        || ride_pay_block(5, 5),
-        || ride_pay_block(6, 6),
+        || ride_pay_block(5, 5, 12),
+        || ride_pay_block(6, 6, 13),
     ];
 
     // Iterate over the block creation functions, modify and import each block
@@ -120,7 +118,7 @@ fn transfer_block(index: usize) -> Block {
     Block::new_block(index, String::new(), vec![transfer_request_transcation])
 }
 
-fn ride_request_block(index: usize) -> Block {
+fn ride_request_block(index: usize, nonce: u64) -> Block {
     let ride_request = ride_request::RideRequest {
         pickup_location: coordinate::Coordinates {
             latitude: 35.55841414973938,
@@ -134,7 +132,7 @@ fn ride_request_block(index: usize) -> Block {
 
     let ride_request_transcation = transaction::Transaction::new_transaction(
         FROM_ADDRESS_KEY.to_string(),
-        2,
+        nonce,
         FunctionCallType::RideRequest,
         FROM_SECRET_KEY.to_string(),
         ride_request,
@@ -176,9 +174,9 @@ fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
     Block::new_block(index, String::new(), vec![ride_acceptance_transaction])
 }
 
-fn ride_pay_block(index: usize, nonce: u64) -> Block {
+fn ride_pay_block(index: usize, nonce: u64, fare: u64) -> Block {
     let ride_pay = ride_pay::RidePay {
-        fare: 25,
+        fare: fare,
         ride_acceptance_transaction_hash: RIDE_ACCEPTANCE_TX_HASH.to_string(),
     };
 
