@@ -15,6 +15,7 @@ pub enum FunctionCallType{
     RideOffer,
     RideAcceptance,
     RidePay,
+    RideCancel,
     ConfirmArrival,
     ComplainArrival,
 }
