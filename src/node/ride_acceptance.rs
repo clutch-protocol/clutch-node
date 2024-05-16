@@ -114,8 +114,8 @@ impl RideAcceptance {
 
         vec![
             Some((ride_acceptance_key, ride_acceptance_value)), //ride_{} 
-            Some((ride_request_acceptance_key, ride_request_acceptance_value)), //ride_request_{}:ride
-            Some((ride_offer_acceptance_key, ride_offer_acceptance_value)), //"ride_offer_{}:ride
+            Some((ride_request_acceptance_key, ride_request_acceptance_value)), //ride_request_{}:ride_acceptance
+            Some((ride_offer_acceptance_key, ride_offer_acceptance_value)), //"ride_offer_{}:ride_acceptance
             Some((passenger_account_state_key, passenger_account_state_value)),
         ]
     }
