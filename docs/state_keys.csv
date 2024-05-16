@@ -5,5 +5,5 @@ ride_offer_{}
 ride_offer_{}:from
 ride_offer_{}:ride_acceptance
 ride_acceptance_{}
+ride_acceptance_{}:paid
 ride_pay_{}
-ride_pay_{}:ride_acceptance

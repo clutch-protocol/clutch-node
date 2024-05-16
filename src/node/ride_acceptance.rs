@@ -144,4 +144,8 @@ impl RideAcceptance {
     pub fn construct_ride_acceptance_key(tx_hash: &str) -> Vec<u8> {
         format!("ride_acceptance_{}", tx_hash).into_bytes()
     }
+
+    pub fn construct_ride_acceptance_fare_paid_key(tx_hash: &str) -> Vec<u8> {
+        format!("ride_acceptance_{}:fare_paid", tx_hash).into_bytes()
+    }
 }
