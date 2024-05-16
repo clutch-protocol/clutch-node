@@ -162,6 +162,23 @@ impl RideAcceptance {
         }
     }
 
+    pub fn get_ride_cancel(
+        ride_acceptance_tx_hash: &str,
+        db: &Database,
+    ) -> Result<Option<String>, String> {
+        let key = Self::construct_ride_acceptance_cancel_key(ride_acceptance_tx_hash);
+        match db.get("state", &key) {
+            Ok(Some(value)) => {
+                match String::from_utf8(value) {
+                    Ok(v) => Ok(Some(v)),
+                    Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
+                }             
+            }
+            Ok(None) => Ok(None),
+            Err(_) => Err("Database error occurred".to_string()),
+        }
+    }
+
     pub fn construct_ride_acceptance_key(ride_acceptance_tx_hash: &str) -> Vec<u8> {
         format!("ride_acceptance_{}", ride_acceptance_tx_hash).into_bytes()
     }
