@@ -1,7 +1,6 @@
 
 use super::{
-    ride_offer::RideOffer,
-    signature_keys::{self, SignatureKeys},
+    ride_cancel::RideCancel, ride_offer::RideOffer, signature_keys::{self, SignatureKeys}
 };
 use crate::node::{
     account_state::AccountState,
@@ -183,6 +182,7 @@ impl Transaction {
             FunctionCallType::RideOffer => RideOffer::verify_state(&self, db),
             FunctionCallType::RideAcceptance => RideAcceptance::verify_state(&self, db),
             FunctionCallType::RidePay => RidePay::verify_state(&self, db),
+            FunctionCallType::RideCancel => RideCancel::verify_state(&self, db),
             _ => false,
         };
     }
@@ -194,6 +194,7 @@ impl Transaction {
             FunctionCallType::RideOffer => RideOffer::state_transaction(&self, db),
             FunctionCallType::RideAcceptance => RideAcceptance::state_transaction(&self, db),
             FunctionCallType::RidePay => RidePay::state_transaction(&self, db),
+            FunctionCallType::RideCancel => RideCancel::state_transaction(&self, db),
             _ => vec![None],
         };
 
