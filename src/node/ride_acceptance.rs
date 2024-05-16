@@ -87,8 +87,8 @@ impl RideAcceptance {
             .unwrap()
             .ride_request_transaction_hash;
 
-        let ride_key = Self::construct_ride_key(&ride_acceptance_tx_hash);
-        let ride_value = serde_json::to_string(&ride_acceptance)
+        let ride_acceptance_key = Self::construct_ride_acceptance_key(&ride_acceptance_tx_hash);
+        let ride_acceptance_value = serde_json::to_string(&ride_acceptance)
             .unwrap()
             .into_bytes();
 
@@ -113,7 +113,7 @@ impl RideAcceptance {
             AccountState::update_account_state_key(&transaction.from, -transfer_value, db);
 
         vec![
-            Some((ride_key, ride_value)), //ride_{} 
+            Some((ride_acceptance_key, ride_acceptance_value)), //ride_{} 
             Some((ride_request_acceptance_key, ride_request_acceptance_value)), //ride_request_{}:ride
             Some((ride_offer_acceptance_key, ride_offer_acceptance_value)), //"ride_offer_{}:ride
             Some((passenger_account_state_key, passenger_account_state_value)),
@@ -124,7 +124,7 @@ impl RideAcceptance {
         ride_acceptance_tx_hash: &str,
         db: &Database,
     ) -> Result<Option<RideAcceptance>, String> {
-        let key = Self::construct_ride_key(ride_acceptance_tx_hash);
+        let key = Self::construct_ride_acceptance_key(ride_acceptance_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => {
                 let ride_acceptance_str = match String::from_utf8(value) {
@@ -141,7 +141,7 @@ impl RideAcceptance {
         }
     }
 
-    pub fn construct_ride_key(tx_hash: &str) -> Vec<u8> {
-        format!("ride_{}", tx_hash).into_bytes()
+    pub fn construct_ride_acceptance_key(tx_hash: &str) -> Vec<u8> {
+        format!("ride_acceptance_{}", tx_hash).into_bytes()
     }
 }

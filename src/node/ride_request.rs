@@ -89,6 +89,6 @@ impl RideRequest {
     }
 
     pub fn construct_ride_request_acceptance_key(ride_request_tx_hash: &str) -> Vec<u8> {
-        format!("ride_request_{}:ride", ride_request_tx_hash).into_bytes()
+        format!("ride_request_{}:ride_acceptance", ride_request_tx_hash).into_bytes()
     }
 }

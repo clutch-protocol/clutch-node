@@ -99,11 +99,11 @@ impl RideOffer {
         format!("ride_offer_{}", ride_offer_tx_hash).into_bytes()
     }
 
-    pub fn construct_ride_offer_acceptance_key(ride_offer_tx_hash: &str) -> Vec<u8> {
-        format!("ride_offer_{}:ride", ride_offer_tx_hash).into_bytes()
-    }
-
     pub fn construct_ride_offer_from_key(ride_request_tx_hash: &str) -> Vec<u8> {
         format!("ride_offer_{}:from", ride_request_tx_hash).into_bytes()
+    }
+
+    pub fn construct_ride_offer_acceptance_key(ride_offer_tx_hash: &str) -> Vec<u8> {
+        format!("ride_offer_{}:ride_acceptance", ride_offer_tx_hash).into_bytes()
     }
 }
