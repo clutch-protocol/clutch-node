@@ -1,5 +1,7 @@
 use crate::node::{
-    account_state::AccountState, ride_acceptance::RideAcceptance, ride_offer::RideOffer,
+    account_state::AccountState,
+    ride_acceptance::{self, RideAcceptance},
+    ride_offer::RideOffer,
 };
 
 use super::{database::Database, ride_request::RideRequest, transaction::Transaction};
@@ -84,7 +86,7 @@ impl RidePay {
                 return vec![];
             }
         };
-        
+
         let ride_acceptance_tx_hash = &ride_pay.ride_acceptance_transaction_hash;
 
         let ride_pay_key = Self::construct_ride_pay_key(&transaction.hash);
@@ -92,34 +94,27 @@ impl RidePay {
             .expect("Failed to serialize RidePay.")
             .into_bytes();
 
-        let ride_acceptance = match RideAcceptance::get_ride_acceptance(ride_acceptance_tx_hash, db)
-        {
-            Ok(Some(ride_acceptance)) => ride_acceptance,
-            Ok(None) | Err(_) => {
-                eprintln!("Ride acceptance does not exist or failed to retrieve.");
-                return vec![];
-            }
-        };
+        let ride_acceptance = RideAcceptance::get_ride_acceptance(ride_acceptance_tx_hash, db)
+            .unwrap()
+            .unwrap();
 
         let ride_offer_tx_hash = &ride_acceptance.ride_offer_transaction_hash;
-        let driver = match RideOffer::get_from(ride_offer_tx_hash, db) {
-            Ok(Some(driver)) => driver,
-            Ok(None) | Err(_) => {
-                eprintln!(
-                    "Failed to retrieve 'from' field for ride offer with transaction hash '{}'.",
-                    ride_offer_tx_hash
-                );
-                return vec![];
-            }
-        };
+        let driver = RideOffer::get_from(ride_offer_tx_hash, db)
+            .unwrap()
+            .unwrap();
 
         let transfer_value: i64 = ride_pay.fare as i64;
         let (driver_account_state_key, driver_account_state_value) =
             AccountState::update_account_state_key(&driver, transfer_value, db);
 
+        let fare_paid_key =
+            RideAcceptance::construct_ride_acceptance_fare_paid_key(&ride_acceptance_tx_hash);
+        let fare_paid_value = serde_json::to_string(&transfer_value).unwrap().into_bytes();
+
         vec![
             Some((ride_pay_key, ride_pay_value)),
             Some((driver_account_state_key, driver_account_state_value)),
+            Some((fare_paid_key, fare_paid_value)),
         ]
     }
 
