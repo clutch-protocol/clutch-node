@@ -82,6 +82,26 @@ impl RideCancel {
             }
         };
 
+        let fare_paid = match RideAcceptance::get_fare_paid(&ride_acceptance_tx_hash, db) {
+            Ok(Some(fare)) => fare,
+            Ok(None) => 0,
+            Err(_) => {
+                println!(
+                    "Failed to retrieve 'fare_paid' field for ride acceptace with transaction hash '{}'.",
+                    &ride_acceptance_tx_hash
+                );
+                return false;
+            }
+        };
+
+        if (fare_paid as u64) == ride_offer.fare {
+            println!(
+                "The full fare for ride acceptance '{}' has been paid. No further payments are needed, and the ride cannot be cancelled.",
+                &ride_acceptance_tx_hash
+            );
+            return false;
+        }
+
         if passenger.to_string() != transaction.from && driver.to_string() != transaction.from {
             println!(
                 "Transaction 'from' field does not match the expected values. Expected either passenger: '{}' or driver: '{}', but found: '{}'.",

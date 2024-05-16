@@ -183,19 +183,38 @@
   {
     "index": 7,
     "previous_hash": "f5feaef451bde25d6ec522b2d7a5f66836929614747292a2a257aa48fc71a92e",
-    "hash": "691f3091bb9c1f5d5e5b1ff4a0618947a5a79a29e860bb9f97490d3a9284a6a1",
+    "hash": "63e869d389cd98062ca570e4031b503699bd83de6004829135a3ec75a850ca18",
     "transactions": [
       {
         "from": "0xdeb4cfb63db134698e1879ea24904df074726cc0",
         "data": {
           "function_call_type": "RidePay",
-          "arguments": "{\"ride_acceptance_transaction_hash\":\"d269c2ec9d03df1450e7330c776dd814cbafb61a6652a68c945be1c185508f65\",\"fare\":15}"
+          "arguments": "{\"ride_acceptance_transaction_hash\":\"d269c2ec9d03df1450e7330c776dd814cbafb61a6652a68c945be1c185508f65\",\"fare\":10}"
         },
         "nonce": 7,
-        "signature_r": "0b83c4c2f86606f2e6c815527941be34a25bbdeffc3b8ab8b364c289f4edd2a6",
-        "signature_s": "4bef127b6f65c5fecb6fca016c7cd5a0afb812c993b75bf7d57c4cb240247ceb",
+        "signature_r": "ce663ab99bc754587acdc4a92b54e274c026d6f1fa67fde3bfad1c4e6d9e33fd",
+        "signature_s": "6d189d44833899abb7551449ecb495768e41a656400aebf6bb6d8692c206d607",
+        "signature_v": 28,
+        "hash": "1f51c31c755bc196789c2d8f4517e0a1d7301f5c9d08b2da2619930eed19fe72"
+      }
+    ]
+  },
+  {
+    "index": 8,
+    "previous_hash": "63e869d389cd98062ca570e4031b503699bd83de6004829135a3ec75a850ca18",
+    "hash": "997f9c33d7fa7e7b9dd913bf9ce5a221d3af5f51f05109fedcdea8c49e4f7074",
+    "transactions": [
+      {
+        "from": "0xdeb4cfb63db134698e1879ea24904df074726cc0",
+        "data": {
+          "function_call_type": "RideCancel",
+          "arguments": "{\"ride_acceptance_transaction_hash\":\"d269c2ec9d03df1450e7330c776dd814cbafb61a6652a68c945be1c185508f65\"}"
+        },
+        "nonce": 8,
+        "signature_r": "0af298ce7cc06a7dedc1208ac8085fe6c3c2fef564ab4b29faf96811b97387c9",
+        "signature_s": "398b3d4e79d998c61d17bdb01dfe5324227761a8fb2fa350b071fc37558411d8",
         "signature_v": 27,
-        "hash": "53d4178e7770ca1a574d1e2fe4126a7559fc4f8e3b620c3b81a108f19409b275"
+        "hash": "2dd7e4a5f730ade0e84356555bc6652c2b077ed7d7d5f41bd78cdf46d4e5f0ce"
       }
     ]
   }

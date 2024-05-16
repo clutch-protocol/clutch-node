@@ -3,7 +3,10 @@ use std::io::Write;
 use std::path::Path;
 use std::vec;
 
-use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
+use clutch_node::node::{
+    block::Block, blockchain::Blockchain, function_call::FunctionCallType, ride_cancel::RideCancel,
+    *,
+};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
@@ -25,9 +28,11 @@ fn test() {
         || ride_request_block(2, 2, 20),
         || ride_offer_block(3, 3, 30),
         || ride_acceptance_block(4, 4),
-        || ride_pay_block(5, 5, 5),
-        || ride_pay_block(6, 6, 10),
-        || ride_pay_block(7, 7, 15),
+        || ride_pay_block(5, 5, 5), //5
+        || ride_pay_block(6, 6, 10), // 5+10 = 15
+        || ride_pay_block(7, 7, 10), // 15 + 10 = 25
+        || ride_cancel_block(8, 8),
+        || ride_pay_block(9, 9, 5),
     ];
 
     // Iterate over the block creation functions, modify and import each block
@@ -191,4 +196,20 @@ fn ride_pay_block(index: usize, nonce: u64, fare: u64) -> Block {
     );
 
     Block::new_block(index, String::new(), vec![ride_pay_transaction])
+}
+
+fn ride_cancel_block(index: usize, nonce: u64) -> Block {
+    let ride_pay = ride_cancel::RideCancel {
+        ride_acceptance_transaction_hash: RIDE_ACCEPTANCE_TX_HASH.to_string(),
+    };
+
+    let ride_cancel_transaction = transaction::Transaction::new_transaction(
+        FROM_ADDRESS_KEY.to_string(),
+        nonce,
+        FunctionCallType::RideCancel,
+        FROM_SECRET_KEY.to_string(),
+        ride_pay,
+    );
+
+    Block::new_block(index, String::new(), vec![ride_cancel_transaction])
 }
