@@ -1,0 +1,9 @@
+﻿ride_request_{}
+ride_request_{}:from
+ride_request_{}:ride_acceptance
+ride_offer_{}
+ride_offer_{}:from
+ride_offer_{}:ride_acceptance
+ride_acceptance_{}
+ride_pay_{}
+ride_pay_{}:ride_acceptance

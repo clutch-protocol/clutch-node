@@ -84,13 +84,20 @@ impl RidePay {
                 return vec![];
             }
         };
+        
+        let ride_acceptance_tx_hash = &ride_pay.ride_acceptance_transaction_hash;
 
         let ride_pay_key = Self::construct_ride_pay_key(&transaction.hash);
         let ride_pay_value = serde_json::to_string(&ride_pay)
             .expect("Failed to serialize RidePay.")
             .into_bytes();
 
-        let ride_acceptance_tx_hash = &ride_pay.ride_acceptance_transaction_hash;
+        let ride_pay_acceptance_key =
+            Self::construct_ride_pay_acceptance_key(&ride_pay.ride_acceptance_transaction_hash);
+        let ride_pay_acceptance_value = serde_json::to_string(&ride_acceptance_tx_hash)
+            .unwrap()
+            .into_bytes();
+
         let ride_acceptance = match RideAcceptance::get_ride_acceptance(ride_acceptance_tx_hash, db)
         {
             Ok(Some(ride_acceptance)) => ride_acceptance,
@@ -118,12 +125,13 @@ impl RidePay {
 
         vec![
             Some((ride_pay_key, ride_pay_value)),
+            Some((ride_pay_acceptance_key, ride_pay_acceptance_value)),
             Some((driver_account_state_key, driver_account_state_value)),
         ]
     }
 
     pub fn construct_ride_pay_key(tx_hash: &str) -> Vec<u8> {
-        format!("ride_pay{}", tx_hash).into_bytes()
+        format!("ride_pay_{}", tx_hash).into_bytes()
     }
 
     pub fn construct_ride_pay_acceptance_key(tx_hash: &str) -> Vec<u8> {
