@@ -123,6 +123,6 @@ impl RidePay {
     }
 
     pub fn construct_ride_pay_key(tx_hash: &str) -> Vec<u8> {
-        format!("ride_pay{}", tx_hash).into_bytes()
+        format!("ride_pay{}", tx_hash).into_bytes() 
     }
 }

@@ -113,9 +113,9 @@ impl RideAcceptance {
             AccountState::update_account_state_key(&transaction.from, -transfer_value, db);
 
         vec![
-            Some((ride_key, ride_value)),
-            Some((ride_request_acceptance_key, ride_request_acceptance_value)),
-            Some((ride_offer_acceptance_key, ride_offer_acceptance_value)),
+            Some((ride_key, ride_value)), //ride_{} 
+            Some((ride_request_acceptance_key, ride_request_acceptance_value)), //ride_request_{}:ride
+            Some((ride_offer_acceptance_key, ride_offer_acceptance_value)), //"ride_offer_{}:ride
             Some((passenger_account_state_key, passenger_account_state_value)),
         ]
     }
