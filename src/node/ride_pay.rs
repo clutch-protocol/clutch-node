@@ -31,6 +31,24 @@ impl RidePay {
             }
         };
 
+        let ride_cancel_exists = match RideAcceptance::get_ride_cancel(ride_acceptance_tx_hash, db)
+        {
+            Ok(Some(_)) => true,
+            Ok(None) => false,
+            Err(_) => {
+                println!(
+                    "Failed to retrieve ride cancel for transaction hash '{}'.",
+                    ride_acceptance_tx_hash
+                );
+                return false;
+            }
+        };
+
+        if ride_cancel_exists {
+            println!("A ride cancel for the requested ride acceptance already exists.");
+            return false;
+        }
+
         let ride_offer =
             match RideOffer::get_ride_offer(&ride_acceptance.ride_offer_transaction_hash, db) {
                 Ok(Some(ride_offer)) => ride_offer,
