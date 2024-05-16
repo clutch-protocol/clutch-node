@@ -141,6 +141,27 @@ impl RideAcceptance {
         }
     }
 
+    pub fn get_fare_paid(
+        ride_acceptance_tx_hash: &str,
+        db: &Database,
+    ) -> Result<Option<i64>, String> {
+        let key = Self::construct_ride_acceptance_fare_paid_key(ride_acceptance_tx_hash);
+        match db.get("state", &key) {
+            Ok(Some(value)) => {
+                let fare_paid_str = match String::from_utf8(value) {
+                    Ok(v) => v,
+                    Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
+                };
+                match serde_json::from_str(&fare_paid_str) {
+                    Ok(ride_acceptance) => Ok(ride_acceptance),
+                    Err(_) => Err("Failed to deserialize RideOffer".to_string()),
+                }
+            }
+            Ok(None) => Ok(None),
+            Err(_) => Err("Database error occurred".to_string()),
+        }
+    }
+
     pub fn construct_ride_acceptance_key(tx_hash: &str) -> Vec<u8> {
         format!("ride_acceptance_{}", tx_hash).into_bytes()
     }
