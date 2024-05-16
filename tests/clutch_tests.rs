@@ -4,7 +4,7 @@ use std::path::Path;
 use std::vec;
 
 use clutch_node::node::{
-    block::Block, blockchain::Blockchain, function_call::FunctionCallType, ride_cancel::RideCancel,
+    block::Block, blockchain::Blockchain, function_call::FunctionCallType,
     *,
 };
 
