@@ -157,7 +157,7 @@ impl RideAcceptance {
                     Err(_) => Err("Failed to deserialize RideOffer".to_string()),
                 }
             }
-            Ok(None) => Ok(Some(0)),
+            Ok(None) => Ok(None),
             Err(_) => Err("Database error occurred".to_string()),
         }
     }

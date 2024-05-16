@@ -1,7 +1,5 @@
 use crate::node::{
-    account_state::AccountState,
-    ride_acceptance::RideAcceptance,
-    ride_offer::RideOffer,
+    account_state::AccountState, ride_acceptance::RideAcceptance, ride_offer::RideOffer,
 };
 
 use super::{database::Database, ride_request::RideRequest, transaction::Transaction};
@@ -56,6 +54,18 @@ impl RidePay {
             }
         };
 
+        let fare_paid = match RideAcceptance::get_fare_paid(&ride_acceptance_tx_hash, db) {
+            Ok(Some(fare)) => fare,
+            Ok(None) => 0,
+            Err(_) => {
+                println!(
+                    "Failed to retrieve 'fare_paid' field for ride acceptace with transaction hash '{}'.",
+                    &ride_acceptance_tx_hash
+                );
+                return false;
+            }
+        };
+
         if passenger.to_string() != transaction.from {
             println!(
                 "Ride request 'from' field does not match the transaction 'from' field. Expected: {}, found: {}.",
@@ -64,10 +74,11 @@ impl RidePay {
             return false;
         }
 
-        if ride_pay.fare > ride_offer.fare {
+        let total_fare = (fare_paid as u64) + ride_pay.fare;
+        if total_fare > ride_offer.fare {
             println!(
-                "The fare in the ride pay ({}) is greater than the fare in the ride offer ({}).",
-                ride_pay.fare, ride_offer.fare
+                "The total fare in the ride pay ({}) is greater than the fare in the ride offer ({}).",
+                total_fare, ride_offer.fare
             );
             return false;
         }
@@ -107,9 +118,22 @@ impl RidePay {
         let (driver_account_state_key, driver_account_state_value) =
             AccountState::update_account_state_key(&driver, transfer_value, db);
 
+        let fare_paid = match RideAcceptance::get_fare_paid(&ride_acceptance_tx_hash, db) {
+            Ok(Some(fare)) => fare,
+            Ok(None) => 0,
+            Err(_) => {
+                println!(
+                    "Failed to retrieve 'fare_paid' field for ride acceptace with transaction hash '{}'.",
+                    &ride_acceptance_tx_hash
+                );
+                0
+            }
+        };
+
+        let total_fare = (fare_paid as u64) + ride_pay.fare;
         let fare_paid_key =
             RideAcceptance::construct_ride_acceptance_fare_paid_key(&ride_acceptance_tx_hash);
-        let fare_paid_value = serde_json::to_string(&transfer_value).unwrap().into_bytes();
+        let fare_paid_value = serde_json::to_string(&total_fare).unwrap().into_bytes();
 
         vec![
             Some((ride_pay_key, ride_pay_value)),

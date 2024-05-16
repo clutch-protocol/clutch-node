@@ -160,24 +160,5 @@
         "hash": "aacf41be658befb9bf4d01d483e3bea95bfcf1487812b761ac110f9b5a94528f"
       }
     ]
-  },
-  {
-    "index": 6,
-    "previous_hash": "c0a34865fba02061185c56c6c64d05349925b2992284ca9d1134337a12bc0d99",
-    "hash": "c86bf4b70d807cbe969ca7fd7560d4c22ade63e057f5b49faad70cc8299b8f2f",
-    "transactions": [
-      {
-        "from": "0xdeb4cfb63db134698e1879ea24904df074726cc0",
-        "data": {
-          "function_call_type": "RidePay",
-          "arguments": "{\"ride_acceptance_transaction_hash\":\"725555d18b0f8a0a211bb6aa7b2bc2a06587e92311294fa3aef83612468ddf65\",\"fare\":25}"
-        },
-        "nonce": 6,
-        "signature_r": "f2d6b8d3bd08f8b2a1690c12eb33f09e1378a9e6d1e1ddbc200d5b25961e95bf",
-        "signature_s": "515c775e385dab16e41f32a15d5e0aae09cda6d7e8b1bc04bbb6dd673f958dc5",
-        "signature_v": 27,
-        "hash": "ec5bf8436b5b42e56ab2b987037b1d01c8b87beb41e85b174effc2785bc1b14a"
-      }
-    ]
   }
 ]
