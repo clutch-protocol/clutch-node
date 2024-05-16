@@ -47,8 +47,8 @@ impl RidePay {
             Ok(Some(driver)) => driver,
             Ok(None) | Err(_) => {
                 println!(
-                    "Failed to retrieve 'from' field for ride offer with transaction hash '{}'.",
-                    &ride_acceptance.ride_offer_transaction_hash
+                    "Failed to retrieve 'from' field for ride request with transaction hash '{}'.",
+                    &ride_offer.ride_request_transaction_hash
                 );
                 return false;
             }
