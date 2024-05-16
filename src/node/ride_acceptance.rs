@@ -162,11 +162,15 @@ impl RideAcceptance {
         }
     }
 
-    pub fn construct_ride_acceptance_key(tx_hash: &str) -> Vec<u8> {
-        format!("ride_acceptance_{}", tx_hash).into_bytes()
+    pub fn construct_ride_acceptance_key(ride_acceptance_tx_hash: &str) -> Vec<u8> {
+        format!("ride_acceptance_{}", ride_acceptance_tx_hash).into_bytes()
     }
 
-    pub fn construct_ride_acceptance_fare_paid_key(tx_hash: &str) -> Vec<u8> {
-        format!("ride_acceptance_{}:fare_paid", tx_hash).into_bytes()
+    pub fn construct_ride_acceptance_fare_paid_key(ride_acceptance_tx_hash: &str) -> Vec<u8> {
+        format!("ride_acceptance_{}:fare_paid", ride_acceptance_tx_hash).into_bytes()
+    }
+
+    pub fn construct_ride_acceptance_cancel_key(ride_acceptance_tx_hash: &str) -> Vec<u8> {
+        format!("ride_acceptance_{}:cancel", ride_acceptance_tx_hash).into_bytes()
     }
 }
