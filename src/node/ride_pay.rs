@@ -2,7 +2,7 @@ use crate::node::{
     account_state::AccountState, ride_acceptance::RideAcceptance, ride_offer::RideOffer,
 };
 
-use super::{database::Database, transaction::Transaction};
+use super::{database::Database, ride_request::RideRequest, transaction::Transaction};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -43,7 +43,7 @@ impl RidePay {
                 }
             };
 
-        let driver = match RideOffer::get_from(&ride_acceptance.ride_offer_transaction_hash, db) {
+        let passenger = match RideRequest::get_from(&ride_offer.ride_request_transaction_hash, db) {
             Ok(Some(driver)) => driver,
             Ok(None) | Err(_) => {
                 println!(
@@ -54,10 +54,10 @@ impl RidePay {
             }
         };
 
-        if driver.to_string() != transaction.from {
+        if passenger.to_string() != transaction.from {
             println!(
-                "Ride offer 'from' field does not match the transaction 'from' field. Expected: {}, found: {}.",
-                transaction.from, driver
+                "Ride request 'from' field does not match the transaction 'from' field. Expected: {}, found: {}.",
+                transaction.from, passenger
             );
             return false;
         }
