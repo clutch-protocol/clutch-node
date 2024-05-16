@@ -53,14 +53,14 @@ impl RideAcceptance {
 
             // Check if there is any ride linked to this ride offer's request.
             if let Ok(Some(_)) =
-                RideRequest::get_ride(&ride_offer.ride_request_transaction_hash, db)
+                RideRequest::get_ride_acceptance(&ride_offer.ride_request_transaction_hash, db)
             {
                 println!("A ride for the requested ride offer already exists.");
                 return false;
             }
 
             // Check if this ride offer is already used in another ride.
-            if let Ok(Some(_)) = RideOffer::get_ride(&ride_offer_transaction_hash, db) {
+            if let Ok(Some(_)) = RideOffer::get_ride_acceptance(&ride_offer_transaction_hash, db) {
                 println!("Ride offer is already linked to a ride.");
                 return false;
             }

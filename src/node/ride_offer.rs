@@ -15,7 +15,7 @@ impl RideOffer {
 
         if let Ok(Some(_)) = RideRequest::get_ride_request(&ride_request_tx_hash, db) {
             // Check if there is any ride linked to this ride offer's request.
-            if let Ok(Some(_)) = RideRequest::get_ride(&ride_request_tx_hash, db) {
+            if let Ok(Some(_)) = RideRequest::get_ride_acceptance(&ride_request_tx_hash, db) {
                 println!("A ride for the requested ride offer already exists.");
                 return false;
             }
@@ -68,7 +68,7 @@ impl RideOffer {
         }
     }
 
-    pub fn get_ride(ride_offer_tx_hash: &str, db: &Database) -> Result<Option<String>, String> {
+    pub fn get_ride_acceptance(ride_offer_tx_hash: &str, db: &Database) -> Result<Option<String>, String> {
         let key = Self::construct_ride_offer_acceptance_key(ride_offer_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => match String::from_utf8(value) {

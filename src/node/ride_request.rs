@@ -56,7 +56,7 @@ impl RideRequest {
         }
     }
 
-    pub fn get_ride(ride_request_tx_hash: &str, db: &Database) -> Result<Option<String>, String> {
+    pub fn get_ride_acceptance(ride_request_tx_hash: &str, db: &Database) -> Result<Option<String>, String> {
         let key = Self::construct_ride_request_acceptance_key(ride_request_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => match String::from_utf8(value) {
