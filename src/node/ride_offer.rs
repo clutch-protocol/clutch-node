@@ -38,12 +38,12 @@ impl RideOffer {
         let ride_offer_key = Self::construct_ride_offer_key(ride_offer_tx_hash);
         let ride_offer_value = serde_json::to_string(&ride_offer).unwrap().into_bytes();
 
-        let ride_request_from_key = Self::construct_ride_offer_from_key(&ride_offer_tx_hash);
-        let ride_request_from_value = from.clone().into_bytes();
+        let ride_offer_from_key = Self::construct_ride_offer_from_key(&ride_offer_tx_hash);
+        let ride_offer_from_value = from.clone().into_bytes();
 
         vec![
             Some((ride_offer_key, ride_offer_value)),
-            Some((ride_request_from_key, ride_request_from_value)),
+            Some((ride_offer_from_key, ride_offer_from_value)),
         ]
     }
 
