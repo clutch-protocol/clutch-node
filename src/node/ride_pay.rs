@@ -1,6 +1,6 @@
 use crate::node::{
     account_state::AccountState,
-    ride_acceptance::{self, RideAcceptance},
+    ride_acceptance::RideAcceptance,
     ride_offer::RideOffer,
 };
 
