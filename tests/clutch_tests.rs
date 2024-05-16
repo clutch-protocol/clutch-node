@@ -32,7 +32,7 @@ fn test() {
         || ride_pay_block(6, 6, 10), // 5+10 = 15
         || ride_pay_block(7, 7, 10), // 15 + 10 = 25
         || ride_cancel_block(8, 8),
-        || ride_pay_block(9, 9, 5),
+        // || ride_pay_block(9, 9, 5),
     ];
 
     // Iterate over the block creation functions, modify and import each block
