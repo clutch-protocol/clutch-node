@@ -1,15 +1,16 @@
-
 use super::{
-    ride_cancel::RideCancel, ride_offer::RideOffer, signature_keys::{self, SignatureKeys}
+    ride_cancel::RideCancel,
+    ride_offer::RideOffer,
+    signature_keys::{self, SignatureKeys},
 };
 use crate::node::{
     account_state::AccountState,
+    database::Database,
     function_call::{FunctionCall, FunctionCallType},
-    ride_request::RideRequest,
-    transfer::Transfer,
     ride_acceptance::RideAcceptance,
     ride_pay::RidePay,
-    database::Database
+    ride_request::RideRequest,
+    transfer::Transfer,
 };
 
 use serde::{Deserialize, Serialize};
@@ -34,7 +35,6 @@ impl Transaction {
         from: String,
         nonce: u64,
         function_call_type: FunctionCallType,
-        secret_key: String,
         payload: T,
     ) -> Transaction {
         let arguments = serde_json::to_string(&payload).unwrap();
@@ -52,25 +52,15 @@ impl Transaction {
             nonce: nonce,
             data: function_call,
         };
-
         transaction.hash = transaction.calculate_hash();
-        let data = transaction.hash.as_bytes();
-        let (r, s, v) = signature_keys::SignatureKeys::sign(&secret_key, data);
-        transaction.signature_r = r;
-        transaction.signature_s = s;
-        transaction.signature_v = v;
-
         transaction
     }
 
     pub fn new_genesis_transactions() -> Vec<Transaction> {
-        let from_secret_key = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df2f81f48e9f2748f";
-
         let tx1 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
-            from_secret_key.to_string(),
             Transfer {
                 to: "0xdeb4cfb63db134698e1879ea24904df074726cc0".to_string(),
                 value: 30,
@@ -80,7 +70,6 @@ impl Transaction {
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
-            from_secret_key.to_string(),
             Transfer {
                 to: "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2".to_string(),
                 value: 90,
@@ -90,7 +79,6 @@ impl Transaction {
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
-            from_secret_key.to_string(),
             Transfer {
                 to: "0xac20ff4e42ff243046faaf032068762dd2c018dc".to_string(),
                 value: 80,
@@ -100,7 +88,6 @@ impl Transaction {
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
-            from_secret_key.to_string(),
             Transfer {
                 to: "0xa91101310bee451ca0e219aba08d8d4dd929f16c".to_string(),
                 value: 20,
@@ -110,7 +97,6 @@ impl Transaction {
             FROM_GENESIS.to_string(),
             0,
             FunctionCallType::Transfer,
-            from_secret_key.to_string(),
             Transfer {
                 to: "0x37adf81cb1f18762042e5da03a55f1e54ba66870".to_string(),
                 value: 45,
@@ -128,6 +114,15 @@ impl Transaction {
         ));
         let result = hasher.finalize();
         format!("{:x}", result)
+    }
+
+    pub fn sign(&mut self, secret_key: &str) {
+        let hash_bytes = self.hash.as_bytes();
+        let (r, s, v) = signature_keys::SignatureKeys::sign(secret_key, hash_bytes);
+
+        self.signature_r = r;
+        self.signature_s = s;
+        self.signature_v = v;
     }
 
     pub fn validate_transaction(&self, db: &Database) -> bool {

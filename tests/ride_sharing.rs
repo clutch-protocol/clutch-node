@@ -115,14 +115,14 @@ fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {
         }, //Ghil,Hengam iceland,Iran
     };
 
-    let ride_request_transcation = transaction::Transaction::new_transaction(
+    let mut ride_request_transcation = transaction::Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideRequest,
-        PASSENGER_SECRET_KEY.to_string(),
         ride_request,
     );
 
+    ride_request_transcation.sign(PASSENGER_SECRET_KEY);
     Block::new_block(index, String::new(), vec![ride_request_transcation])
 }
 
@@ -132,14 +132,14 @@ fn ride_offer_block(index: usize, nonce: u64, fare: u64) -> Block {
         ride_request_transaction_hash: RIDE_REQUEST_TX_HASH.to_string(),
     };
 
-    let ride_offer_transaction = transaction::Transaction::new_transaction(
+    let mut ride_offer_transaction = transaction::Transaction::new_transaction(
         DRIVER_ADDRESS_KEY.to_string(),
         nonce,
-        FunctionCallType::RideOffer,
-        DRIVER_SECRET_KEY.to_string(),
+        FunctionCallType::RideOffer,        
         ride_offer,
     );
 
+    ride_offer_transaction.sign(DRIVER_SECRET_KEY);
     Block::new_block(index, String::new(), vec![ride_offer_transaction])
 }
 
@@ -148,14 +148,14 @@ fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
         ride_offer_transaction_hash: RIDE_OFFER_TX_HASH.to_string(),
     };
 
-    let ride_acceptance_transaction = transaction::Transaction::new_transaction(
+    let mut ride_acceptance_transaction = transaction::Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideAcceptance,
-        PASSENGER_SECRET_KEY.to_string(),
         ride_acceptance,
     );
 
+    ride_acceptance_transaction.sign(PASSENGER_SECRET_KEY);
     Block::new_block(index, String::new(), vec![ride_acceptance_transaction])
 }
 
@@ -165,14 +165,14 @@ fn ride_pay_block(index: usize, nonce: u64, fare: u64) -> Block {
         ride_acceptance_transaction_hash: RIDE_ACCEPTANCE_TX_HASH.to_string(),
     };
 
-    let ride_pay_transaction = transaction::Transaction::new_transaction(
+    let mut ride_pay_transaction = transaction::Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RidePay,
-        PASSENGER_SECRET_KEY.to_string(),
         ride_pay,
     );
 
+    ride_pay_transaction.sign(PASSENGER_SECRET_KEY);
     Block::new_block(index, String::new(), vec![ride_pay_transaction])
 }
 
@@ -181,13 +181,13 @@ fn ride_cancel_block(index: usize, nonce: u64) -> Block {
         ride_acceptance_transaction_hash: RIDE_ACCEPTANCE_TX_HASH.to_string(),
     };
 
-    let ride_cancel_transaction = transaction::Transaction::new_transaction(
+    let mut ride_cancel_transaction = transaction::Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideCancel,
-        PASSENGER_SECRET_KEY.to_string(),
         ride_pay,
     );
 
+    ride_cancel_transaction.sign(PASSENGER_SECRET_KEY);
     Block::new_block(index, String::new(), vec![ride_cancel_transaction])
 }

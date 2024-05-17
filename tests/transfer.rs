@@ -43,11 +43,11 @@ fn transfer_founds() {
 }
 
 fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), String> {
-    // Update the previous hash and import the block
     block.previous_hash = blockchain
         .get_latest_block()
         .expect("Failed to get the latest block")
         .hash;
+
     blockchain.block_import(block)
 }
 
@@ -92,13 +92,13 @@ fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
         value: transfer_value,
     };
 
-    let transfer_request_transcation = transaction::Transaction::new_transaction(
+    let mut transfer_transaction = transaction::Transaction::new_transaction(
         FROM_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::Transfer,
-        FROM_SECRET_KEY.to_string(),
         transfer,
     );
+    transfer_transaction.sign(FROM_SECRET_KEY);
 
-    Block::new_block(index, String::new(), vec![transfer_request_transcation])
+    Block::new_block(index, String::new(), vec![transfer_transaction])
 }
