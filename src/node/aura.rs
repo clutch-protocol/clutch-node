@@ -2,6 +2,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use crate::node::consensus::Consensus;
 use crate::node::block::Block;
 
+#[derive(Debug)]
 pub struct Aura {
     pub authorities: Vec<String>, // List of validators
     pub step_duration: u64,       // Duration of each step in seconds

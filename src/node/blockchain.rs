@@ -1,22 +1,27 @@
+use crate::node::account_state::AccountState;
+use crate::node::aura::Aura;
 use crate::node::block::Block;
 use crate::node::database::Database;
 
-use super::account_state::AccountState;
+use super::consensus::Consensus;
 
 #[derive(Debug)]
 pub struct Blockchain {
     pub name: String,
     db: Database,
     developer_mode: bool,
+    consensus: Aura,
 }
 
 impl Blockchain {
     pub fn new(name: String, developer_mode: bool) -> Blockchain {
         let db = Database::new_db(&name);
+        let authorities = vec!["node_1".to_string(), "node_2".to_string()];
         let mut blockchain = Blockchain {
-            name: name,
-            db: db,
-            developer_mode: developer_mode,
+            name,
+            db,
+            developer_mode,
+            consensus: Aura::new(authorities, 30),
         };
 
         blockchain.genesis_block_import();
@@ -42,6 +47,10 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block: &Block) -> Result<(), String> {
+        if !self.consensus.verify_block_author(&block) {
+            return Err(String::from("Block author is invalid."));
+        }
+
         let is_valid_block = block.validate_block(&self.db);
         if !is_valid_block {
             return Err(String::from("Block is invalid and will not be added."));
