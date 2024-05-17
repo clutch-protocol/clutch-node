@@ -31,7 +31,7 @@ impl Consensus for Aura {
         &self.authorities[slot % self.authorities.len()]
     }
 
-    fn verify_block_author(&self, block: &Block) -> bool {
+    fn verify_block_author(&self, _block: &Block) -> bool {
         //&block.author == self.current_author()
         true
     }
