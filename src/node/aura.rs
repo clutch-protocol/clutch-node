@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn test_current_author() {
-        let aura = Aura::new(vec!["node_1".to_string(), "node_2".to_string(),"node_3".to_string()], 10);
+        let aura = Aura::new(vec!["node_1".to_string(), "node_2".to_string()], 60);
         let slot = aura.current_slot() as usize;
         let expected_author = &aura.authorities[slot % aura.authorities.len()];
         println!(
