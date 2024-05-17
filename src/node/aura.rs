@@ -1,4 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
+use crate::node::consensus::Consensus;
+use crate::node::block::Block;
 
 pub struct Aura {
     pub authorities: Vec<String>, // List of validators
@@ -20,12 +22,18 @@ impl Aura {
             .unwrap()
             .as_secs();
         now / self.step_duration
-    }
+    }  
+}
 
-    // Get the current author (validator) for the current slot
-    pub fn current_author(&self) -> &String {
+impl Consensus for Aura {
+    fn current_author(&self) -> &String {
         let slot = self.current_slot() as usize;
         &self.authorities[slot % self.authorities.len()]
+    }
+
+    fn verify_block_author(&self, block: &Block) -> bool {
+        //&block.author == self.current_author()
+        true
     }
 }
 
