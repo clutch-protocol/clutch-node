@@ -46,9 +46,9 @@ impl Block {
     pub fn new_block(index: usize, previous_hash: String, transactions: Vec<Transaction>) -> Block {
         let mut block = Block {
             hash: String::new(),
-            previous_hash: previous_hash,
-            index: index,
-            transactions: transactions,
+            previous_hash,
+            index,
+            transactions,
         };
 
         block.hash = block.calculate_hash();
