@@ -169,8 +169,8 @@ impl RideCancel {
             AccountState::update_account_state_key(&passenger, remaining_amount, db);
 
         vec![
-            Some((passenger_account_state_key, passenger_account_state_value)),
             Some((ride_cancel_key, ride_cancel_value)),
+            Some((passenger_account_state_key, passenger_account_state_value)),
             Some((ride_acceptance_cancel_key, ride_acceptance_cancel_value)),
         ]
     }
