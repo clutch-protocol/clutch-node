@@ -138,7 +138,38 @@ impl RideCancel {
             .unwrap()
             .into_bytes();
 
+        let fare_paid = match RideAcceptance::get_fare_paid(&ride_acceptance_tx_hash, db) {
+            Ok(Some(fare)) => fare,
+            Ok(None) => 0,
+            Err(_) => {
+                println!(
+                        "Failed to retrieve 'fare_paid' field for ride acceptace with transaction hash '{}'.",
+                        &ride_acceptance_tx_hash
+                    );
+                0
+            }
+        };
+
+        let ride_acceptance = RideAcceptance::get_ride_acceptance(ride_acceptance_tx_hash, db)
+            .unwrap()
+            .unwrap();
+
+        let ride_offer =
+            RideOffer::get_ride_offer(&ride_acceptance.ride_offer_transaction_hash, db)
+                .unwrap()
+                .unwrap();
+
+        let passenger = RideRequest::get_from(&ride_offer.ride_request_transaction_hash, db)
+            .unwrap()
+            .unwrap();
+
+        let remaining_amount = (ride_offer.fare as i64) - (fare_paid as i64);
+
+        let (passenger_account_state_key, passenger_account_state_value) =
+            AccountState::update_account_state_key(&passenger, remaining_amount, db);
+
         vec![
+            Some((passenger_account_state_key, passenger_account_state_value)),
             Some((ride_cancel_key, ride_cancel_value)),
             Some((ride_acceptance_cancel_key, ride_acceptance_cancel_value)),
         ]
