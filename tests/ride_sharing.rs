@@ -3,39 +3,37 @@ use std::io::Write;
 use std::path::Path;
 use std::vec;
 
-use clutch_node::node::{
-    block::Block, blockchain::Blockchain, function_call::FunctionCallType,
-    *,
-};
+use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
-const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
-const FROM_SECRET_KEY: &str = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df2f81f48e9f2748f";
-const TO: &str = "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2";
+
+const PASSENGER_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
+const PASSENGER_SECRET_KEY: &str =
+    "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df2f81f48e9f2748f";
+
+const DRIVER_ADDRESS_KEY: &str = "0x8f19077627cde4848b090c53c83b12956837d5e9";
+const DRIVER_SECRET_KEY: &str = "e74e3f87268132c7b3ddb24600716fc362f4519bf9986a9436aa8a1be58c7150";
+
 const RIDE_REQUEST_TX_HASH: &str =
-    "939368c8bc84dc2b10286a420ee7100568d4c36a7f6308d1c4b29f0f77b4e83b";
-const RIDE_OFFER_TX_HASH: &str = "b32250c25c42cd25f9b9af99285fe9ec434ed260e5b426dac47dd820fedd06b5";
+    "70d4cd23a2fc6c636ed1ac7744a7d58869ec95f7066d8441645821a0420f0164";
+const RIDE_OFFER_TX_HASH: &str = "c72839a57eeb93971409828845ef0b443ccb8f50a18ebf9559dba39c639633a7";
 const RIDE_ACCEPTANCE_TX_HASH: &str =
-    "d269c2ec9d03df1450e7330c776dd814cbafb61a6652a68c945be1c185508f65";
+    "856a5dae6fee5f249dbd144321ca28badd9297088d4927af27069e37a8cccdd9";
 
 #[test]
-fn test() {
+fn ride_sharing_sample() {
     let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
 
-    // Import multiple blocks using an array of closure functions
     let blocks = [
-        || transfer_block(1, 1, 10),
-        || ride_request_block(2, 2, 20),
-        || ride_offer_block(3, 3, 30),
-        || ride_acceptance_block(4, 4),
-        || ride_pay_block(5, 5, 5), //5
-        || ride_pay_block(6, 6, 10), // 5+10 = 15
-        || ride_pay_block(7, 7, 10), // 15 + 10 = 25
-        || ride_cancel_block(8, 8),
-        // || ride_pay_block(9, 9, 5),
+        || ride_request_block(1, 1, 20),
+        || ride_offer_block(2, 1, 30),
+        || ride_acceptance_block(3, 2),
+        || ride_pay_block(4, 3, 5),  //5
+        || ride_pay_block(5, 4, 10), // 5+10 = 15
+        || ride_pay_block(6, 5, 10), // 15 + 10 = 25
+        || ride_cancel_block(7, 6),
     ];
 
-    // Iterate over the block creation functions, modify and import each block
     for block_creator in blocks.iter() {
         let mut block = block_creator();
         if let Err(e) = import_block(&mut blockchain, &mut block) {
@@ -44,7 +42,6 @@ fn test() {
         }
     }
 
-    // Output the blockchain status
     let latest_block = blockchain
         .get_latest_block()
         .expect("Failed to get the latest block");
@@ -54,11 +51,9 @@ fn test() {
         blockchain.name, latest_block.index,
     );
 
-    // Output the from account status
-    let from_account_state = blockchain.get_current_state(&FROM_ADDRESS_KEY.to_string());
+    let from_account_state = blockchain.get_current_state(&PASSENGER_ADDRESS_KEY.to_string());
     println!("From account state: {:#?}", from_account_state);
 
-    // Save and cleanup tasks
     save_blocks_to_file(&blockchain);
     blockchain.cleanup_if_developer_mode();
 }
@@ -107,23 +102,6 @@ fn save_blocks_to_file(blockchain: &Blockchain) {
     }
 }
 
-fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
-    let transfer = transfer::Transfer {
-        to: TO.to_string(),
-        value: transfer_value,
-    };
-
-    let transfer_request_transcation = transaction::Transaction::new_transaction(
-        FROM_ADDRESS_KEY.to_string(),
-        nonce,
-        FunctionCallType::Transfer,
-        FROM_SECRET_KEY.to_string(),
-        transfer,
-    );
-
-    Block::new_block(index, String::new(), vec![transfer_request_transcation])
-}
-
 fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {
     let ride_request = ride_request::RideRequest {
         fare: fare,
@@ -138,10 +116,10 @@ fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {
     };
 
     let ride_request_transcation = transaction::Transaction::new_transaction(
-        FROM_ADDRESS_KEY.to_string(),
+        PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideRequest,
-        FROM_SECRET_KEY.to_string(),
+        PASSENGER_SECRET_KEY.to_string(),
         ride_request,
     );
 
@@ -155,10 +133,10 @@ fn ride_offer_block(index: usize, nonce: u64, fare: u64) -> Block {
     };
 
     let ride_offer_transaction = transaction::Transaction::new_transaction(
-        FROM_ADDRESS_KEY.to_string(),
+        DRIVER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideOffer,
-        FROM_SECRET_KEY.to_string(),
+        DRIVER_SECRET_KEY.to_string(),
         ride_offer,
     );
 
@@ -171,10 +149,10 @@ fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
     };
 
     let ride_acceptance_transaction = transaction::Transaction::new_transaction(
-        FROM_ADDRESS_KEY.to_string(),
+        PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideAcceptance,
-        FROM_SECRET_KEY.to_string(),
+        PASSENGER_SECRET_KEY.to_string(),
         ride_acceptance,
     );
 
@@ -188,10 +166,10 @@ fn ride_pay_block(index: usize, nonce: u64, fare: u64) -> Block {
     };
 
     let ride_pay_transaction = transaction::Transaction::new_transaction(
-        FROM_ADDRESS_KEY.to_string(),
+        PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RidePay,
-        FROM_SECRET_KEY.to_string(),
+        PASSENGER_SECRET_KEY.to_string(),
         ride_pay,
     );
 
@@ -204,10 +182,10 @@ fn ride_cancel_block(index: usize, nonce: u64) -> Block {
     };
 
     let ride_cancel_transaction = transaction::Transaction::new_transaction(
-        FROM_ADDRESS_KEY.to_string(),
+        PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideCancel,
-        FROM_SECRET_KEY.to_string(),
+        PASSENGER_SECRET_KEY.to_string(),
         ride_pay,
     );
 
