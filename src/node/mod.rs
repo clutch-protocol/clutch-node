@@ -15,3 +15,4 @@ pub mod signature_keys;
 pub mod account_state;
 pub mod ride_pay;
 pub mod ride_cancel;
+pub mod aura;
