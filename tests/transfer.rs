@@ -35,7 +35,7 @@ fn transfer_founds() {
         blockchain.name, latest_block.index,
     );
 
-    let from_account_state = blockchain.get_current_state(&FROM_ADDRESS_KEY.to_string());
+    let from_account_state = blockchain.get_account_state(&FROM_ADDRESS_KEY.to_string());
     println!("From account state: {:#?}", from_account_state);
 
     save_blocks_to_file(&blockchain);

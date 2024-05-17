@@ -27,7 +27,7 @@ impl Blockchain {
         Block::get_latest_block(&self.db)
     }
 
-    pub fn get_current_state(&self, public_key: &String) -> AccountState {
+    pub fn get_account_state(&self, public_key: &String) -> AccountState {
         AccountState::get_current_state(public_key, &self.db)
     }
 
