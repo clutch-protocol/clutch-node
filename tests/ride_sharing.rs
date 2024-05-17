@@ -68,7 +68,7 @@ fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), St
 }
 
 fn save_blocks_to_file(blockchain: &Blockchain) {
-    let path = Path::new("output/blcoks.json");
+    let path = Path::new("output/ride_sharing_sample.json");
     let mut file = match File::create(&path) {
         Ok(file) => file,
         Err(e) => {
