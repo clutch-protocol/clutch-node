@@ -4,6 +4,8 @@ use crate::node::transaction::Transaction;
 
 use serde::{Deserialize, Serialize};
 
+use crate::node::account_state::AccountState;
+
 #[derive(Serialize, Deserialize)]
 pub struct RideRequest {
     pub pickup_location: Coordinates,
@@ -12,7 +14,28 @@ pub struct RideRequest {
 }
 
 impl RideRequest {
-    pub fn verify_state(_transaction: &Transaction, _db: &Database) -> bool {
+    pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
+        let ride_request: Result<RideRequest, _> =
+            serde_json::from_str(&transaction.data.arguments);
+
+        if ride_request.is_err() {
+            println!("Failed to deserialize transaction data.");
+            return false;
+        }
+        let ride_request = ride_request.unwrap();
+        let from = &transaction.from;
+
+        let passenger_account_state = AccountState::get_current_state(from, &db);
+        if &passenger_account_state.balance < &ride_request.fare {
+            println!(
+                "The account balance is insufficient to cover the fare for the requested ride. \
+                 Account balance is: {}, fare: {}",
+                passenger_account_state.balance, &ride_request.fare
+            );
+
+            return false;
+        }
+
         true
     }
 
@@ -57,7 +80,10 @@ impl RideRequest {
         }
     }
 
-    pub fn get_ride_acceptance(ride_request_tx_hash: &str, db: &Database) -> Result<Option<String>, String> {
+    pub fn get_ride_acceptance(
+        ride_request_tx_hash: &str,
+        db: &Database,
+    ) -> Result<Option<String>, String> {
         let key = Self::construct_ride_request_acceptance_key(ride_request_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => match String::from_utf8(value) {

@@ -73,7 +73,7 @@ impl Transaction {
             from_secret_key.to_string(),
             Transfer {
                 to: "0xdeb4cfb63db134698e1879ea24904df074726cc0".to_string(),
-                value: 100,
+                value: 30,
             },
         );
         let tx2 = Self::new_transaction(
