@@ -125,6 +125,16 @@ impl Transaction {
         self.signature_v = v;
     }
 
+    fn verify_signature(&self) -> bool {
+        let from_public_key = &self.from;
+        let data = self.hash.as_bytes();
+        let r = &self.signature_r;
+        let s = &self.signature_s;
+        let v = self.signature_v;
+
+        SignatureKeys::verify(from_public_key, data, r, s, v)
+    }
+
     pub fn validate_transaction(&self, db: &Database) -> bool {
         if !self.verify_signature() {
             println!(
@@ -143,17 +153,7 @@ impl Transaction {
         }
 
         true
-    }
-
-    fn verify_signature(&self) -> bool {
-        let from_public_key = &self.from;
-        let data = self.hash.as_bytes();
-        let r = &self.signature_r;
-        let s = &self.signature_s;
-        let v = self.signature_v;
-
-        SignatureKeys::verify(from_public_key, data, r, s, v)
-    }
+    }  
 
     fn verify_nonce(&self, db: &Database) -> bool {
         let last_nonce = AccountState::get_current_nonce(&self.from, &db);

@@ -6,15 +6,18 @@ use std::vec;
 use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
-
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
 const FROM_SECRET_KEY: &str = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df2f81f48e9f2748f";
-
 const TO_ADDRESS_KEY: &str = "0x8f19077627cde4848b090c53c83b12956837d5e9";
+const AUTHOR_PUBLIC_KEY: &str = "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20";
+const AUTHOR_SECRET_KEY: &str = "0883ddd3d07303b87c954b0c9383f7b78f45e002520fc03a8adc80595dbf6509";
 
 #[test]
 fn transfer_founds() {
-    let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
+    let authorities = vec![
+        AUTHOR_PUBLIC_KEY.to_string(),
+    ];
+    let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true, authorities);
 
     let blocks = [|| transfer_block(1, 1, 20)];
 
@@ -100,5 +103,13 @@ fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
     );
     transfer_transaction.sign(FROM_SECRET_KEY);
 
-    Block::new_block(index, String::new(), vec![transfer_transaction])
+    let mut block = Block::new_block(
+        AUTHOR_PUBLIC_KEY,
+        index,
+        String::new(),
+        vec![transfer_transaction],
+    );
+
+    block.sign(AUTHOR_SECRET_KEY);
+    block
 }

@@ -2,6 +2,10 @@
   {
     "index": 0,
     "previous_hash": "0",
+    "author": "",
+    "signature_r": "",
+    "signature_s": "",
+    "signature_v": 0,
     "hash": "2282c46637becfbe1f0f11d6d7d878ba1fa6c41fe5cad3bbdede42f6e5ac36e3",
     "transactions": [
       {
@@ -69,6 +73,10 @@
   {
     "index": 1,
     "previous_hash": "2282c46637becfbe1f0f11d6d7d878ba1fa6c41fe5cad3bbdede42f6e5ac36e3",
+    "author": "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20",
+    "signature_r": "d685a08c1c91a57f6bc7a020b882b3642e613dd2150c807d632a056fa542a691",
+    "signature_s": "7b6b9d703d2137792fb4cf6fda29fceefce7a157367146642d563ba55bcf986e",
+    "signature_v": 28,
     "hash": "b91042e0a947e90107d661cbaae3863d29d0a471a51f6d4615f801eb3e5e8058",
     "transactions": [
       {

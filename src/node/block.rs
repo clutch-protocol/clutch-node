@@ -1,4 +1,5 @@
 use crate::node::database::Database;
+use crate::node::signature_keys;
 use crate::node::transaction::Transaction;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -7,6 +8,10 @@ use sha2::{Digest, Sha256};
 pub struct Block {
     pub index: usize,
     pub previous_hash: String,
+    pub author: String,
+    pub signature_r: String,
+    pub signature_s: String,
+    pub signature_v: i32,
     pub hash: String,
     pub transactions: Vec<Transaction>,
 }
@@ -32,7 +37,11 @@ impl Block {
 
     pub fn new_genesis_block() -> Block {
         let mut genesis_block = Block {
+            author: String::new(),
             hash: String::new(),
+            signature_r: String::new(),
+            signature_s: String::new(),
+            signature_v: 0,
             previous_hash: "0".to_string(),
             index: 0,
             transactions: vec![],
@@ -43,8 +52,17 @@ impl Block {
         genesis_block
     }
 
-    pub fn new_block(index: usize, previous_hash: String, transactions: Vec<Transaction>) -> Block {
+    pub fn new_block(
+        author: &str,
+        index: usize,
+        previous_hash: String,
+        transactions: Vec<Transaction>,
+    ) -> Block {
         let mut block = Block {
+            author: author.to_string(),
+            signature_r: String::new(),
+            signature_s: String::new(),
+            signature_v: 0,
             hash: String::new(),
             previous_hash,
             index,
@@ -53,6 +71,25 @@ impl Block {
 
         block.hash = block.calculate_hash();
         block
+    }
+
+    pub fn sign(&mut self, secret_key: &str) {
+        let hash_bytes = self.hash.as_bytes();
+        let (r, s, v) = signature_keys::SignatureKeys::sign(secret_key, hash_bytes);
+
+        self.signature_r = r;
+        self.signature_s = s;
+        self.signature_v = v;
+    }
+
+    fn verify_signature(&self) -> bool {
+        let author = &self.author;
+        let data = self.hash.as_bytes();
+        let r = &self.signature_r;
+        let s = &self.signature_s;
+        let v = self.signature_v;
+
+        signature_keys::SignatureKeys::verify(author, data, r, s, v)
     }
 
     pub fn get_latest_block(db: &Database) -> Option<Block> {
@@ -70,6 +107,14 @@ impl Block {
     pub fn validate_block(&self, db: &Database) -> bool {
         match Block::get_latest_block(db) {
             Some(latest_block) => {
+                if !self.verify_signature() {
+                    println!(
+                        "Verification failed: Signature does not match for block from author: {}",
+                        self.author
+                    );
+                    return false;
+                }
+
                 if self.index != latest_block.index + 1 {
                     println!(
                         "Invalid block: The block index should be {}, but it was {}.",

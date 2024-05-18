@@ -14,14 +14,14 @@ pub struct Blockchain {
 }
 
 impl Blockchain {
-    pub fn new(name: String, developer_mode: bool) -> Blockchain {
+    pub fn new(name: String, developer_mode: bool, authorities: Vec<String>) -> Blockchain {
         let db = Database::new_db(&name);
-        let authorities = vec!["node_1".to_string(), "node_2".to_string()];
+        let step_duration = 60 / authorities.len() as u64;
         let mut blockchain = Blockchain {
             name,
             db,
             developer_mode,
-            consensus: Aura::new(authorities, 30),
+            consensus: Aura::new(authorities, step_duration),
         };
 
         blockchain.genesis_block_import();
@@ -47,13 +47,13 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block: &Block) -> Result<(), String> {
-        if !self.consensus.verify_block_author(&block) {
-            return Err(String::from("Block author is invalid."));
-        }
-
         let is_valid_block = block.validate_block(&self.db);
         if !is_valid_block {
             return Err(String::from("Block is invalid and will not be added."));
+        }
+
+        if !self.consensus.verify_block_author(&block) {
+            return Err(String::from("Block author is invalid."));
         }
 
         for tx in block.transactions.iter() {

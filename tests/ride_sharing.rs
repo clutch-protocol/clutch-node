@@ -20,9 +20,20 @@ const RIDE_OFFER_TX_HASH: &str = "c72839a57eeb93971409828845ef0b443ccb8f50a18ebf
 const RIDE_ACCEPTANCE_TX_HASH: &str =
     "856a5dae6fee5f249dbd144321ca28badd9297088d4927af27069e37a8cccdd9";
 
+const AUTHOR_PUBLIC_KEY: &str = "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20";
+const AUTHOR_SECRET_KEY: &str = "0883ddd3d07303b87c954b0c9383f7b78f45e002520fc03a8adc80595dbf6509";
+
 #[test]
 fn ride_sharing_sample() {
-    let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true);
+    let authorities = vec![
+        "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20".to_string(),
+        "node_2".to_string(),
+        "node_3".to_string(),
+        "node_4".to_string(),
+        "node_5".to_string(),
+        "node_6".to_string(),
+    ];
+    let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true, authorities);
 
     let blocks = [
         || ride_request_block(1, 1, 20),
@@ -64,6 +75,7 @@ fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), St
         .get_latest_block()
         .expect("Failed to get the latest block")
         .hash;
+    block.sign(AUTHOR_SECRET_KEY);
     blockchain.block_import(block)
 }
 
@@ -123,7 +135,12 @@ fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {
     );
 
     ride_request_transcation.sign(PASSENGER_SECRET_KEY);
-    Block::new_block(index, String::new(), vec![ride_request_transcation])
+    Block::new_block(
+        AUTHOR_PUBLIC_KEY,
+        index,
+        String::new(),
+        vec![ride_request_transcation],
+    )
 }
 
 fn ride_offer_block(index: usize, nonce: u64, fare: u64) -> Block {
@@ -135,12 +152,17 @@ fn ride_offer_block(index: usize, nonce: u64, fare: u64) -> Block {
     let mut ride_offer_transaction = transaction::Transaction::new_transaction(
         DRIVER_ADDRESS_KEY.to_string(),
         nonce,
-        FunctionCallType::RideOffer,        
+        FunctionCallType::RideOffer,
         ride_offer,
     );
 
     ride_offer_transaction.sign(DRIVER_SECRET_KEY);
-    Block::new_block(index, String::new(), vec![ride_offer_transaction])
+    Block::new_block(
+        AUTHOR_PUBLIC_KEY,
+        index,
+        String::new(),
+        vec![ride_offer_transaction],
+    )
 }
 
 fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
@@ -156,7 +178,12 @@ fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
     );
 
     ride_acceptance_transaction.sign(PASSENGER_SECRET_KEY);
-    Block::new_block(index, String::new(), vec![ride_acceptance_transaction])
+    Block::new_block(
+        AUTHOR_PUBLIC_KEY,
+        index,
+        String::new(),
+        vec![ride_acceptance_transaction],
+    )
 }
 
 fn ride_pay_block(index: usize, nonce: u64, fare: u64) -> Block {
@@ -173,7 +200,12 @@ fn ride_pay_block(index: usize, nonce: u64, fare: u64) -> Block {
     );
 
     ride_pay_transaction.sign(PASSENGER_SECRET_KEY);
-    Block::new_block(index, String::new(), vec![ride_pay_transaction])
+    Block::new_block(
+        AUTHOR_PUBLIC_KEY,
+        index,
+        String::new(),
+        vec![ride_pay_transaction],
+    )
 }
 
 fn ride_cancel_block(index: usize, nonce: u64) -> Block {
@@ -189,5 +221,10 @@ fn ride_cancel_block(index: usize, nonce: u64) -> Block {
     );
 
     ride_cancel_transaction.sign(PASSENGER_SECRET_KEY);
-    Block::new_block(index, String::new(), vec![ride_cancel_transaction])
+    Block::new_block(
+        AUTHOR_PUBLIC_KEY,
+        index,
+        String::new(),
+        vec![ride_cancel_transaction],
+    )
 }

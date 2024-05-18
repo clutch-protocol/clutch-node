@@ -1,6 +1,6 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-use crate::node::consensus::Consensus;
 use crate::node::block::Block;
+use crate::node::consensus::Consensus;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug)]
 pub struct Aura {
@@ -23,7 +23,7 @@ impl Aura {
             .unwrap()
             .as_secs();
         now / self.step_duration
-    }  
+    }
 }
 
 impl Consensus for Aura {
@@ -32,9 +32,17 @@ impl Consensus for Aura {
         &self.authorities[slot % self.authorities.len()]
     }
 
-    fn verify_block_author(&self, _block: &Block) -> bool {
-        //&block.author == self.current_author()
-        true
+    fn verify_block_author(&self, block: &Block) -> bool {
+        let is_valid = &block.author == self.current_author();
+        if !is_valid {
+            println!(
+                "Block author verification failed: expected author {}, but found {}",
+                self.current_author(),
+                block.author
+            );
+        }
+
+        is_valid
     }
 }
 
