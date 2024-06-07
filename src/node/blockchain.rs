@@ -47,13 +47,13 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block: &Block) -> Result<(), String> {
-        let is_valid_block = block.validate_block(&self.db);
-        if !is_valid_block {
-            return Err(String::from("Block is invalid and will not be added."));
-        }
-
+        
         if !self.consensus.verify_block_author(&block) {
             return Err(String::from("Block author is invalid."));
+        }
+
+        if !block.validate_block(&self.db) {
+            return Err(String::from("Block is invalid and will not be added."));
         }
 
         for tx in block.transactions.iter() {
@@ -90,6 +90,10 @@ impl Blockchain {
             }
             Err(e) => Err(format!("Failed to retrieve blocks: {}", e)),
         }
+    }
+
+    pub fn current_author(&self) -> &String { 
+        self.consensus.current_author()
     }
 
     fn genesis_block_import(&mut self) {

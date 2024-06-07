@@ -52,14 +52,9 @@ impl Block {
         genesis_block
     }
 
-    pub fn new_block(
-        author: &str,
-        index: usize,
-        previous_hash: String,
-        transactions: Vec<Transaction>,
-    ) -> Block {
+    pub fn new_block(index: usize, previous_hash: String, transactions: Vec<Transaction>) -> Block {
         let mut block = Block {
-            author: author.to_string(),
+            author: String::new(),
             signature_r: String::new(),
             signature_s: String::new(),
             signature_v: 0,
@@ -73,13 +68,14 @@ impl Block {
         block
     }
 
-    pub fn sign(&mut self, secret_key: &str) {
+    pub fn sign(&mut self, author: &str, secret_key: &str) {
         let hash_bytes = self.hash.as_bytes();
         let (r, s, v) = signature_keys::SignatureKeys::sign(secret_key, hash_bytes);
 
         self.signature_r = r;
         self.signature_s = s;
         self.signature_v = v;
+        self.author = author.to_string();
     }
 
     fn verify_signature(&self) -> bool {

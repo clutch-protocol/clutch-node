@@ -103,13 +103,12 @@ fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
     );
     transfer_transaction.sign(FROM_SECRET_KEY);
 
-    let mut block = Block::new_block(
-        AUTHOR_PUBLIC_KEY,
+    let mut block = Block::new_block(        
         index,
         String::new(),
         vec![transfer_transaction],
     );
 
-    block.sign(AUTHOR_SECRET_KEY);
+    block.sign(AUTHOR_PUBLIC_KEY,AUTHOR_SECRET_KEY);
     block
 }
