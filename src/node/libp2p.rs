@@ -1,5 +1,9 @@
 use futures::stream::StreamExt;
-use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
+use libp2p::{
+    gossipsub, gossipsub::Event as GossipsubEvent, gossipsub::IdentTopic, gossipsub::MessageId,
+    mdns, mdns::Event as MdnsEvent, noise, swarm::NetworkBehaviour, swarm::Swarm,
+    swarm::SwarmEvent, tcp, yamux, Multiaddr, PeerId,
+};
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::hash::{Hash, Hasher};
@@ -56,51 +60,55 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
         .with_swarm_config(|c| c.with_idle_connection_timeout(Duration::from_secs(60)))
         .build();
 
-    // Create a Gossipsub topic
-    let topic = gossipsub::IdentTopic::new("test-net");
-    // subscribes to our topic
+        let topic = setup_gossipsub_topic(&mut swarm)?;
+
+        listen_for_connections(&mut swarm)?;
+        process_messages(&mut swarm, topic).await
+}
+
+fn setup_gossipsub_topic(swarm: &mut Swarm<MyBehaviour>) -> Result<IdentTopic, Box<dyn Error>> {
+    let topic = IdentTopic::new("test-net");
     swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
+    Ok(topic)
+}
 
-    // Read full lines from stdin
-    let mut stdin = io::BufReader::new(io::stdin()).lines();
-
-    // Listen on all interfaces and whatever port the OS assigns
+fn listen_for_connections(swarm: &mut Swarm<MyBehaviour>) -> Result<(), Box<dyn Error>> {
     swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
     swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
+    Ok(())
+}
 
+async fn process_messages(
+    swarm: &mut Swarm<MyBehaviour>,
+    topic: IdentTopic,
+) -> Result<(), Box<dyn Error>> {
+    let mut stdin = io::BufReader::new(io::stdin()).lines();
     println!("Enter messages via STDIN and they will be sent to connected peers using Gossipsub");
 
-    // Kick it off
     loop {
         select! {
             Ok(Some(line)) = stdin.next_line() => {
                 if let Err(e) = swarm
-                    .behaviour_mut().gossipsub
+                    .behaviour_mut()
+                    .gossipsub
                     .publish(topic.clone(), line.as_bytes()) {
                     println!("Publish error: {e:?}");
                 }
             }
             event = swarm.select_next_some() => match event {
-                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
-                    for (peer_id, _multiaddr) in list {
-                        println!("mDNS discovered a new peer: {peer_id}");
-                        swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
-                    }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(MdnsEvent::Discovered(list))) => {
+                    handle_mdns_discovered(swarm, list);
                 },
-                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
-                    for (peer_id, _multiaddr) in list {
-                        println!("mDNS discover peer has expired: {peer_id}");
-                        swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
-                    }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(MdnsEvent::Expired(list))) => {
+                    handle_mdns_expired(swarm, list);
                 },
-                SwarmEvent::Behaviour(MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
+                SwarmEvent::Behaviour(MyBehaviourEvent::Gossipsub(GossipsubEvent::Message {
                     propagation_source: peer_id,
                     message_id: id,
                     message,
-                })) => println!(
-                        "Got message: '{}' with id: {id} from peer: {peer_id}",
-                        String::from_utf8_lossy(&message.data),
-                    ),
+                })) => {
+                    handle_gossipsub_message(peer_id, id, message);
+                },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     println!("Local node is listening on {address}");
                 }
@@ -108,4 +116,28 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
             }
         }
     }
+}
+
+fn handle_mdns_discovered(swarm: &mut Swarm<MyBehaviour>, list: Vec<(PeerId, Multiaddr)>) {
+    for (peer_id, _multiaddr) in list {
+        println!("mDNS discovered a new peer: {peer_id}");
+        swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
+    }
+}
+
+fn handle_mdns_expired(swarm: &mut Swarm<MyBehaviour>, list: Vec<(PeerId, Multiaddr)>) {
+    for (peer_id, _multiaddr) in list {
+        println!("mDNS discover peer has expired: {peer_id}");
+        swarm
+            .behaviour_mut()
+            .gossipsub
+            .remove_explicit_peer(&peer_id);
+    }
+}
+
+fn handle_gossipsub_message(peer_id: PeerId, id: MessageId, message: gossipsub::Message) {
+    println!(
+        "Got message: '{}' with id: {id} from peer: {peer_id}",
+        String::from_utf8_lossy(&message.data),
+    );
 }
