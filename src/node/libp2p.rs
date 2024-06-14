@@ -19,9 +19,7 @@ pub struct MyBehaviour {
 }
 
 pub async fn run() -> Result<(), Box<dyn Error>> {
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .try_init();
+    setup_tracing()?;
 
     let mut swarm = libp2p::SwarmBuilder::with_new_identity()
         .with_tokio()
@@ -64,6 +62,13 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
 
         listen_for_connections(&mut swarm)?;
         process_messages(&mut swarm, topic).await
+}
+
+fn setup_tracing() -> Result<(), Box<dyn Error>> {
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .try_init().expect("setup_tracing error");
+    Ok(())
 }
 
 fn setup_gossipsub_topic(swarm: &mut Swarm<MyBehaviour>) -> Result<IdentTopic, Box<dyn Error>> {
