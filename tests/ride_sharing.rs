@@ -82,7 +82,7 @@ fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), St
         .expect("Failed to get the latest block")
         .hash;
 
-    if let Some((public_key, secret_key)) = current_author(blockchain) {
+    if let Some((public_key, secret_key)) = current_author_keys(blockchain) {
         block.sign(public_key, secret_key);
     } else {
         return Err("Current author not found".to_string());
@@ -91,7 +91,7 @@ fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), St
     blockchain.block_import(block)
 }
 
-fn current_author(blockchain: &Blockchain) -> Option<(&str, &str)> {
+fn current_author_keys(blockchain: &Blockchain) -> Option<(&str, &str)> {
     let author_keys = [
         (AUTHOR_1_PUBLIC_KEY, AUTHOR_1_SECRET_KEY),
         (AUTHOR_2_PUBLIC_KEY, AUTHOR_2_SECRET_KEY),
