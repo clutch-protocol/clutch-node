@@ -17,3 +17,4 @@ pub mod ride_request;
 pub mod signature_keys;
 pub mod transaction;
 pub mod transfer;
+pub mod libp2p;
