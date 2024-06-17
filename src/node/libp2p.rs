@@ -1,5 +1,4 @@
 use crate::node::config::AppConfig;
-use clap::builder::Str;
 use futures::stream::StreamExt;
 use libp2p::{
     gossipsub, gossipsub::Event as GossipsubEvent, gossipsub::IdentTopic, gossipsub::MessageId,
