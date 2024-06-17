@@ -1,3 +1,5 @@
+use crate::node::config::AppConfig;
+use clap::builder::Str;
 use futures::stream::StreamExt;
 use libp2p::{
     gossipsub, gossipsub::Event as GossipsubEvent, gossipsub::IdentTopic, gossipsub::MessageId,
@@ -18,11 +20,11 @@ pub struct MyBehaviour {
     pub mdns: mdns::tokio::Behaviour,
 }
 
-pub async fn run() -> Result<(), Box<dyn Error>> {
+pub async fn run(config: AppConfig) -> Result<(), Box<dyn Error>> {
     setup_tracing()?;
 
     let mut swarm = build_swarm()?;
-    let topic = setup_gossipsub_topic(&mut swarm)?;
+    let topic = setup_gossipsub_topic(&mut swarm, &config.libp2p_topic_name)?;
 
     listen_for_connections(&mut swarm)?;
     process_messages(&mut swarm, topic).await
@@ -73,8 +75,11 @@ fn build_swarm() -> Result<Swarm<MyBehaviour>, Box<dyn Error>> {
     Ok(swarm)
 }
 
-fn setup_gossipsub_topic(swarm: &mut Swarm<MyBehaviour>) -> Result<IdentTopic, Box<dyn Error>> {
-    let topic = IdentTopic::new("test-net");
+fn setup_gossipsub_topic(
+    swarm: &mut Swarm<MyBehaviour>,
+    topic_name: &String,
+) -> Result<IdentTopic, Box<dyn Error>> {
+    let topic = IdentTopic::new(topic_name);
     swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
     Ok(topic)
 }
