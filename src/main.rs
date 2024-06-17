@@ -13,8 +13,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let env = &args.env;
     let config = node::config::AppConfig::from_env(&env)?;
-
     println!("Loaded configuration from env {:?}: {:?}", &env, &config);
 
+    let mut blockchain = node::blockchain::Blockchain::new(config.blockchain_name.clone(), config.developer_mode.clone(), config.authorities.clone());    
     node::libp2p::run(config).await
 }
