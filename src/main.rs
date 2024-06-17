@@ -18,6 +18,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = node::config::AppConfig::from_env(&env)?;
     println!("Loaded configuration from env {:?}: {:?}", &env, &config);
 
-    let mut blockchain = Blockchain::new(config.blockchain_name.clone(), config.developer_mode.clone(), config.authorities.clone());
+    let _ = Blockchain::new(config.blockchain_name.clone(), config.developer_mode.clone(), config.authorities.clone());
     run(config).await
 }
