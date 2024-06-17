@@ -12,7 +12,7 @@ impl AppConfig {
         dotenv().ok(); // Load environment variables from `.env` file, if it exists
 
         // Construct the file path based on the environment name
-        let file_path = format!("config/{}.toml", env);
+        let file_path = format!("config/node/{}.toml", env);
 
         // Create a ConfigBuilder and add settings from the specified file and environment variables
         let builder = Config::builder()
