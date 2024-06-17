@@ -101,7 +101,7 @@ mod tests {
             keys.address_key, keys.secret_key, keys.public_key
         )
     }
-
+    
     #[test]
     fn test_sign_and_verify() {
         let keys = SignatureKeys::generate_new_keypair();
@@ -114,7 +114,7 @@ mod tests {
         let (r, s, v) = SignatureKeys::sign(&keys.secret_key, data);
         println!("Signature: r={:?}, s={:?} , v={:?}", r, s, v);
 
-        let is_verified = SignatureKeys::verify(&keys.public_key, data, &r, &s, v);
+        let is_verified = SignatureKeys::verify(&keys.address_key, data, &r, &s, v);
 
         assert!(is_verified, "Signature verification should succeed");
     }
