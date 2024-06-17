@@ -18,3 +18,4 @@ pub mod signature_keys;
 pub mod transaction;
 pub mod transfer;
 pub mod libp2p;
+pub mod config;
