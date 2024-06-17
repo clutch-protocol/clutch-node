@@ -4,7 +4,6 @@ mod node;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    /// Path to the configuration file
     #[clap(short, long, default_value = "default")]
     env: String,
 }
