@@ -134,6 +134,28 @@ impl Block {
         }
     }
 
+    pub fn get_blocks(db:&Database) -> Result<Vec<Block>, String> {
+        match db.get_keys_values_by_cf_name("block") {
+            Ok(entries) => {
+                let mut blocks = Vec::new();
+
+                for (_key, value) in entries {
+                    match serde_json::from_slice::<Block>(&value) {
+                        Ok(block) => {
+                            blocks.push(block);
+                        }
+                        Err(e) => {
+                            return Err(format!("Failed to deserialize block: {}", e));
+                        }
+                    }
+                }
+
+                Ok(blocks)
+            }
+            Err(e) => Err(format!("Failed to retrieve blocks: {}", e)),
+        }
+    }
+
     pub fn state_block(&self) -> Option<(Vec<Vec<u8>>, Vec<Vec<u8>>)> {
         let mut keys: Vec<Vec<u8>> = Vec::new();
         let mut values: Vec<Vec<u8>> = Vec::new();

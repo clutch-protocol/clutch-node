@@ -47,7 +47,6 @@ impl Blockchain {
     }
 
     pub fn block_import(&mut self, block: &Block) -> Result<(), String> {
-        
         if !self.consensus.verify_block_author(&block) {
             return Err(String::from("Block author is invalid."));
         }
@@ -71,28 +70,10 @@ impl Blockchain {
     }
 
     pub fn get_blocks(&self) -> Result<Vec<Block>, String> {
-        match self.db.get_keys_values_by_cf_name("block") {
-            Ok(entries) => {
-                let mut blocks = Vec::new();
-
-                for (_key, value) in entries {
-                    match serde_json::from_slice::<Block>(&value) {
-                        Ok(block) => {
-                            blocks.push(block);
-                        }
-                        Err(e) => {
-                            return Err(format!("Failed to deserialize block: {}", e));
-                        }
-                    }
-                }
-
-                Ok(blocks)
-            }
-            Err(e) => Err(format!("Failed to retrieve blocks: {}", e)),
-        }
+        Block::get_blocks(&self.db)
     }
 
-    pub fn current_author(&self) -> &String { 
+    pub fn current_author(&self) -> &String {
         self.consensus.current_author()
     }
 
