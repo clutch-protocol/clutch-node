@@ -3,6 +3,7 @@ use crate::node::signature_keys;
 use crate::node::transaction::Transaction;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use tracing_subscriber::registry::Data;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
@@ -134,7 +135,7 @@ impl Block {
         }
     }
 
-    pub fn get_blocks(db:&Database) -> Result<Vec<Block>, String> {
+    pub fn get_blocks(db: &Database) -> Result<Vec<Block>, String> {
         match db.get_keys_values_by_cf_name("block") {
             Ok(entries) => {
                 let mut blocks = Vec::new();
@@ -181,5 +182,83 @@ impl Block {
         values.push(blockchain_latest_block_value);
 
         Some((keys, values))
+    }
+
+    pub fn genesis_block_import(db: &Database) {
+        match db.get("block", b"block_0") {
+            Ok(Some(_)) => {
+                println!("Genesis block already exists.");
+            }
+            Ok(None) => {
+                println!("Genesis block does not exist, creating new one...");
+                let genesis_block = Self::new_genesis_block();
+                Self::add_block_to_chain(db, &genesis_block);
+            }
+            Err(e) => panic!("Failed to check for genesis block: {}", e),
+        }
+    }
+
+   pub fn add_block_to_chain(db: &Database, block: &Block) {
+        // Storage for keys and values
+        let mut cf_storage: Vec<String> = Vec::new();
+        let mut keys_storage: Vec<Vec<u8>> = Vec::new();
+        let mut values_storage: Vec<Vec<u8>> = Vec::new();
+
+        let mut operations: Vec<(&str, &[u8], &[u8])> = Vec::new();
+
+        // Handle block state
+        if let Some((block_keys, block_values)) = block.state_block() {
+            for (key, value) in block_keys.into_iter().zip(block_values.into_iter()) {
+                cf_storage.push("block".to_string());
+                keys_storage.push(key);
+                values_storage.push(value);
+            }
+        } else {
+            println!("Failed to serialize block for storage.");
+            return;
+        }
+
+        // Handle Blockchain State
+        if let Some((block_keys, block_values)) = block.state_blockchain() {
+            for (key, value) in block_keys.into_iter().zip(block_values.into_iter()) {
+                cf_storage.push("blockchain".to_string());
+                keys_storage.push(key);
+                values_storage.push(value);
+            }
+        } else {
+            println!("Failed to serialize block for storage.");
+            return;
+        }
+
+        // Handle transactions State
+        for tx in block.transactions.iter() {
+            let updates = tx.state_transaction(&db);
+
+            for update in updates {
+                if let Some((key, value)) = update {
+                    cf_storage.push("state".to_string());
+                    keys_storage.push(key);
+                    values_storage.push(value);
+                }
+            }
+        }
+
+        // Prepare operations for database write
+        for (key, cf_name) in keys_storage
+            .iter()
+            .zip(values_storage.iter())
+            .zip(cf_storage.iter())
+        {
+            operations.push((cf_name, key.0, key.1));
+        }
+
+        // Update the database
+        match &db.write(operations) {
+            Ok(_) => println!(
+                "add_block_to_chain successfully. block hash: {}. block index: {}.",
+                block.hash, block.index
+            ),
+            Err(e) => panic!("Failed add_block_to_chain: {}", e),
+        }
     }
 }
