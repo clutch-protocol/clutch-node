@@ -76,7 +76,7 @@ fn ride_sharing_sample() {
 }
 
 fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), String> {
-    // Update the previous hash and import the block
+
     block.previous_hash = blockchain
         .get_latest_block()
         .expect("Failed to get the latest block")
