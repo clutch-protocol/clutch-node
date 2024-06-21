@@ -1,6 +1,10 @@
 use std::result;
 
+use clap::builder::Str;
+use tracing_subscriber::fmt::format::PrettyVisitor;
+
 use super::consensus::Consensus;
+use super::transaction_pool;
 use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;
 use crate::node::block::Block;
@@ -89,5 +93,23 @@ impl Blockchain {
 
     pub fn get_transactions_in_pool(&self) -> Result<Vec<Transaction>, String> {
         TransactionPool::get_transactions(&self.db)
+    }
+
+    pub fn author_new_block(&self) -> Result<Block, String> {
+        let transactions = match TransactionPool::get_transactions(&self.db) {
+            Ok(transactions) => transactions,
+            Err(e) => return Err(format!("Failed to get transactions from pool: {}", e)),
+        };
+
+        let latest_block = match self.get_latest_block() {
+            Some(block) => block,
+            None => return Err("Failed to get the latest block in author_new_block".to_string()),
+        };
+
+        let index = latest_block.index + 1;
+        let previous_hash = latest_block.hash;
+
+        let new_block = Block::new_block(index, previous_hash, transactions);
+        Ok(new_block)
     }
 }
