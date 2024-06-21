@@ -198,13 +198,14 @@ impl Block {
         }
     }
 
-   pub fn add_block_to_chain(db: &Database, block: &Block) {
+    pub fn add_block_to_chain(db: &Database, block: &Block) {
         // Storage for keys and values
         let mut cf_storage: Vec<String> = Vec::new();
         let mut keys_storage: Vec<Vec<u8>> = Vec::new();
         let mut values_storage: Vec<Vec<u8>> = Vec::new();
 
-        let mut operations: Vec<(&str, &[u8], &[u8])> = Vec::new();
+        let mut operations: Vec<(&str, &[u8], Option<&[u8]>)> = Vec::new();
+        let mut tx_keys_to_delete: Vec<Vec<u8>> = Vec::new(); // Store tx keys to delete
 
         // Handle block state
         if let Some((block_keys, block_values)) = block.state_block() {
@@ -241,15 +242,24 @@ impl Block {
                     values_storage.push(value);
                 }
             }
+
+            // Prepare keys for deletion from tx_pool
+            let tx_key = format!("tx_pool_{}", tx.hash).into_bytes();
+            tx_keys_to_delete.push(tx_key);
         }
 
         // Prepare operations for database write
-        for (key, cf_name) in keys_storage
+        for ((key, value), cf_name) in keys_storage
             .iter()
             .zip(values_storage.iter())
             .zip(cf_storage.iter())
         {
-            operations.push((cf_name, key.0, key.1));
+            operations.push((cf_name, key.as_slice(), Some(value.as_slice())));
+        }
+
+        // Delete transactions from tx_pool
+        for tx_key in tx_keys_to_delete.iter() {
+            operations.push(("tx_pool", tx_key.as_slice(), None));
         }
 
         // Update the database

@@ -68,22 +68,27 @@ impl Database {
         }
     }
 
-    pub fn write(&self, operations: Vec<(&str, &[u8], &[u8])>) -> Result<(), String> {
+    pub fn write(&self, operations: Vec<(&str, &[u8], Option<&[u8]>)>) -> Result<(), String> {
         let mut batch = WriteBatch::default();
-
+    
         match &self.db {
             Some(db) => {
                 for (cf_name, key, value) in operations {
                     let cf_handle = db
                         .cf_handle(cf_name)
                         .ok_or(format!("Column family {} not found", cf_name))?;
-                    batch.put_cf(cf_handle, key, value);
+                    
+                    match value {
+                        Some(v) => batch.put_cf(cf_handle, key, v),
+                        None => batch.delete_cf(cf_handle, key),
+                    };
                 }
                 db.write(batch).map_err(|e| e.to_string())
             }
             None => Err("Database connection is closed".to_string()),
         }
     }
+    
 
     pub fn close(&mut self) {
         let _ = self.db.take(); // Properly drops the database object, closing the connection
