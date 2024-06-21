@@ -34,12 +34,7 @@ const AUTHOR_3_SECRET_KEY: &str =
 
 #[test]
 fn ride_sharing_sample() {
-    let authorities = vec![
-        AUTHOR_1_PUBLIC_KEY.to_string(),
-        AUTHOR_2_PUBLIC_KEY.to_string(),
-        AUTHOR_3_PUBLIC_KEY.to_string(),
-    ];
-    let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true, authorities);
+    let mut blockchain = new_blockchain();
 
     let blocks = [
         || ride_request_block(1, 1, 20),
@@ -73,6 +68,16 @@ fn ride_sharing_sample() {
 
     save_blocks_to_file(&blockchain);
     blockchain.cleanup_if_developer_mode();
+}
+
+fn new_blockchain() -> Blockchain {
+    let authorities = vec![
+        AUTHOR_1_PUBLIC_KEY.to_string(),
+        AUTHOR_2_PUBLIC_KEY.to_string(),
+        AUTHOR_3_PUBLIC_KEY.to_string(),
+    ];
+    let blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true, authorities);
+    blockchain
 }
 
 fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), String> {
@@ -143,7 +148,7 @@ fn save_blocks_to_file(blockchain: &Blockchain) {
 }
 
 fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {
-    let ride_request_transcation = ride_request_transcation(fare, nonce);   
+    let ride_request_transcation = ride_request_transcation(fare, nonce);
     Block::new_block(index, String::new(), vec![ride_request_transcation])
 }
 
@@ -172,7 +177,7 @@ fn ride_request_transcation(fare: u64, nonce: u64) -> transaction::Transaction {
 }
 
 fn ride_offer_block(index: usize, nonce: u64, fare: u64) -> Block {
-    let ride_offer_transaction: transaction::Transaction = ride_offer_transaction(fare, nonce);  
+    let ride_offer_transaction: transaction::Transaction = ride_offer_transaction(fare, nonce);
     Block::new_block(index, String::new(), vec![ride_offer_transaction])
 }
 
@@ -193,7 +198,7 @@ fn ride_offer_transaction(fare: u64, nonce: u64) -> transaction::Transaction {
 }
 
 fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
-    let ride_acceptance_transaction = ride_acceptance_transaction(nonce);   
+    let ride_acceptance_transaction = ride_acceptance_transaction(nonce);
     Block::new_block(index, String::new(), vec![ride_acceptance_transaction])
 }
 
@@ -213,7 +218,7 @@ fn ride_acceptance_transaction(nonce: u64) -> transaction::Transaction {
 }
 
 fn ride_pay_block(index: usize, nonce: u64, fare: u64) -> Block {
-    let ride_pay_transaction = ride_pay_transaction(fare, nonce);   
+    let ride_pay_transaction = ride_pay_transaction(fare, nonce);
     Block::new_block(index, String::new(), vec![ride_pay_transaction])
 }
 
@@ -234,7 +239,7 @@ fn ride_pay_transaction(fare: u64, nonce: u64) -> transaction::Transaction {
 }
 
 fn ride_cancel_block(index: usize, nonce: u64) -> Block {
-    let ride_cancel_transaction = ride_cancel_transaction(nonce);   
+    let ride_cancel_transaction = ride_cancel_transaction(nonce);
     Block::new_block(index, String::new(), vec![ride_cancel_transaction])
 }
 
