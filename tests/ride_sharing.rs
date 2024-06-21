@@ -46,7 +46,7 @@ fn ride_sharing_sample() {
         || ride_offer_block(2, 1, 30),
         || ride_acceptance_block(3, 2),
         || ride_pay_block(4, 3, 5),  //5
-        || ride_pay_block(5, 4, 10), // 5+10 = 15
+        || ride_pay_block(5, 4, 10), // 5 + 10 = 15
         || ride_pay_block(6, 5, 10), // 15 + 10 = 25
         || ride_cancel_block(7, 6),
     ];
@@ -76,7 +76,6 @@ fn ride_sharing_sample() {
 }
 
 fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), String> {
-
     block.previous_hash = blockchain
         .get_latest_block()
         .expect("Failed to get the latest block")
@@ -144,6 +143,12 @@ fn save_blocks_to_file(blockchain: &Blockchain) {
 }
 
 fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {
+    let mut ride_request_transcation = ride_request_transcation(fare, nonce);
+    ride_request_transcation.sign(PASSENGER_SECRET_KEY);
+    Block::new_block(index, String::new(), vec![ride_request_transcation])
+}
+
+fn ride_request_transcation(fare: u64, nonce: u64) -> transaction::Transaction {
     let ride_request = ride_request::RideRequest {
         fare: fare,
         pickup_location: coordinate::Coordinates {
@@ -156,79 +161,94 @@ fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {
         }, //Ghil,Hengam iceland,Iran
     };
 
-    let mut ride_request_transcation = transaction::Transaction::new_transaction(
+    let ride_request_transcation = transaction::Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideRequest,
         ride_request,
     );
-
-    ride_request_transcation.sign(PASSENGER_SECRET_KEY);
-    Block::new_block(index, String::new(), vec![ride_request_transcation])
+    ride_request_transcation
 }
 
 fn ride_offer_block(index: usize, nonce: u64, fare: u64) -> Block {
+    let mut ride_offer_transaction: transaction::Transaction = ride_offer_transaction(fare, nonce);
+    ride_offer_transaction.sign(DRIVER_SECRET_KEY);
+    Block::new_block(index, String::new(), vec![ride_offer_transaction])
+}
+
+fn ride_offer_transaction(fare: u64, nonce: u64) -> transaction::Transaction {
     let ride_offer = ride_offer::RideOffer {
         fare: fare,
         ride_request_transaction_hash: RIDE_REQUEST_TX_HASH.to_string(),
     };
 
-    let mut ride_offer_transaction = transaction::Transaction::new_transaction(
+    let ride_offer_transaction = transaction::Transaction::new_transaction(
         DRIVER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideOffer,
         ride_offer,
     );
-
-    ride_offer_transaction.sign(DRIVER_SECRET_KEY);
-    Block::new_block(index, String::new(), vec![ride_offer_transaction])
+    ride_offer_transaction
 }
 
 fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
-    let ride_acceptance = ride_acceptance::RideAcceptance {
-        ride_offer_transaction_hash: RIDE_OFFER_TX_HASH.to_string(),
-    };
-
-    let mut ride_acceptance_transaction = transaction::Transaction::new_transaction(
-        PASSENGER_ADDRESS_KEY.to_string(),
-        nonce,
-        FunctionCallType::RideAcceptance,
-        ride_acceptance,
-    );
+    let mut ride_acceptance_transaction = ride_acceptance_transaction(nonce);
 
     ride_acceptance_transaction.sign(PASSENGER_SECRET_KEY);
     Block::new_block(index, String::new(), vec![ride_acceptance_transaction])
 }
 
+fn ride_acceptance_transaction(nonce: u64) -> transaction::Transaction {
+    let ride_acceptance = ride_acceptance::RideAcceptance {
+        ride_offer_transaction_hash: RIDE_OFFER_TX_HASH.to_string(),
+    };
+
+    let ride_acceptance_transaction = transaction::Transaction::new_transaction(
+        PASSENGER_ADDRESS_KEY.to_string(),
+        nonce,
+        FunctionCallType::RideAcceptance,
+        ride_acceptance,
+    );
+    ride_acceptance_transaction
+}
+
 fn ride_pay_block(index: usize, nonce: u64, fare: u64) -> Block {
+    let mut ride_pay_transaction = ride_pay_transaction(fare, nonce);
+    ride_pay_transaction.sign(PASSENGER_SECRET_KEY);
+    Block::new_block(index, String::new(), vec![ride_pay_transaction])
+}
+
+fn ride_pay_transaction(fare: u64, nonce: u64) -> transaction::Transaction {
     let ride_pay = ride_pay::RidePay {
         fare: fare,
         ride_acceptance_transaction_hash: RIDE_ACCEPTANCE_TX_HASH.to_string(),
     };
 
-    let mut ride_pay_transaction = transaction::Transaction::new_transaction(
+    let ride_pay_transaction = transaction::Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RidePay,
         ride_pay,
     );
-
-    ride_pay_transaction.sign(PASSENGER_SECRET_KEY);
-    Block::new_block(index, String::new(), vec![ride_pay_transaction])
+    ride_pay_transaction
 }
 
 fn ride_cancel_block(index: usize, nonce: u64) -> Block {
+    let mut ride_cancel_transaction = ride_cancel_transaction(nonce);
+    ride_cancel_transaction.sign(PASSENGER_SECRET_KEY);
+    Block::new_block(index, String::new(), vec![ride_cancel_transaction])
+}
+
+fn ride_cancel_transaction(nonce: u64) -> transaction::Transaction {
     let ride_pay = ride_cancel::RideCancel {
         ride_acceptance_transaction_hash: RIDE_ACCEPTANCE_TX_HASH.to_string(),
     };
 
-    let mut ride_cancel_transaction = transaction::Transaction::new_transaction(
+    let ride_cancel_transaction = transaction::Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
         FunctionCallType::RideCancel,
         ride_pay,
     );
-
-    ride_cancel_transaction.sign(PASSENGER_SECRET_KEY);
-    Block::new_block(index, String::new(), vec![ride_cancel_transaction])
+    ride_cancel_transaction
 }
