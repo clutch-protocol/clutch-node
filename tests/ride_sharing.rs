@@ -1,8 +1,8 @@
+use serial_test::serial;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::vec;
-use serial_test::serial;
 
 use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
 
@@ -35,9 +35,16 @@ const AUTHOR_3_SECRET_KEY: &str =
 
 #[test]
 #[serial]
-fn import_blocks() {
+fn test_ride_sharing_blockchain() {
     let mut blockchain = new_blockchain();
 
+    import_blocks(&mut blockchain);
+    author_blocks(&mut blockchain);
+
+    blockchain.cleanup_if_developer_mode();
+}
+
+fn import_blocks(blockchain: &mut Blockchain) {
     let blocks = [
         || ride_request_block(1, 1, 20),
         || ride_offer_block(2, 1, 30),
@@ -50,7 +57,7 @@ fn import_blocks() {
 
     for block_creator in blocks.iter() {
         let mut block = block_creator();
-        if let Err(e) = import_block(&mut blockchain, &mut block) {
+        if let Err(e) = import_block(blockchain, &mut block) {
             println!("Error importing block: {}", e);
             break;
         }
@@ -79,16 +86,10 @@ fn import_blocks() {
         },
         Err(e) => println!("Failed to retrieve blocks: {}", e),
     }
-
-    blockchain.cleanup_if_developer_mode();
 }
 
-#[test]
-#[serial]
-fn author_blocks() {
-    let mut blockchain = new_blockchain();
-
-    let ride_request_transcation = ride_request_transcation(20, 1);
+fn author_blocks(blockchain: &mut Blockchain) {
+    let ride_request_transcation = ride_request_transcation(4, 7);
     add_transaction_to_pool(&blockchain, ride_request_transcation);
 
     match blockchain.get_transactions_in_pool() {
@@ -102,8 +103,6 @@ fn author_blocks() {
         },
         Err(e) => println!("Failed to retrieve transactions in transaction pool: {}", e),
     }
-
-    blockchain.cleanup_if_developer_mode();
 }
 
 fn add_transaction_to_pool(
@@ -111,7 +110,9 @@ fn add_transaction_to_pool(
     ride_request_transcation: transaction::Transaction,
 ) {
     match blockchain.add_transaction_to_pool(ride_request_transcation) {
-        Ok(_) => {}
+        Ok(_) => {
+            println!("Successfully added transaction to transaction_pool");
+        }
         Err(e) => {
             println!("Failed to add transaction to transaction_pool: {}", e);
         }
