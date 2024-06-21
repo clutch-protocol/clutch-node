@@ -91,7 +91,7 @@ impl Blockchain {
         TransactionPool::add_transaction(&self.db, transaction)
     }
 
-    pub fn get_transactions_in_pool(&self) -> Result<Vec<Transaction>, String> {
+    pub fn get_transactions_from_pool(&self) -> Result<Vec<Transaction>, String> {
         TransactionPool::get_transactions(&self.db)
     }
 
