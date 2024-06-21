@@ -66,8 +66,8 @@ fn import_blocks(blockchain: &mut Blockchain) {
 }
 
 fn author_blocks(blockchain: &mut Blockchain) {
-    let ride_request_transcation = ride_request_transcation(4, 7);
-    add_transaction_to_pool(&blockchain, ride_request_transcation);
+    let ride_request_tx = ride_request_transcation(1, 7);
+    add_transaction_to_pool(&blockchain, ride_request_tx);
 
     match blockchain.author_new_block() {
         Ok(mut block) => match import_block(blockchain, &mut block) {

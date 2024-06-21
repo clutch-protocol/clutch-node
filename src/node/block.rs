@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tracing_subscriber::registry::Data;
 
+use super::transaction_pool::TransactionPool;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
     pub index: usize,
@@ -243,8 +245,8 @@ impl Block {
                 }
             }
 
-            // Prepare keys for deletion from tx_pool
-            let tx_key = format!("tx_pool_{}", tx.hash).into_bytes();
+            // Prepare keys for deletion from tx_pool            
+            let tx_key =TransactionPool::construct_tx_pool_key(&tx.hash);
             tx_keys_to_delete.push(tx_key);
         }
 
