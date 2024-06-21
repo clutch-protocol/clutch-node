@@ -4,11 +4,23 @@ use crate::node::transaction::Transaction;
 pub struct TransactionPool {}
 
 impl TransactionPool {
-    pub fn add_transaction(&self, db: &Database, transaction: Transaction) {
-        let value = serde_json::to_string(&transaction).unwrap().into_bytes();
-        let key = Self::construct_tx_pool_key(&transaction.hash);
+    pub fn add_transaction(db: &Database, transaction: Transaction) -> Result<(), String> {
+        if !transaction.validate_transaction(&db) {
+            return Err("Transaction is invalid.".to_string());
+        }
 
-        db.put("tx_pool", &key, &value).unwrap();
+        let key = Self::construct_tx_pool_key(&transaction.hash);
+        let value = serde_json::to_string(&transaction).unwrap().into_bytes();
+
+        db.put("tx_pool", &key, &value)
+    }
+
+    pub fn remove_transaction(db: &Database, tx_hash: &str) -> Result<(), String> {
+        let key = Self::construct_tx_pool_key(tx_hash);
+        match db.delete("tx_pool", &key) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(format!("Failed to remove transaction: {}", e)),
+        }
     }
 
     pub fn construct_tx_pool_key(tx_hash: &str) -> Vec<u8> {

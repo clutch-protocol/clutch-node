@@ -1,9 +1,10 @@
+use super::consensus::Consensus;
 use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;
 use crate::node::block::Block;
 use crate::node::database::Database;
-
-use super::consensus::Consensus;
+use crate::node::transaction::Transaction;
+use crate::node::transaction_pool::TransactionPool;
 
 #[derive(Debug)]
 pub struct Blockchain {
@@ -75,5 +76,12 @@ impl Blockchain {
 
     pub fn current_author(&self) -> &String {
         self.consensus.current_author()
+    }
+
+    pub fn add_transaction_to_pool(&self, transaction: Transaction) -> Result<(), String> {
+        if !transaction.validate_transaction(&self.db) {
+            return Err("Transaction is invalid.".to_string());
+        }
+        TransactionPool::add_transaction(&self.db, transaction)
     }
 }

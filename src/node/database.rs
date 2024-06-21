@@ -56,6 +56,16 @@ impl Database {
             None => Err("Database connection is closed".to_string()),
         }
     }
+    
+    pub fn delete(&self, cf_name: &str, key: &[u8]) -> Result<(), String> {
+        match &self.db {
+            Some(db) => {
+                let cf_handle = db.cf_handle(cf_name).ok_or("Column family not found")?;
+                db.delete_cf(cf_handle, key).map_err(|e| e.to_string())
+            }
+            None => Err("Database connection is closed".to_string()),
+        }
+    }
 
     pub fn write(&self, operations: Vec<(&str, &[u8], &[u8])>) -> Result<(), String> {
         let mut batch = WriteBatch::default();
