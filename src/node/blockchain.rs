@@ -1,3 +1,5 @@
+use std::result;
+
 use super::consensus::Consensus;
 use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;
@@ -83,5 +85,9 @@ impl Blockchain {
             return Err("Transaction is invalid.".to_string());
         }
         TransactionPool::add_transaction(&self.db, transaction)
+    }
+
+    pub fn get_transactions_in_pool(&self) -> Result<Vec<Transaction>, String> {
+        TransactionPool::get_transactions(&self.db)
     }
 }

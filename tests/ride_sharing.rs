@@ -66,7 +66,45 @@ fn import_blocks() {
     let from_account_state = blockchain.get_account_state(&PASSENGER_ADDRESS_KEY.to_string());
     println!("From account state: {:#?}", from_account_state);
 
-    save_blocks_to_file(&blockchain,"import_blocks");
+    match blockchain.get_blocks() {
+        Ok(blocks) => match serde_json::to_string_pretty(&blocks) {
+            Ok(json_str) => {
+                if let Err(e) = write_to_file(&json_str, "import_blocks") {
+                    println!("{}", e);
+                }
+            }
+            Err(e) => println!("Failed to serialize blocks: {}", e),
+        },
+        Err(e) => println!("Failed to retrieve blocks: {}", e),
+    }
+
+    blockchain.cleanup_if_developer_mode();
+}
+
+#[test]
+fn author_blocks() {
+    let mut blockchain = new_blockchain();
+
+    let ride_request_transcation = ride_request_transcation(20, 1);
+    match blockchain.add_transaction_to_pool(ride_request_transcation) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("Failed to add transaction to transaction_pool: {}", e);
+        }
+    }
+
+    match blockchain.get_transactions_in_pool() {
+        Ok(transactions) => match serde_json::to_string_pretty(&transactions) {
+            Ok(json_str) => {
+                if let Err(e) = write_to_file(&json_str, "tx_pool") {
+                    println!("{}", e);
+                }
+            }
+            Err(e) => println!("Failed to serialize transactions: {}", e),
+        },
+        Err(e) => println!("Failed to retrieve transactions in transaction pool: {}", e),
+    }
+
     blockchain.cleanup_if_developer_mode();
 }
 
@@ -112,41 +150,24 @@ fn current_author_keys(blockchain: &Blockchain) -> Option<(&str, &str)> {
     None
 }
 
-fn save_blocks_to_file(blockchain: &Blockchain, file_name: &str) {
-    let address  = format!("output/{}.json", file_name);
-    let path = Path::new(&address);    
+fn write_to_file(content: &str, file_name: &str) -> Result<(), String> {
+    let address = format!("output/{}.json", file_name);
+    let path = Path::new(&address);
 
     let mut file = match File::create(&path) {
         Ok(file) => file,
-        Err(e) => {
-            println!("Failed to create file: {}", e);
-            return;
-        }
+        Err(e) => return Err(format!("Failed to create file: {}", e)),
     };
 
-    match blockchain.get_blocks() {
-        Ok(blocks) => {
-            match serde_json::to_string_pretty(&blocks) {
-                Ok(json_str) => {
-                    if let Err(e) = writeln!(file, "{}", json_str) {
-                        println!("Failed to write to file: {}", e);
-                        return;
-                    }
-                }
-                Err(e) => {
-                    println!("Failed to serialize block: {}", e);
-                    return;
-                }
-            }
-            println!(
-                "Blocks have been successfully saved to '{}'.",
-                path.display()
-            );
-        }
-        Err(e) => {
-            println!("Failed to retrieve blocks: {}", e);
-        }
+    if let Err(e) = writeln!(file, "{}", content) {
+        return Err(format!("Failed to write to file: {}", e));
     }
+
+    println!(
+        "Content has been successfully saved to '{}'.",
+        path.display()
+    );
+    Ok(())
 }
 
 fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {

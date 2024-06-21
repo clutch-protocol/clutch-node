@@ -25,6 +25,7 @@ impl Database {
             ColumnFamilyDescriptor::new("block", Options::default()),
             ColumnFamilyDescriptor::new("state", Options::default()),
             ColumnFamilyDescriptor::new("blockchain", Options::default()),
+            ColumnFamilyDescriptor::new("tx_pool", Options::default()),            
         ];
 
         let db = DBWithThreadMode::<SingleThreaded>::open_cf_descriptors(
@@ -56,7 +57,7 @@ impl Database {
             None => Err("Database connection is closed".to_string()),
         }
     }
-    
+
     pub fn delete(&self, cf_name: &str, key: &[u8]) -> Result<(), String> {
         match &self.db {
             Some(db) => {
