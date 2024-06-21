@@ -86,12 +86,7 @@ fn author_blocks() {
     let mut blockchain = new_blockchain();
 
     let ride_request_transcation = ride_request_transcation(20, 1);
-    match blockchain.add_transaction_to_pool(ride_request_transcation) {
-        Ok(_) => {}
-        Err(e) => {
-            println!("Failed to add transaction to transaction_pool: {}", e);
-        }
-    }
+    add_transaction_to_pool(&blockchain, ride_request_transcation);
 
     match blockchain.get_transactions_in_pool() {
         Ok(transactions) => match serde_json::to_string_pretty(&transactions) {
@@ -106,6 +101,18 @@ fn author_blocks() {
     }
 
     blockchain.cleanup_if_developer_mode();
+}
+
+fn add_transaction_to_pool(
+    blockchain: &Blockchain,
+    ride_request_transcation: transaction::Transaction,
+) {
+    match blockchain.add_transaction_to_pool(ride_request_transcation) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("Failed to add transaction to transaction_pool: {}", e);
+        }
+    }
 }
 
 fn new_blockchain() -> Blockchain {
