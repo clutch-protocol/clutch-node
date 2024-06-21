@@ -33,7 +33,7 @@ const AUTHOR_3_SECRET_KEY: &str =
     "2d75bdfabbbaa65d7a182968e579adf2566fbb6931411752dd834c56bbf092c9";
 
 #[test]
-fn blocks_imports() {
+fn blocks_import() {
     let mut blockchain = new_blockchain();
 
     let blocks = [
