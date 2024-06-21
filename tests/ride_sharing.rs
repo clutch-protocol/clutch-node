@@ -66,7 +66,7 @@ fn import_blocks() {
     let from_account_state = blockchain.get_account_state(&PASSENGER_ADDRESS_KEY.to_string());
     println!("From account state: {:#?}", from_account_state);
 
-    save_blocks_to_file(&blockchain);
+    save_blocks_to_file(&blockchain,"import_blocks");
     blockchain.cleanup_if_developer_mode();
 }
 
@@ -112,8 +112,10 @@ fn current_author_keys(blockchain: &Blockchain) -> Option<(&str, &str)> {
     None
 }
 
-fn save_blocks_to_file(blockchain: &Blockchain) {
-    let path = Path::new("output/ride_sharing_sample.json");
+fn save_blocks_to_file(blockchain: &Blockchain, file_name: &str) {
+    let address  = format!("output/{}.json", file_name);
+    let path = Path::new(&address);    
+
     let mut file = match File::create(&path) {
         Ok(file) => file,
         Err(e) => {
