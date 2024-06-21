@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::vec;
+use serial_test::serial;
 
 use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
 
@@ -33,6 +34,7 @@ const AUTHOR_3_SECRET_KEY: &str =
     "2d75bdfabbbaa65d7a182968e579adf2566fbb6931411752dd834c56bbf092c9";
 
 #[test]
+#[serial]
 fn import_blocks() {
     let mut blockchain = new_blockchain();
 
@@ -82,6 +84,7 @@ fn import_blocks() {
 }
 
 #[test]
+#[serial]
 fn author_blocks() {
     let mut blockchain = new_blockchain();
 
