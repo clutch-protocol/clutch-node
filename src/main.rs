@@ -11,7 +11,6 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 
 mod node;
 
-/// Command line arguments structure
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
