@@ -27,10 +27,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = load_configuration(env)?;
     let blockchain = Arc::new(Mutex::new(initialize_blockchain(&config)));
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
-    start_libp2p_task(config.clone(), shutdown_tx);
 
-    start_websocket_server_task(config.clone(), Arc::clone(&blockchain));
-    await_shutdown_signal(shutdown_rx).await;
+    start_libp2p_service(config.clone(), shutdown_tx);
+    start_websocket_service(config, Arc::clone(&blockchain));
+    wait_for_shutdown_signal(shutdown_rx).await;
 
     if let Ok(mut blockchain) = blockchain.lock() {
         blockchain.cleanup_if_developer_mode();
@@ -52,7 +52,7 @@ fn initialize_blockchain(config: &node::config::AppConfig) -> Blockchain {
     )
 }
 
-fn start_libp2p_task(config: node::config::AppConfig, shutdown_tx: oneshot::Sender<()>) {
+fn start_libp2p_service(config: node::config::AppConfig, shutdown_tx: oneshot::Sender<()>) {
     tokio::spawn(async move {
         if let Err(e) = node::libp2p::run(&config).await {
             eprintln!("Error running libp2p: {}", e);
@@ -61,7 +61,7 @@ fn start_libp2p_task(config: node::config::AppConfig, shutdown_tx: oneshot::Send
     });
 }
 
-fn start_websocket_server_task(config: node::config::AppConfig, blockchain: Arc<Mutex<Blockchain>>) {
+fn start_websocket_service(config: node::config::AppConfig, blockchain: Arc<Mutex<Blockchain>>) {
     let addr = config.websocket_addr.clone();
 
     tokio::spawn(async move {
@@ -71,18 +71,21 @@ fn start_websocket_server_task(config: node::config::AppConfig, blockchain: Arc<
     });
 }
 
-async fn await_shutdown_signal(shutdown_rx: oneshot::Receiver<()>) {
+async fn wait_for_shutdown_signal(shutdown_rx: oneshot::Receiver<()>) {
     tokio::select! {
         _ = signal::ctrl_c() => {
             println!("Received Ctrl+C, shutting down.");
         }
         _ = shutdown_rx => {
-            println!("Libp2p task completed, shutting down.");
+            println!("Libp2p service completed, shutting down.");
         }
     }
 }
 
-async fn start_websocket_server(addr: &str, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn std::error::Error>> {
+async fn start_websocket_server(
+    addr: &str,
+    blockchain: Arc<Mutex<Blockchain>>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind(addr).await?;
     println!("WebSocket server started on {}", addr);
 
@@ -95,7 +98,9 @@ async fn start_websocket_server(addr: &str, blockchain: Arc<Mutex<Blockchain>>) 
 }
 
 async fn handle_websocket_connection(stream: TcpStream, blockchain: Arc<Mutex<Blockchain>>) {
-    let ws_stream = accept_async(stream).await.expect("Error during the websocket handshake");
+    let ws_stream = accept_async(stream)
+        .await
+        .expect("Error during the websocket handshake");
 
     let (mut ws_sender, mut ws_receiver) = ws_stream.split();
 
