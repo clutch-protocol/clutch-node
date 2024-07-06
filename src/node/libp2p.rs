@@ -1,3 +1,4 @@
+use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
 use futures::stream::StreamExt;
 use libp2p::{
@@ -8,6 +9,7 @@ use libp2p::{
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::hash::{Hash, Hasher};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::{io, io::AsyncBufReadExt, select};
 use tracing_subscriber::EnvFilter;
@@ -19,7 +21,10 @@ pub struct MyBehaviour {
     pub mdns: mdns::tokio::Behaviour,
 }
 
-pub async fn run(config: &AppConfig) -> Result<(), Box<dyn Error>> {
+pub async fn run(
+    config: &AppConfig,
+    blockchain: Arc<Mutex<Blockchain>>,
+) -> Result<(), Box<dyn Error>> {
     setup_tracing()?;
 
     let mut swarm = build_swarm()?;

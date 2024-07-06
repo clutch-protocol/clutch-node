@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let blockchain = Arc::new(Mutex::new(initialize_blockchain(&config)));
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
 
-    start_libp2p_service(config.clone(), shutdown_tx);
+    start_libp2p_service(config.clone(),Arc::clone(&blockchain), shutdown_tx);
     start_websocket_service(config, Arc::clone(&blockchain));
     wait_for_shutdown_signal(shutdown_rx).await;
 
@@ -47,9 +47,9 @@ fn initialize_blockchain(config: &node::config::AppConfig) -> Blockchain {
     )
 }
 
-fn start_libp2p_service(config: node::config::AppConfig, shutdown_tx: oneshot::Sender<()>) {
+fn start_libp2p_service(config: node::config::AppConfig, blockchain: Arc<Mutex<Blockchain>>, shutdown_tx: oneshot::Sender<()>) {
     tokio::spawn(async move {
-        if let Err(e) = node::libp2p::run(&config).await {
+        if let Err(e) = node::libp2p::run(&config, blockchain).await {
             eprintln!("Error running libp2p: {}", e);
         }
         let _ = shutdown_tx.send(());
