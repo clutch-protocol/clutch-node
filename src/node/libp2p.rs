@@ -19,7 +19,7 @@ pub struct MyBehaviour {
     pub mdns: mdns::tokio::Behaviour,
 }
 
-pub async fn run(config: AppConfig) -> Result<(), Box<dyn Error>> {
+pub async fn run(config: &AppConfig) -> Result<(), Box<dyn Error>> {
     setup_tracing()?;
 
     let mut swarm = build_swarm()?;

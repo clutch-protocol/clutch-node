@@ -2,11 +2,12 @@ use config::{Config, ConfigError, Environment, File};
 use dotenv::dotenv;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize,Clone)]
 pub struct AppConfig {
     pub libp2p_topic_name: String,
     pub blockchain_name: String,
     pub developer_mode: bool,
+    pub websocket_addr: String,
     pub authorities: Vec<String>,
 }
 
