@@ -1,15 +1,11 @@
 use clap::Parser;
-use futures::stream::StreamExt;
-use futures::SinkExt;
-use node::blockchain::Blockchain;
 use std::sync::{Arc, Mutex};
-use tokio::net::{TcpListener, TcpStream};
 use tokio::signal;
 use tokio::sync::oneshot;
-use tokio_tungstenite::accept_async;
-use tokio_tungstenite::tungstenite::protocol::Message;
+use node::blockchain::Blockchain;
 
 mod node;
+use node::websocket; 
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -64,7 +60,7 @@ fn start_websocket_service(config: node::config::AppConfig, blockchain: Arc<Mute
     let addr = config.websocket_addr.clone();
 
     tokio::spawn(async move {
-        if let Err(e) = start_websocket_server(&addr, blockchain).await {
+        if let Err(e) = websocket::start_websocket_server(&addr, blockchain).await {
             eprintln!("Error starting WebSocket server: {}", e);
         }
     });
@@ -77,44 +73,6 @@ async fn wait_for_shutdown_signal(shutdown_rx: oneshot::Receiver<()>) {
         }
         _ = shutdown_rx => {
             println!("Libp2p service completed, shutting down.");
-        }
-    }
-}
-
-async fn start_websocket_server(
-    addr: &str,
-    blockchain: Arc<Mutex<Blockchain>>,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let listener = TcpListener::bind(addr).await?;
-    println!("WebSocket server started on {}", addr);
-
-    while let Ok((stream, _)) = listener.accept().await {
-        let blockchain = Arc::clone(&blockchain);
-        tokio::spawn(handle_websocket_connection(stream, blockchain));
-    }
-
-    Ok(())
-}
-
-async fn handle_websocket_connection(stream: TcpStream, blockchain: Arc<Mutex<Blockchain>>) {
-    let ws_stream = accept_async(stream)
-        .await
-        .expect("Error during the websocket handshake");
-
-    let (mut ws_sender, mut ws_receiver) = ws_stream.split();
-
-    while let Some(Ok(message)) = ws_receiver.next().await {
-        if let Message::Text(text) = message {
-            println!("Received: {}", text);
-            // Run a blockchain method here
-            if let Ok(mut blockchain) = blockchain.lock() {
-                // blockchain.some_method(&text); // Replace `some_method` with the actual method you want to call
-            }
-
-            if let Err(e) = ws_sender.send(Message::Text(text)).await {
-                eprintln!("Error sending message: {}", e);
-                return;
-            }
         }
     }
 }
