@@ -26,9 +26,9 @@ async fn handle_websocket_connection(stream: TcpStream, blockchain: Arc<Mutex<Bl
     while let Some(Ok(message)) = ws_receiver.next().await {
         if let Message::Text(text) = message {
             println!("Received: {}", text);
-            // Run a blockchain method here
+            
             if let Ok(mut blockchain) = blockchain.lock() {
-                // blockchain.some_method(&text); // Replace `some_method` with the actual method you want to call
+                // blockchain.add_transaction_to_pool(transaction);
             }
 
             if let Err(e) = ws_sender.send(Message::Text(text)).await {

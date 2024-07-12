@@ -5,7 +5,6 @@ use tokio::sync::oneshot;
 use node::blockchain::Blockchain;
 
 mod node;
-use node::websocket; 
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -60,7 +59,7 @@ fn start_websocket_service(config: node::config::AppConfig, blockchain: Arc<Mute
     let addr = config.websocket_addr.clone();
 
     tokio::spawn(async move {
-        if let Err(e) = websocket::start_websocket_server(&addr, blockchain).await {
+        if let Err(e) = node::websocket::start_websocket_server(&addr, blockchain).await {
             eprintln!("Error starting WebSocket server: {}", e);
         }
     });
