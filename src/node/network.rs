@@ -21,7 +21,13 @@ impl Network {
         Self::start_websocket_service(config, Arc::clone(&blockchain), websocket_shutdown_tx);
 
         tokio::spawn(async move {
-            Network::wait_for_shutdown_signal(libp2p_shutdown_rx, websocket_shutdown_rx, shutdown_tx, blockchain).await;
+            Network::wait_for_shutdown_signal(
+                libp2p_shutdown_rx,
+                websocket_shutdown_rx,
+                shutdown_tx,
+                blockchain,
+            )
+            .await;
         });
     }
 
@@ -39,7 +45,11 @@ impl Network {
         });
     }
 
-    fn start_websocket_service(config: &AppConfig, blockchain: Arc<Mutex<Blockchain>>, shutdown_tx: oneshot::Sender<()>) {
+    fn start_websocket_service(
+        config: &AppConfig,
+        blockchain: Arc<Mutex<Blockchain>>,
+        shutdown_tx: oneshot::Sender<()>,
+    ) {
         let addr = config.websocket_addr.clone();
         tokio::spawn(async move {
             if let Err(e) = websocket::start_websocket_server(&addr, blockchain).await {
@@ -66,6 +76,7 @@ impl Network {
                 println!("WebSocket service completed, shutting down.");
             }
         }
+
         let _ = shutdown_tx.send(());
 
         if let Ok(mut blockchain) = blockchain.lock() {
