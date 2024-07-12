@@ -1,5 +1,6 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
+use crate::node::transaction::Transaction;
 use futures::stream::StreamExt;
 use libp2p::{
     gossipsub, gossipsub::Event as GossipsubEvent, gossipsub::IdentTopic, gossipsub::MessageId,
@@ -21,6 +22,16 @@ pub struct MyBehaviour {
     pub mdns: mdns::tokio::Behaviour,
 }
 
+
+impl MyBehaviour {
+    pub fn broadcast_transaction(&mut self, topic: &IdentTopic, transaction: Transaction) {
+        let transaction_data = serde_json::to_vec(&transaction).expect("Failed to serialize transaction");
+        if let Err(e) = self.gossipsub.publish(topic.clone(), transaction_data) {
+            eprintln!("Failed to publish transaction: {}", e);
+        }
+    }
+}
+
 pub async fn run(
     config: &AppConfig,
     blockchain: Arc<Mutex<Blockchain>>,
@@ -31,7 +42,7 @@ pub async fn run(
     let topic = setup_gossipsub_topic(&mut swarm, &config.libp2p_topic_name)?;
 
     listen_for_connections(&mut swarm)?;
-    process_messages(&mut swarm, topic).await
+    process_messages(&mut swarm, topic, blockchain).await
 }
 
 fn setup_tracing() -> Result<(), Box<dyn Error>> {
@@ -97,6 +108,7 @@ fn listen_for_connections(swarm: &mut Swarm<MyBehaviour>) -> Result<(), Box<dyn 
 async fn process_messages(
     swarm: &mut Swarm<MyBehaviour>,
     topic: IdentTopic,
+    blockchain: Arc<Mutex<Blockchain>>,
 ) -> Result<(), Box<dyn Error>> {
     let mut stdin = io::BufReader::new(io::stdin()).lines();
     println!("Enter messages via STDIN and they will be sent to connected peers using Gossipsub");
@@ -123,7 +135,7 @@ async fn process_messages(
                     message_id: id,
                     message,
                 })) => {
-                    handle_gossipsub_message(peer_id, id, message);
+                    handle_gossipsub_message(peer_id, id, message, &blockchain);
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     println!("Local node is listening on {address}");
@@ -151,9 +163,22 @@ fn handle_mdns_expired(swarm: &mut Swarm<MyBehaviour>, list: Vec<(PeerId, Multia
     }
 }
 
-fn handle_gossipsub_message(peer_id: PeerId, id: MessageId, message: gossipsub::Message) {
+
+fn handle_gossipsub_message(peer_id: PeerId, id: MessageId, message: gossipsub::Message, blockchain: &Arc<Mutex<Blockchain>>) {
     println!(
         "Got message: '{}' with id: {id} from peer: {peer_id}",
         String::from_utf8_lossy(&message.data),
     );
+    // Deserialize and handle the transaction message here
+    if let Ok(transaction) = serde_json::from_slice::<Transaction>(&message.data) {
+        if let Ok(mut blockchain) = blockchain.lock() {
+            if blockchain.add_transaction_to_pool(transaction).is_ok() {
+                println!("Transaction added to pool from peer: {peer_id}");
+            } else {
+                println!("Failed to add transaction to pool from peer: {peer_id}");
+            }
+        }
+    } else {
+        println!("Failed to deserialize transaction from peer: {peer_id}");
+    }
 }
