@@ -26,9 +26,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Wait until shutdown signal is received
     shutdown_rx.await.unwrap();
 
-    if let Ok(mut blockchain) = blockchain.lock() {
-        blockchain.cleanup_if_developer_mode();
-    }
     Ok(())
 }
 
