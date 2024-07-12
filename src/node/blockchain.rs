@@ -1,10 +1,4 @@
-use std::result;
-
-use clap::builder::Str;
-use tracing_subscriber::fmt::format::PrettyVisitor;
-
 use super::consensus::Consensus;
-use super::transaction_pool;
 use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;
 use crate::node::block::Block;

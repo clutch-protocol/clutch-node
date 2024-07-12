@@ -1,11 +1,10 @@
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+
 use crate::node::database::Database;
 use crate::node::signature_keys;
 use crate::node::transaction::Transaction;
-use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
-use tracing_subscriber::registry::Data;
-
-use super::transaction_pool::TransactionPool;
+use crate::node::transaction_pool::TransactionPool;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
