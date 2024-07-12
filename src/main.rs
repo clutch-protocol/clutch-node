@@ -1,6 +1,5 @@
 use clap::Parser;
 use std::sync::{Arc, Mutex};
-use tokio::signal;
 use tokio::sync::oneshot;
 use node::blockchain::Blockchain;
 
@@ -22,9 +21,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let blockchain = Arc::new(Mutex::new(initialize_blockchain(&config)));
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
 
-    start_libp2p_service(config.clone(),Arc::clone(&blockchain), shutdown_tx);
-    start_websocket_service(config, Arc::clone(&blockchain));
-    wait_for_shutdown_signal(shutdown_rx).await;
+    node::network::Network::start_services(&config, Arc::clone(&blockchain), shutdown_tx);
+
+    // Wait until shutdown signal is received
+    shutdown_rx.await.unwrap();
 
     if let Ok(mut blockchain) = blockchain.lock() {
         blockchain.cleanup_if_developer_mode();
@@ -44,34 +44,4 @@ fn initialize_blockchain(config: &node::config::AppConfig) -> Blockchain {
         config.developer_mode.clone(),
         config.authorities.clone(),
     )
-}
-
-fn start_libp2p_service(config: node::config::AppConfig, blockchain: Arc<Mutex<Blockchain>>, shutdown_tx: oneshot::Sender<()>) {
-    tokio::spawn(async move {
-        if let Err(e) = node::libp2p::run(&config, blockchain).await {
-            eprintln!("Error running libp2p: {}", e);
-        }
-        let _ = shutdown_tx.send(());
-    });
-}
-
-fn start_websocket_service(config: node::config::AppConfig, blockchain: Arc<Mutex<Blockchain>>) {
-    let addr = config.websocket_addr.clone();
-
-    tokio::spawn(async move {
-        if let Err(e) = node::websocket::start_websocket_server(&addr, blockchain).await {
-            eprintln!("Error starting WebSocket server: {}", e);
-        }
-    });
-}
-
-async fn wait_for_shutdown_signal(shutdown_rx: oneshot::Receiver<()>) {
-    tokio::select! {
-        _ = signal::ctrl_c() => {
-            println!("Received Ctrl+C, shutting down.");
-        }
-        _ = shutdown_rx => {
-            println!("Libp2p service completed, shutting down.");
-        }
-    }
 }

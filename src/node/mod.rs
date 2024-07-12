@@ -10,6 +10,7 @@ pub mod coordinate;
 pub mod database;
 pub mod function_call;
 pub mod libp2p;
+pub mod network;
 pub mod ride_acceptance;
 pub mod ride_cancel;
 pub mod ride_offer;
