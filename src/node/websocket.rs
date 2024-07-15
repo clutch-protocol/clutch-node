@@ -72,7 +72,7 @@ impl WebSocket {
                 let response = match network.lock() {
                     Ok(net) => {
                         if net.blockchain.lock().unwrap().add_transaction_to_pool(transaction).is_ok() {
-                            json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string()
+                            json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string()                            
                         } else {
                             json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": "Failed to add transaction"}, "id": id}).to_string()
                         }
