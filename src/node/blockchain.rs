@@ -113,9 +113,8 @@ impl Blockchain {
     }
 
     pub async fn start_network_services(self, config: &AppConfig) {
-        let blockchain = Arc::new(Mutex::new(self));
         let (shutdown_tx, shutdown_rx) = oneshot::channel();
-        Network::start_services(config, blockchain, shutdown_tx).await;
+        Network::start_services(config, self, shutdown_tx).await;
         shutdown_rx.await.unwrap();
     }
 }
