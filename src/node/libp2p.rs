@@ -189,7 +189,7 @@ impl P2PBehaviour {
         if let Ok(transaction) = transaction_result {
             let blockchain = Arc::clone(blockchain);
             tokio::task::spawn_blocking(move || {
-                if let Ok(mut blockchain) = blockchain.lock() {
+                if let Ok(blockchain) = blockchain.lock() {
                     if blockchain.add_transaction_to_pool(transaction).is_ok() {
                         println!("Transaction added to pool from peer: {peer_id}");
                     } else {
