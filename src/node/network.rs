@@ -18,14 +18,26 @@ impl Network {
         let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
 
         // Start libp2p service
-        Self::start_libp2p_service(config.clone(), Arc::clone(&blockchain), libp2p_shutdown_tx);
+        let libp2p_config = config.clone();
+        let libp2p_blockchain = Arc::clone(&blockchain);
+        tokio::spawn(async move {
+            let topic_name = &libp2p_config.libp2p_topic_name;
+            if let Err(e) = libp2p::P2PBehaviour::run(topic_name, libp2p_blockchain).await {
+                eprintln!("Error running libp2p: {}", e);
+            }
+            let _ = libp2p_shutdown_tx.send(());
+        });
 
         // Start WebSocket service
-        Self::start_websocket_service(
-            config.clone(),
-            Arc::clone(&blockchain),
-            websocket_shutdown_tx,
-        );
+        let websocket_config = config.clone();
+        let websocket_blockchain = Arc::clone(&blockchain);
+        tokio::spawn(async move {
+            let addr = &websocket_config.websocket_addr;
+            if let Err(e) = websocket::WebSocket::run(addr, websocket_blockchain).await {
+                eprintln!("Error starting WebSocket server: {}", e);
+            }
+            let _ = websocket_shutdown_tx.send(());
+        });
 
         // Wait for shutdown signal
         Self::wait_for_shutdown_signal(
@@ -35,34 +47,6 @@ impl Network {
             blockchain,
         )
         .await;
-    }
-
-    fn start_libp2p_service(
-        config: AppConfig,
-        blockchain: Arc<Mutex<Blockchain>>,
-        libp2p_shutdown_tx: oneshot::Sender<()>,
-    ) {
-        tokio::spawn(async move {
-            let topic_name = &config.libp2p_topic_name;
-            if let Err(e) = libp2p::P2PBehaviour::run(topic_name, blockchain).await {
-                eprintln!("Error running libp2p: {}", e);
-            }
-            let _ = libp2p_shutdown_tx.send(());
-        });
-    }
-
-    fn start_websocket_service(
-        config: AppConfig,
-        blockchain: Arc<Mutex<Blockchain>>,
-        websocket_shutdown_tx: oneshot::Sender<()>,
-    ) {
-        tokio::spawn(async move {
-            let addr = &config.websocket_addr;
-            if let Err(e) = websocket::WebSocket::run(addr, blockchain).await {
-                eprintln!("Error starting WebSocket server: {}", e);
-            }
-            let _ = websocket_shutdown_tx.send(());
-        });
     }
 
     async fn wait_for_shutdown_signal(
