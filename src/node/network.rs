@@ -17,9 +17,13 @@ impl Network {
         let (libp2p_shutdown_tx, libp2p_shutdown_rx) = oneshot::channel();
         let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
 
+        // Start libp2p service
         Self::start_libp2p_service(config, Arc::clone(&blockchain), libp2p_shutdown_tx);
+
+        // Start WebSocket service
         Self::start_websocket_service(config, Arc::clone(&blockchain), websocket_shutdown_tx);
 
+        // Spawn a task to wait for shutdown signal
         tokio::spawn(async move {
             Network::wait_for_shutdown_signal(
                 libp2p_shutdown_rx,
@@ -77,8 +81,10 @@ impl Network {
             }
         }
 
+        // Send shutdown signal
         let _ = shutdown_tx.send(());
 
+        // Cleanup blockchain if in developer mode
         if let Ok(mut blockchain) = blockchain.lock() {
             blockchain.cleanup_if_developer_mode();
         }
