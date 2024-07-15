@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 use tokio::net::{TcpListener, TcpStream};
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::protocol::Message;
+use crate::node::blockchain::Blockchain;
 
 pub struct WebSocket;
 
@@ -14,7 +15,7 @@ impl WebSocket {
 
     pub async fn run(
         addr: &str,
-        blockchain: Arc<Mutex<Network>>,
+        blockchain: Arc<Mutex<Blockchain>>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let listener = TcpListener::bind(addr).await?;
         println!("WebSocket server started on {}", addr);
@@ -27,7 +28,7 @@ impl WebSocket {
         Ok(())
     }
     
-    async fn handle_websocket_connection(stream: TcpStream, blockchain: Arc<Mutex<Network>>) {
+    async fn handle_websocket_connection(stream: TcpStream, blockchain: Arc<Mutex<Blockchain>>) {
         let ws_stream = accept_async(stream)
             .await
             .expect("Error during the websocket handshake");
@@ -51,7 +52,7 @@ impl WebSocket {
     
     async fn handle_json_rpc_request(
         request: &str,
-        network: &Arc<Mutex<Network>>,
+        blockchain: &Arc<Mutex<Blockchain>>,
     ) -> Option<String> {
         let request: Value = match serde_json::from_str(request) {
             Ok(val) => val,
@@ -69,10 +70,11 @@ impl WebSocket {
                     Err(_) => return Some(json!({"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": id}).to_string()),
                 };
     
-                let response = match network.lock() {
-                    Ok(net) => {
-                        if net.blockchain.lock().unwrap().add_transaction_to_pool(transaction).is_ok() {
-                            // net.libp2p.unwrap().lock().unwrap().broadcast_transaction(transaction);
+                let response = match blockchain.lock() {
+                    Ok(mut _blockchain) => {
+                        if _blockchain.add_transaction_to_pool(&transaction).is_ok() {                                                      
+                                println!("broadcast_transaction2");
+                                // libp2p.broadcast_transaction(&transaction);                                                        
                             json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string()
                         } else {
                             json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": "Failed to add transaction"}, "id": id}).to_string()

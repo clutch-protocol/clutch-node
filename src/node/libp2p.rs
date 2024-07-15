@@ -14,33 +14,46 @@ use std::time::Duration;
 use tokio::{io, io::AsyncBufReadExt, select};
 use tracing_subscriber::EnvFilter;
 
+use super::blockchain::Blockchain;
+
 #[derive(NetworkBehaviour)]
 pub struct P2PBehaviour {
     pub gossipsub: gossipsub::Behaviour,
     pub mdns: mdns::tokio::Behaviour,
 }
 
-impl P2PBehaviour {
-    pub fn broadcast_transaction(&mut self, topic: &IdentTopic, transaction: Transaction) {
-        let transaction_data =
-            serde_json::to_vec(&transaction).expect("Failed to serialize transaction");
+pub struct P2PServer {
+    pub behaviour: Swarm<P2PBehaviour>,
+    pub topic: IdentTopic,
+}
 
-        if let Err(e) = self.gossipsub.publish(topic.clone(), transaction_data) {
-            eprintln!("Failed to publish transaction: {}", e);
+impl P2PServer {
+    pub fn new(topic_name: &str) -> Self {
+        let mut swarm = Self::build_swarm().unwrap();
+        let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name).unwrap();
+
+        Self {
+            behaviour: swarm,
+            topic: topic,
         }
     }
 
+    pub fn broadcast_transaction(&mut self, transaction: &Transaction) {       
+        let transaction_data = serde_json::to_string(&transaction).expect("Failed to serialize transaction");
+        if let Err(e) = self.behaviour.behaviour_mut().gossipsub.publish(self.topic.clone(), transaction_data) {
+            eprintln!("Failed to publish transaction: {}", e);
+        }
+    } 
+
     pub async fn run(
-        topic_name: &str,
-        network: Arc<Mutex<Network>>,
+        &mut self,        
+        blockchain: Arc<Mutex<Blockchain>>,
     ) -> Result<(), Box<dyn Error>> {
-        Self::setup_tracing()?;
+        Self::setup_tracing()?;      
 
-        let mut swarm = Self::build_swarm()?;
-        let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name)?;
-
-        Self::listen_for_connections(&mut swarm)?;
-        Self::process_messages(&mut swarm, topic, network).await
+        Self::listen_for_connections(&mut self.behaviour)?;
+        let topic = self.topic.clone();
+        Self::process_messages(&mut self.behaviour, topic, blockchain).await
     }
 
     fn setup_tracing() -> Result<(), Box<dyn Error>> {
@@ -108,7 +121,7 @@ impl P2PBehaviour {
     async fn process_messages(
         swarm: &mut Swarm<P2PBehaviour>,
         topic: IdentTopic,
-        network: Arc<Mutex<Network>>,
+        blockchain: Arc<Mutex<Blockchain>>,
     ) -> Result<(), Box<dyn Error>> {
         let mut stdin = io::BufReader::new(io::stdin()).lines();
         println!(
@@ -125,7 +138,7 @@ impl P2PBehaviour {
                         println!("Publish error: {e:?}");
                     }
                 }
-                event = swarm.select_next_some() => Self::handle_swarm_event(event, swarm, &network).await,
+                event = swarm.select_next_some() => Self::handle_swarm_event(event, swarm, &blockchain).await,
             }
         }
     }
@@ -133,7 +146,7 @@ impl P2PBehaviour {
     async fn handle_swarm_event(
         event: SwarmEvent<P2PBehaviourEvent>,
         swarm: &mut Swarm<P2PBehaviour>,
-        network: &Arc<Mutex<Network>>,
+        blockchain: &Arc<Mutex<Blockchain>>,
     ) {
         match event {
             SwarmEvent::Behaviour(P2PBehaviourEvent::Mdns(MdnsEvent::Discovered(list))) => {
@@ -147,7 +160,7 @@ impl P2PBehaviour {
                 message_id: id,
                 message,
             })) => {
-                Self::handle_gossipsub_message(peer_id, id, message, network).await;
+                Self::handle_gossipsub_message(peer_id, id, message, blockchain).await;
             }
             SwarmEvent::NewListenAddr { address, .. } => {
                 println!("Local node is listening on {address}");
@@ -177,7 +190,7 @@ impl P2PBehaviour {
         peer_id: PeerId,
         id: MessageId,
         message: gossipsub::Message,
-        network: &Arc<Mutex<Network>>,
+        blockchain: &Arc<Mutex<Blockchain>>,
     ) {
         println!(
             "Got message: '{}' with id: {id} from peer: {peer_id}",
@@ -187,13 +200,10 @@ impl P2PBehaviour {
         let transaction_result: Result<Transaction, _> = serde_json::from_slice(&message.data);
 
         if let Ok(transaction) = transaction_result {
-            let blockchain = {
-                let net = network.lock().unwrap();
-                Arc::clone(&net.blockchain)
-            };
+            let blockchain =  Arc::clone(&blockchain);
             tokio::task::spawn_blocking(move || {
                 if let Ok(blockchain) = blockchain.lock() {
-                    if blockchain.add_transaction_to_pool(transaction).is_ok() {
+                    if blockchain.add_transaction_to_pool(&transaction).is_ok() {
                         println!("Transaction added to pool from peer: {peer_id}");
                     } else {
                         println!("Failed to add transaction to pool from peer: {peer_id}");

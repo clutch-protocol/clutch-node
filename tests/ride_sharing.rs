@@ -82,7 +82,7 @@ fn add_transaction_to_pool(
     blockchain: &Blockchain,
     ride_request_transcation: transaction::Transaction,
 ) {
-    match blockchain.add_transaction_to_pool(ride_request_transcation) {
+    match blockchain.add_transaction_to_pool(&ride_request_transcation) {
         Ok(_) => {
             println!("Successfully added transaction to transaction_pool");
         }

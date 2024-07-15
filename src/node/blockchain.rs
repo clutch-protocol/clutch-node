@@ -83,11 +83,11 @@ impl Blockchain {
         self.consensus.current_author()
     }
 
-    pub fn add_transaction_to_pool(&self, transaction: Transaction) -> Result<(), String> {
+    pub fn add_transaction_to_pool(&self, transaction: &Transaction) -> Result<(), String> {
         if !transaction.validate_transaction(&self.db) {
             return Err("Transaction is invalid.".to_string());
         }
-        TransactionPool::add_transaction(&self.db, transaction)
+        TransactionPool::add_transaction(&self.db, &transaction)
     }
 
     pub fn get_transactions_from_pool(&self) -> Result<Vec<Transaction>, String> {
