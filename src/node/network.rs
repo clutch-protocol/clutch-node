@@ -58,7 +58,7 @@ impl Network {
     ) {
         tokio::spawn(async move {
             let addr = &config.websocket_addr;
-            if let Err(e) = websocket::run(addr, blockchain).await {
+            if let Err(e) = websocket::WebSocket::run(addr, blockchain).await {
                 eprintln!("Error starting WebSocket server: {}", e);
             }
             let _ = shutdown_tx.send(());
