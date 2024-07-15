@@ -8,7 +8,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::protocol::Message;
 
-pub async fn start_websocket_server(addr: &str, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run(addr: &str, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind(addr).await?;
     println!("WebSocket server started on {}", addr);
 
