@@ -18,13 +18,13 @@ impl Network {
         let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
 
         // Start libp2p service
-        Self::start_libp2p_service(config, Arc::clone(&blockchain), libp2p_shutdown_tx).await;
+        Self::start_libp2p_service(config.clone(), Arc::clone(&blockchain), libp2p_shutdown_tx);
 
         // Start WebSocket service
-        Self::start_websocket_service(config, Arc::clone(&blockchain), websocket_shutdown_tx).await;
+        Self::start_websocket_service(config.clone(), Arc::clone(&blockchain), websocket_shutdown_tx);
 
         // Wait for shutdown signal
-        Network::wait_for_shutdown_signal(
+        Self::wait_for_shutdown_signal(
             libp2p_shutdown_rx,
             websocket_shutdown_rx,
             shutdown_tx,
@@ -33,12 +33,11 @@ impl Network {
         .await;
     }
 
-    async fn start_libp2p_service(
-        config: &AppConfig,
+    fn start_libp2p_service(
+        config: AppConfig,
         blockchain: Arc<Mutex<Blockchain>>,
         shutdown_tx: oneshot::Sender<()>,
     ) {
-        let config = config.clone();
         tokio::spawn(async move {
             if let Err(e) = libp2p::run(&config, blockchain).await {
                 eprintln!("Error running libp2p: {}", e);
@@ -47,8 +46,8 @@ impl Network {
         });
     }
 
-    async fn start_websocket_service(
-        config: &AppConfig,
+    fn start_websocket_service(
+        config: AppConfig,
         blockchain: Arc<Mutex<Blockchain>>,
         shutdown_tx: oneshot::Sender<()>,
     ) {
