@@ -9,7 +9,7 @@ use tokio::sync::oneshot;
 pub struct Network;
 
 impl Network {
-    pub fn start_services(
+    pub async fn start_services(
         config: &AppConfig,
         blockchain: Arc<Mutex<Blockchain>>,
         shutdown_tx: oneshot::Sender<()>,
@@ -18,24 +18,22 @@ impl Network {
         let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
 
         // Start libp2p service
-        Self::start_libp2p_service(config, Arc::clone(&blockchain), libp2p_shutdown_tx);
+        Self::start_libp2p_service(config, Arc::clone(&blockchain), libp2p_shutdown_tx).await;
 
         // Start WebSocket service
-        Self::start_websocket_service(config, Arc::clone(&blockchain), websocket_shutdown_tx);
+        Self::start_websocket_service(config, Arc::clone(&blockchain), websocket_shutdown_tx).await;
 
-        // Spawn a task to wait for shutdown signal
-        tokio::spawn(async move {
-            Network::wait_for_shutdown_signal(
-                libp2p_shutdown_rx,
-                websocket_shutdown_rx,
-                shutdown_tx,
-                blockchain,
-            )
-            .await;
-        });
+        // Wait for shutdown signal
+        Network::wait_for_shutdown_signal(
+            libp2p_shutdown_rx,
+            websocket_shutdown_rx,
+            shutdown_tx,
+            blockchain,
+        )
+        .await;
     }
 
-    fn start_libp2p_service(
+    async fn start_libp2p_service(
         config: &AppConfig,
         blockchain: Arc<Mutex<Blockchain>>,
         shutdown_tx: oneshot::Sender<()>,
@@ -49,7 +47,7 @@ impl Network {
         });
     }
 
-    fn start_websocket_service(
+    async fn start_websocket_service(
         config: &AppConfig,
         blockchain: Arc<Mutex<Blockchain>>,
         shutdown_tx: oneshot::Sender<()>,
