@@ -1,8 +1,13 @@
+use std::sync::{Arc, Mutex};
+use tokio::sync::oneshot;
+
+use super::config::AppConfig;
 use super::consensus::Consensus;
 use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;
 use crate::node::block::Block;
 use crate::node::database::Database;
+use crate::node::network::Network;
 use crate::node::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
 
@@ -105,5 +110,12 @@ impl Blockchain {
 
         let new_block = Block::new_block(index, previous_hash, transactions);
         Ok(new_block)
+    }
+
+    pub async fn start_network_services(self, config: &AppConfig) {
+        let blockchain = Arc::new(Mutex::new(self));
+        let (shutdown_tx, shutdown_rx) = oneshot::channel();
+        Network::start_services(config, blockchain, shutdown_tx);
+        shutdown_rx.await.unwrap();
     }
 }
