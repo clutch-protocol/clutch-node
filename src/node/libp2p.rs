@@ -1,4 +1,3 @@
-use crate::node::network::Network;
 use crate::node::transaction::Transaction;
 use futures::stream::StreamExt;
 use libp2p::{
@@ -9,9 +8,9 @@ use libp2p::{
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::hash::{Hash, Hasher};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
-use tokio::{io, io::AsyncBufReadExt, select};
+use tokio::{io, io::AsyncBufReadExt, select, sync::Mutex};
 use tracing_subscriber::EnvFilter;
 
 use super::blockchain::Blockchain;
@@ -34,22 +33,22 @@ impl P2PServer {
 
         Self {
             behaviour: swarm,
-            topic: topic,
+            topic,
         }
     }
 
-    pub fn broadcast_transaction(&mut self, transaction: &Transaction) {       
-        let transaction_data = serde_json::to_string(&transaction).expect("Failed to serialize transaction");
+    pub fn broadcast_transaction(&mut self, transaction: &Transaction) {
+        let transaction_data = serde_json::to_vec(transaction).expect("Failed to serialize transaction");
         if let Err(e) = self.behaviour.behaviour_mut().gossipsub.publish(self.topic.clone(), transaction_data) {
             eprintln!("Failed to publish transaction: {}", e);
         }
-    } 
+    }
 
     pub async fn run(
-        &mut self,        
+        &mut self,
         blockchain: Arc<Mutex<Blockchain>>,
     ) -> Result<(), Box<dyn Error>> {
-        Self::setup_tracing()?;      
+        Self::setup_tracing()?;
 
         Self::listen_for_connections(&mut self.behaviour)?;
         let topic = self.topic.clone();
@@ -197,23 +196,37 @@ impl P2PServer {
             String::from_utf8_lossy(&message.data),
         );
 
-        let transaction_result: Result<Transaction, _> = serde_json::from_slice(&message.data);
+        handle_received_transcation(message, blockchain).await;
+    }
+}
 
-        if let Ok(transaction) = transaction_result {
-            let blockchain =  Arc::clone(&blockchain);
-            tokio::task::spawn_blocking(move || {
-                if let Ok(blockchain) = blockchain.lock() {
-                    if blockchain.add_transaction_to_pool(&transaction).is_ok() {
-                        println!("Transaction added to pool from peer: {peer_id}");
-                    } else {
-                        println!("Failed to add transaction to pool from peer: {peer_id}");
-                    }
-                }
-            })
-            .await
-            .unwrap();
-        } else {
-            println!("Failed to deserialize transaction from peer: {peer_id}");
+async fn handle_received_transcation(message: gossipsub::Message, blockchain: &Arc<Mutex<Blockchain>>) {
+    let transaction_result: Result<Transaction, _> = serde_json::from_slice(&message.data);
+
+    if let Ok(transaction) = transaction_result {
+        println!("tx");
+
+        let transaction_added = {
+            let blockchain = blockchain.lock().await;
+            blockchain.add_transaction_to_pool(&transaction).is_ok()
+        };
+
+        if transaction_added{
+            println!("Transaction added");
         }
+        else {
+            println!("Failed to add transaction to pool");
+        }
+        // let blockchain = Arc::clone(blockchain);
+        // tokio::spawn(async move {
+            // let blockchain = blockchain.lock().await;
+            // if blockchain.add_transaction_to_pool(&transaction).is_ok() {
+            //     println!("Transaction added to pool from peer: {peer_id}");
+            // } else {
+            //     println!("Failed to add transaction to pool from peer: {peer_id}");
+            // }
+        // });
+    } else {
+        println!("Failed to deserialize transaction");
     }
 }

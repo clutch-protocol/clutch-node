@@ -112,9 +112,7 @@ impl Blockchain {
         Ok(new_block)
     }
 
-    pub async fn start_network_services(self, config: &AppConfig) {
-        let (shutdown_tx, shutdown_rx) = oneshot::channel();
-        Network::start_services(config, self, shutdown_tx).await;
-        shutdown_rx.await.unwrap();
+    pub async fn start_network_services(self, config: &AppConfig) {        
+        Network::start_services(config, self).await;   
     }
 }
