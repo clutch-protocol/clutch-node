@@ -81,7 +81,7 @@ impl WebSocket {
                 let  blockchain = blockchain.lock().await;                
                 if blockchain.add_transaction_to_pool(&transaction).is_ok(){
 
-                    p2p_server.lock().await.broadcast_transaction(&transaction);
+                    // p2p_server.lock().await.broadcast_transaction(&transaction);
 
                     return  Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
                 }
