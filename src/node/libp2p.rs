@@ -38,16 +38,19 @@ impl P2PServer {
     }
 
     pub fn broadcast_transaction(&mut self, transaction: &Transaction) {
-        let transaction_data = serde_json::to_vec(transaction).expect("Failed to serialize transaction");
-        if let Err(e) = self.behaviour.behaviour_mut().gossipsub.publish(self.topic.clone(), transaction_data) {
+        let transaction_data =
+            serde_json::to_vec(transaction).expect("Failed to serialize transaction");
+        if let Err(e) = self
+            .behaviour
+            .behaviour_mut()
+            .gossipsub
+            .publish(self.topic.clone(), transaction_data)
+        {
             eprintln!("Failed to publish transaction: {}", e);
         }
     }
 
-    pub async fn run(
-        &mut self,
-        blockchain: Arc<Mutex<Blockchain>>,
-    ) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&mut self, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
 
         Self::listen_for_connections(&mut self.behaviour)?;
@@ -200,7 +203,10 @@ impl P2PServer {
     }
 }
 
-async fn handle_received_transcation(message: gossipsub::Message, blockchain: &Arc<Mutex<Blockchain>>) {
+async fn handle_received_transcation(
+    message: gossipsub::Message,
+    blockchain: &Arc<Mutex<Blockchain>>,
+) {
     let transaction_result: Result<Transaction, _> = serde_json::from_slice(&message.data);
 
     if let Ok(transaction) = transaction_result {
@@ -211,20 +217,19 @@ async fn handle_received_transcation(message: gossipsub::Message, blockchain: &A
             blockchain.add_transaction_to_pool(&transaction).is_ok()
         };
 
-        if transaction_added{
+        if transaction_added {
             println!("Transaction added");
-        }
-        else {
+        } else {
             println!("Failed to add transaction to pool");
         }
         // let blockchain = Arc::clone(blockchain);
         // tokio::spawn(async move {
-            // let blockchain = blockchain.lock().await;
-            // if blockchain.add_transaction_to_pool(&transaction).is_ok() {
-            //     println!("Transaction added to pool from peer: {peer_id}");
-            // } else {
-            //     println!("Failed to add transaction to pool from peer: {peer_id}");
-            // }
+        // let blockchain = blockchain.lock().await;
+        // if blockchain.add_transaction_to_pool(&transaction).is_ok() {
+        //     println!("Transaction added to pool from peer: {peer_id}");
+        // } else {
+        //     println!("Failed to add transaction to pool from peer: {peer_id}");
+        // }
         // });
     } else {
         println!("Failed to deserialize transaction");
