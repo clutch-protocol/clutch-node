@@ -28,8 +28,8 @@ pub struct P2PServer {
 
 impl P2PServer {
     pub fn new(topic_name: &str) -> Self {
-        let mut swarm = Self::build_swarm().unwrap();
-        let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name).unwrap();
+        let mut swarm = Self::build_swarm().expect("Failed to build swarm");
+        let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name).expect("Failed to setup gossipsub topic");
 
         Self {
             behaviour: swarm,
@@ -52,7 +52,6 @@ impl P2PServer {
 
     pub async fn run(&mut self, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
-
         Self::listen_for_connections(&mut self.behaviour)?;
         let topic = self.topic.clone();
         Self::process_messages(&mut self.behaviour, topic, blockchain).await
@@ -62,7 +61,7 @@ impl P2PServer {
         tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_default_env())
             .try_init()
-            .expect("setup_tracing error");
+            .expect("Failed to setup tracing");
         Ok(())
     }
 
@@ -199,11 +198,11 @@ impl P2PServer {
             String::from_utf8_lossy(&message.data),
         );
 
-        handle_received_transcation(message, blockchain).await;
+        handle_received_transaction(message, blockchain).await;
     }
 }
 
-async fn handle_received_transcation(
+async fn handle_received_transaction(
     message: gossipsub::Message,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) {
@@ -222,15 +221,6 @@ async fn handle_received_transcation(
         } else {
             println!("Failed to add transaction to pool");
         }
-        // let blockchain = Arc::clone(blockchain);
-        // tokio::spawn(async move {
-        // let blockchain = blockchain.lock().await;
-        // if blockchain.add_transaction_to_pool(&transaction).is_ok() {
-        //     println!("Transaction added to pool from peer: {peer_id}");
-        // } else {
-        //     println!("Failed to add transaction to pool from peer: {peer_id}");
-        // }
-        // });
     } else {
         println!("Failed to deserialize transaction");
     }
