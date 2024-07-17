@@ -29,7 +29,8 @@ pub struct P2PServer {
 impl P2PServer {
     pub fn new(topic_name: &str) -> Self {
         let mut swarm = Self::build_swarm().expect("Failed to build swarm");
-        let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name).expect("Failed to setup gossipsub topic");
+        let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name)
+            .expect("Failed to setup gossipsub topic");
 
         Self {
             behaviour: swarm,
@@ -37,24 +38,28 @@ impl P2PServer {
         }
     }
 
-    pub fn broadcast_transaction(&mut self, transaction: &Transaction) -> Result<(), Box<dyn Error>> {
+    pub fn broadcast_transaction(
+        &mut self,
+        transaction: &Transaction,
+    ) -> Result<(), Box<dyn Error>> {
         // Attempt to serialize the transaction
-        let transaction_data = serde_json::to_vec(transaction)?;
-        
+        let transaction_data = serde_json::to_vec(transaction).map_err(|e| {
+            eprintln!("Failed to serialize transaction: {}", e);
+            Box::new(e) as Box<dyn Error>
+        })?;
+
         // Attempt to publish the serialized transaction data
-        match self
-            .behaviour
+        self.behaviour
             .behaviour_mut()
             .gossipsub
-            .publish(self.topic.clone(), transaction_data) 
-        {
-            Ok(_) => Ok(()),
-            Err(e) => {
+            .publish(self.topic.clone(), transaction_data)
+            .map_err(|e| {
                 eprintln!("Failed to publish transaction: {}", e);
-                Err(Box::new(e))
-            }
-        }
-    }    
+                Box::new(e) as Box<dyn Error>
+            })?;
+
+        Ok(())
+    }
 
     pub async fn run(&mut self, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
