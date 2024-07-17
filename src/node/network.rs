@@ -10,29 +10,31 @@ pub struct Network;
 
 impl Network {
     pub async fn start_services(config: &AppConfig, blockchain: Blockchain) {
-        let blockchain_arc = Arc::new(Mutex::new(blockchain));        
-        let p2p_server_arc = Arc::new(Mutex::new(P2PServer::new(&config.clone().libp2p_topic_name)));
-        
-        // Start libp2p service
-        let libp2p_blockchain = Arc::clone(&blockchain_arc);
-        let libp2p_p2p_server = Arc::clone(&p2p_server_arc);
+        let blockchain_arc = Arc::new(Mutex::new(blockchain));
+        let p2p_server_arc = Arc::new(Mutex::new(P2PServer::new(&config.libp2p_topic_name)));
+
         let (libp2p_shutdown_tx, libp2p_shutdown_rx) = oneshot::channel();
-        start_libp2p(libp2p_blockchain, libp2p_p2p_server, libp2p_shutdown_tx);
-        
-        // Start WebSocket service
-        let websocket_blockchain = Arc::clone(&blockchain_arc);
-        let websocket_p2p_server = Arc::clone(&p2p_server_arc);
         let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
+
+        start_libp2p(
+            Arc::clone(&blockchain_arc),
+            Arc::clone(&p2p_server_arc),
+            libp2p_shutdown_tx,
+        );
+
         start_websocket(
             config,
-            websocket_blockchain,
-            websocket_p2p_server,
+            Arc::clone(&blockchain_arc),
+            Arc::clone(&p2p_server_arc),
             websocket_shutdown_tx,
         );
 
-        // Wait for shutdown signal
-        Self::wait_for_shutdown_signal(libp2p_shutdown_rx, websocket_shutdown_rx, blockchain_arc)
-            .await;
+        Self::wait_for_shutdown_signal(
+            libp2p_shutdown_rx,
+            websocket_shutdown_rx,
+            Arc::clone(&blockchain_arc),
+        )
+        .await;
     }
 
     async fn wait_for_shutdown_signal(
@@ -52,7 +54,6 @@ impl Network {
             }
         }
 
-        // Cleanup blockchain if in developer mode
         let mut blockchain = blockchain.lock().await;
         blockchain.cleanup_if_developer_mode();
     }
