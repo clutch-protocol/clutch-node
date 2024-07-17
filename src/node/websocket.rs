@@ -79,16 +79,28 @@ impl WebSocket {
                     Ok(tx) => tx,
                     Err(_) => return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": id}).to_string()),
                 };
-                
-                let mut blockchain = blockchain.lock().await;                
+
+                let mut blockchain = blockchain.lock().await;
                 if blockchain.add_transaction_to_pool(&transaction).is_ok() {
-                     //Uncomment the following line to enable broadcasting the transaction
-                     p2p_server.lock().await.broadcast_transaction(&transaction);
+                    println!("Transaction added to pool. Attempting to broadcast...");
+                    
+                    // Logging before broadcasting
+                    println!("Attempting to lock P2P server to broadcast transaction.");
+
+                    match p2p_server.lock().await.broadcast_transaction(&transaction) {
+                        Ok(_) => {
+                            println!("Transaction broadcasted successfully.");
+                        }
+                        Err(e) => {
+                            eprintln!("Error broadcasting transaction: {}", e);
+                            return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": "Failed to broadcast transaction"}, "id": id}).to_string());
+                        }
+                    }
 
                     return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
                 } else {
                     return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": "Failed to add transaction"}, "id": id}).to_string());
-                }              
+                }
             }
             _ => Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": id}).to_string()),
         }

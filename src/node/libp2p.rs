@@ -37,18 +37,24 @@ impl P2PServer {
         }
     }
 
-    pub fn broadcast_transaction(&mut self, transaction: &Transaction) {
-        let transaction_data =
-            serde_json::to_vec(transaction).expect("Failed to serialize transaction");
-        if let Err(e) = self
+    pub fn broadcast_transaction(&mut self, transaction: &Transaction) -> Result<(), Box<dyn Error>> {
+        // Attempt to serialize the transaction
+        let transaction_data = serde_json::to_vec(transaction)?;
+        
+        // Attempt to publish the serialized transaction data
+        match self
             .behaviour
             .behaviour_mut()
             .gossipsub
-            .publish(self.topic.clone(), transaction_data)
+            .publish(self.topic.clone(), transaction_data) 
         {
-            eprintln!("Failed to publish transaction: {}", e);
+            Ok(_) => Ok(()),
+            Err(e) => {
+                eprintln!("Failed to publish transaction: {}", e);
+                Err(Box::new(e))
+            }
         }
-    }
+    }    
 
     pub async fn run(&mut self, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
