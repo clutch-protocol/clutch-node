@@ -11,7 +11,7 @@ pub struct Network;
 impl Network {
     pub async fn start_services(config: &AppConfig, blockchain: Blockchain) {
         let blockchain_arc = Arc::new(Mutex::new(blockchain));
-        let p2p_server_arc = Arc::new(Mutex::new(P2PServer::new(&config.libp2p_topic_name)));
+        let p2p_server_arc = Arc::new(Mutex::new(P2PServer::new(&config.libp2p_topic_name).unwrap()));
 
         let (libp2p_shutdown_tx, libp2p_shutdown_rx) = oneshot::channel();
         let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
@@ -69,6 +69,7 @@ impl Network {
                 if let Err(e) = p2p_server.run(Arc::clone(&blockchain)).await {
                     eprintln!("Error running libp2p: {}", e);
                 }
+                // p2p_server.broadcast_message("hello");
             }
             let _ = libp2p_shutdown_tx.send(());
         });

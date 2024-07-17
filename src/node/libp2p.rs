@@ -1,3 +1,4 @@
+use crate::node::blockchain::Blockchain;
 use crate::node::transaction::Transaction;
 use futures::stream::StreamExt;
 use libp2p::{
@@ -13,8 +14,6 @@ use std::time::Duration;
 use tokio::{io, io::AsyncBufReadExt, select, sync::Mutex};
 use tracing_subscriber::EnvFilter;
 
-use super::blockchain::Blockchain;
-
 #[derive(NetworkBehaviour)]
 pub struct P2PBehaviour {
     pub gossipsub: gossipsub::Behaviour,
@@ -27,37 +26,33 @@ pub struct P2PServer {
 }
 
 impl P2PServer {
-    pub fn new(topic_name: &str) -> Self {
-        let mut swarm = Self::build_swarm().expect("Failed to build swarm");
-        let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name)
-            .expect("Failed to setup gossipsub topic");
+    pub fn new(topic_name: &str) -> Result<Self, Box<dyn Error>> {
+        let mut swarm = Self::build_swarm()?;
+        let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name)?;
 
-        Self {
+        Ok(Self {
             behaviour: swarm,
             topic,
-        }
+        })
     }
 
     pub fn broadcast_transaction(
         &mut self,
         transaction: &Transaction,
     ) -> Result<(), Box<dyn Error>> {
-        // Attempt to serialize the transaction
-        let transaction_data = serde_json::to_vec(transaction).map_err(|e| {
-            eprintln!("Failed to serialize transaction: {}", e);
-            Box::new(e) as Box<dyn Error>
-        })?;
-
-        // Attempt to publish the serialized transaction data
+        let transaction_data = serde_json::to_vec(transaction)?;
         self.behaviour
             .behaviour_mut()
             .gossipsub
-            .publish(self.topic.clone(), transaction_data)
-            .map_err(|e| {
-                eprintln!("Failed to publish transaction: {}", e);
-                Box::new(e) as Box<dyn Error>
-            })?;
+            .publish(self.topic.clone(), transaction_data)?;
+        Ok(())
+    }
 
+    pub fn broadcast_message(&mut self, message: &str) -> Result<(), Box<dyn Error>> {        
+        self.behaviour
+            .behaviour_mut()
+            .gossipsub
+            .publish(self.topic.clone(), message.as_bytes())?;
         Ok(())
     }
 
@@ -125,7 +120,6 @@ impl P2PServer {
     }
 
     fn listen_for_connections(swarm: &mut Swarm<P2PBehaviour>) -> Result<(), Box<dyn Error>> {
-        swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
         swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
         Ok(())
     }
@@ -220,7 +214,7 @@ async fn handle_received_transaction(
     let transaction_result: Result<Transaction, _> = serde_json::from_slice(&message.data);
 
     if let Ok(transaction) = transaction_result {
-        println!("tx");
+        println!("Transaction received");
 
         let transaction_added = {
             let blockchain = blockchain.lock().await;
