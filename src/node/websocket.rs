@@ -34,23 +34,25 @@ impl WebSocket {
         blockchain: Arc<Mutex<Blockchain>>,
         p2p_server: Arc<Mutex<P2PServer>>,
     ) {
-        let ws_stream = accept_async(stream)
-            .await
-            .expect("Error during the websocket handshake");
-        let (mut ws_sender, mut ws_receiver) = ws_stream.split();
+        match accept_async(stream).await {
+            Ok(ws_stream) => {
+                let (mut ws_sender, mut ws_receiver) = ws_stream.split();
 
-        while let Some(Ok(message)) = ws_receiver.next().await {
-            if let Message::Text(text) = message {
-                println!("Received from websocket: {}", text);
-                let response = Self::handle_json_rpc_request(&text, &blockchain, &p2p_server).await;
+                while let Some(Ok(message)) = ws_receiver.next().await {
+                    if let Message::Text(text) = message {
+                        println!("Received from websocket: {}", text);
+                        let response = Self::handle_json_rpc_request(&text, &blockchain, &p2p_server).await;
 
-                if let Some(response) = response {
-                    if let Err(e) = ws_sender.send(Message::Text(response)).await {
-                        eprintln!("Error sending message: {}", e);
-                        return;
+                        if let Some(response) = response {
+                            if let Err(e) = ws_sender.send(Message::Text(response)).await {
+                                eprintln!("Error sending message: {}", e);
+                                return;
+                            }
+                        }
                     }
                 }
             }
+            Err(e) => eprintln!("Error during the websocket handshake: {}", e),
         }
     }
 
@@ -78,15 +80,14 @@ impl WebSocket {
                     Err(_) => return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": id}).to_string()),
                 };
                 
-                let  blockchain = blockchain.lock().await;                
-                if blockchain.add_transaction_to_pool(&transaction).is_ok(){
+                let mut blockchain = blockchain.lock().await;                
+                if blockchain.add_transaction_to_pool(&transaction).is_ok() {
+                     //Uncomment the following line to enable broadcasting the transaction
+                     p2p_server.lock().await.broadcast_transaction(&transaction);
 
-                    // p2p_server.lock().await.broadcast_transaction(&transaction);
-
-                    return  Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
-                }
-                else {
-                    return  Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": "Failed to add transaction"}, "id": id}).to_string());
+                    return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
+                } else {
+                    return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": "Failed to add transaction"}, "id": id}).to_string());
                 }              
             }
             _ => Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": id}).to_string()),
