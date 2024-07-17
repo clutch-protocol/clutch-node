@@ -11,7 +11,7 @@ use std::error::Error;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::{io, io::AsyncBufReadExt, select, sync::Mutex};
+use tokio::{io, select, sync::Mutex};
 use tracing_subscriber::EnvFilter;
 
 #[derive(NetworkBehaviour)]
@@ -59,8 +59,7 @@ impl P2PServer {
     pub async fn run(&mut self, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
         Self::listen_for_connections(&mut self.behaviour)?;
-        let topic = self.topic.clone();
-        Self::process_messages(&mut self.behaviour, topic, blockchain).await
+        Self::process_messages(&mut self.behaviour, blockchain).await
     }
 
     fn setup_tracing() -> Result<(), Box<dyn Error>> {
@@ -126,24 +125,10 @@ impl P2PServer {
 
     async fn process_messages(
         swarm: &mut Swarm<P2PBehaviour>,
-        topic: IdentTopic,
         blockchain: Arc<Mutex<Blockchain>>,
-    ) -> Result<(), Box<dyn Error>> {
-        let mut stdin = io::BufReader::new(io::stdin()).lines();
-        println!(
-            "Enter messages via STDIN and they will be sent to connected peers using Gossipsub"
-        );
-
+    ) -> Result<(), Box<dyn Error>> {     
         loop {
-            select! {
-                Ok(Some(line)) = stdin.next_line() => {
-                    if let Err(e) = swarm
-                        .behaviour_mut()
-                        .gossipsub
-                        .publish(topic.clone(), line.as_bytes()) {
-                        println!("Publish error: {e:?}");
-                    }
-                }
+            select! {            
                 event = swarm.select_next_some() => Self::handle_swarm_event(event, swarm, &blockchain).await,
             }
         }
