@@ -20,46 +20,43 @@ pub struct P2PBehaviour {
     pub mdns: mdns::tokio::Behaviour,
 }
 
-pub struct P2PServer {
-    pub behaviour: Swarm<P2PBehaviour>,
-    pub topic: IdentTopic,
-}
+pub struct P2PServer;
 
 impl P2PServer {
-    pub fn new(topic_name: &str) -> Result<Self, Box<dyn Error>> {
+    pub async fn run(
+        &mut self,
+        topic_name: &str,
+        blockchain: Arc<Mutex<Blockchain>>,
+    ) -> Result<(), Box<dyn Error>> {
         let mut swarm = Self::build_swarm()?;
         let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name)?;
-
-        Ok(Self {
-            behaviour: swarm,
-            topic,
-        })
-    }
-
-    pub fn broadcast_transaction(
-        &mut self,
-        transaction: &Transaction,
-    ) -> Result<(), Box<dyn Error>> {
-        let transaction_data = serde_json::to_vec(transaction)?;
-        self.behaviour
-            .behaviour_mut()
-            .gossipsub
-            .publish(self.topic.clone(), transaction_data)?;
-        Ok(())
-    }
-
-    pub fn broadcast_message(&mut self, message: &str) -> Result<(), Box<dyn Error>> {        
-        self.behaviour
-            .behaviour_mut()
-            .gossipsub
-            .publish(self.topic.clone(), message.as_bytes())?;
-        Ok(())
-    }
-
-    pub async fn run(&mut self, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
-        Self::listen_for_connections(&mut self.behaviour)?;
-        Self::process_messages(&mut self.behaviour, blockchain).await
+        Self::listen_for_connections(&mut swarm)?;
+        let swarm = Arc::new(Mutex::new(swarm));
+        let blockchain = Arc::clone(&blockchain);
+        
+        while let Some(event) = swarm.lock().await.next().await {
+            let swarm_clone = Arc::clone(&swarm);
+            let blockchain_clone = Arc::clone(&blockchain);
+            tokio::spawn(async move {
+                {
+                    let mut swarm = swarm_clone.lock().await;
+                    Self::handle_swarm_event(event, &mut swarm, &blockchain_clone).await;
+                }
+            });
+        }
+
+        Ok(())
+    }
+
+    pub fn broadcast_message(&self, message: &str, topic_name: &str) -> Result<(), Box<dyn Error>> {
+        let mut swarm = Self::build_swarm()?;
+        let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name)?;
+        swarm
+            .behaviour_mut()
+            .gossipsub
+            .publish(topic, message.as_bytes())?;
+        Ok(())
     }
 
     fn setup_tracing() -> Result<(), Box<dyn Error>> {
@@ -123,16 +120,15 @@ impl P2PServer {
         Ok(())
     }
 
-    async fn process_messages(
-        swarm: &mut Swarm<P2PBehaviour>,
-        blockchain: Arc<Mutex<Blockchain>>,
-    ) -> Result<(), Box<dyn Error>> {     
-        loop {
-            select! {            
-                event = swarm.select_next_some() => Self::handle_swarm_event(event, swarm, &blockchain).await,
-            }
-        }
-    }
+    // async fn process_messages(
+    //     swarm: &mut Swarm<P2PBehaviour>,
+    //     blockchain: Arc<Mutex<Blockchain>>,
+    // ) -> Result<(), Box<dyn Error>> {
+    //     while let Some(event) = swarm.next().await {
+    //         Self::handle_swarm_event(event, swarm, &blockchain).await;
+    //     }
+    //     Ok(())
+    // }
 
     async fn handle_swarm_event(
         event: SwarmEvent<P2PBehaviourEvent>,

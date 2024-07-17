@@ -11,12 +11,13 @@ pub struct Network;
 impl Network {
     pub async fn start_services(config: &AppConfig, blockchain: Blockchain) {
         let blockchain_arc = Arc::new(Mutex::new(blockchain));
-        let p2p_server_arc = Arc::new(Mutex::new(P2PServer::new(&config.libp2p_topic_name).unwrap()));
+        let p2p_server_arc = Arc::new(Mutex::new(P2PServer));
 
         let (libp2p_shutdown_tx, libp2p_shutdown_rx) = oneshot::channel();
         let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
 
         Self::start_libp2p(
+            config,
             Arc::clone(&blockchain_arc),
             Arc::clone(&p2p_server_arc),
             libp2p_shutdown_tx,
@@ -59,17 +60,22 @@ impl Network {
     }
 
     fn start_libp2p(
+        config: &AppConfig,
         blockchain: Arc<Mutex<Blockchain>>,
         p2p_server: Arc<Mutex<P2PServer>>,
         libp2p_shutdown_tx: oneshot::Sender<()>,
     ) {
+        let libp2p_topic_name = config.libp2p_topic_name.clone();
+
         tokio::spawn(async move {
             {
                 let mut p2p_server = p2p_server.lock().await;
-                if let Err(e) = p2p_server.run(Arc::clone(&blockchain)).await {
+                if let Err(e) = p2p_server
+                    .run(&libp2p_topic_name, Arc::clone(&blockchain))
+                    .await
+                {
                     eprintln!("Error running libp2p: {}", e);
                 }
-                // p2p_server.broadcast_message("hello");
             }
             let _ = libp2p_shutdown_tx.send(());
         });

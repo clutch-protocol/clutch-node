@@ -83,18 +83,14 @@ impl WebSocket {
                 let mut blockchain = blockchain.lock().await;
                 if blockchain.add_transaction_to_pool(&transaction).is_ok() {
                     println!("Transaction added to pool. Attempting to broadcast...");
-                    
-                    // Logging before broadcasting
-                    println!("Attempting to lock P2P server to broadcast transaction.");
+                   // return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
 
-                    match p2p_server.lock().await.broadcast_transaction(&transaction) {
-                        Ok(_) => {
-                            println!("Transaction broadcasted successfully.");
-                        }
-                        Err(e) => {
-                            eprintln!("Error broadcasting transaction: {}", e);
-                            return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": "Failed to broadcast transaction"}, "id": id}).to_string());
-                        }
+                    // // Logging before broadcasting
+                    // println!("Attempting to lock P2P server to broadcast transaction.");
+
+                    let p2p_server = p2p_server.lock().await;
+                    if p2p_server.broadcast_message("message", "test-net").is_ok() {
+
                     }
 
                     return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
