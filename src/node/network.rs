@@ -1,6 +1,6 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
-use crate::node::libp2p::P2PServer;
+use crate::node::p2p_server::P2PServer;
 use crate::node::websocket::WebSocket;
 use std::sync::Arc;
 use tokio::signal;

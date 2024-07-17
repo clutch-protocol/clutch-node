@@ -1,5 +1,5 @@
 use crate::node::blockchain::Blockchain;
-use crate::node::libp2p::P2PServer;
+use crate::node::p2p_server::P2PServer;
 use crate::node::transaction::Transaction;
 use futures::{stream::StreamExt, SinkExt};
 use std::error::Error;
