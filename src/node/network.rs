@@ -5,6 +5,7 @@ use crate::node::p2p_server::P2PServer;
 use crate::node::websocket::WebSocket;
 use std::sync::Arc;
 use std::time::Duration;
+use sha2::digest::consts::P2;
 use tokio::signal;
 use tokio::sync::{mpsc, oneshot, Mutex};
 use rand::Rng; // Add this import for random string generation
@@ -91,23 +92,8 @@ impl Network {
                     .map(char::from)
                     .collect();
 
-                // Example of sending a message
-                let (response_tx, response_rx) = oneshot::channel();
-                command_tx
-                    .send(Command::SendMessage {
-                        message: random_string.clone(),
-                        response_tx,
-                    })
-                    .await
-                    .unwrap();
-
-                match response_rx.await {
-                    Ok(result) => match result {
-                        Ok(message_id) => println!("Message sent with id: {:?}", message_id),
-                        Err(e) => eprintln!("Failed to send message: {:?}", e),
-                    },
-                    Err(e) => eprintln!("Failed to receive response: {:?}", e),
-                }
+                // Example of sending a message               
+                P2PServer::send_message(command_tx.clone(), &random_string.clone()).await;
             }
         });
     }
