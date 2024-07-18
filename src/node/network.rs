@@ -69,7 +69,6 @@ impl Network {
                 if let Err(e) = p2p_server.run(Arc::clone(&blockchain)).await {
                     eprintln!("Error running libp2p: {}", e);
                 }
-                p2p_server.send_gossip_message("hello");
             }
             let _ = libp2p_shutdown_tx.send(());
         });
