@@ -38,10 +38,10 @@ impl P2PServer {
         })
     }
 
-    pub async fn send_message(command_tx: Sender<Command>, message: &str) {
+    pub async fn send_message(command_tx: Sender<P2PServerCommand>, message: &str) {
         let (response_tx, response_rx) = oneshot::channel();
         command_tx
-            .send(Command::SendMessage {
+            .send(P2PServerCommand::SendMessage {
                 message: message.to_string(),
                 response_tx,
             })
@@ -60,7 +60,7 @@ impl P2PServer {
     pub async fn run(
         &mut self,
         blockchain: Arc<Mutex<Blockchain>>,
-        mut command_rx: tokio::sync::mpsc::Receiver<Command>,
+        mut command_rx: tokio::sync::mpsc::Receiver<P2PServerCommand>,
     ) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
         Self::listen_for_connections(&mut self.behaviour)?;
@@ -131,7 +131,7 @@ impl P2PServer {
     async fn process_messages(
         &mut self,
         blockchain: Arc<Mutex<Blockchain>>,
-        command_rx: &mut tokio::sync::mpsc::Receiver<Command>,
+        command_rx: &mut tokio::sync::mpsc::Receiver<P2PServerCommand>,
     ) -> Result<(), Box<dyn Error>> {
         loop {
             select! {
@@ -141,7 +141,7 @@ impl P2PServer {
                 command = command_rx.recv() => {
                     if let Some(command) = command {
                         match command {
-                            Command::SendMessage { message, response_tx } => {
+                            P2PServerCommand::SendMessage { message, response_tx } => {
                                 let result = self.send_gossip_message(&message);
                                 let _ = response_tx.send(result);
                             }
@@ -244,7 +244,7 @@ async fn handle_received_transaction(
     }
 }
 
-pub enum Command {
+pub enum P2PServerCommand {
     SendMessage {
         message: String,
         response_tx: tokio::sync::oneshot::Sender<Result<MessageId, gossipsub::PublishError>>,

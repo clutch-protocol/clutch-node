@@ -1,35 +1,32 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
 use crate::node::p2p_server::P2PServer;
+use crate::node::p2p_server::P2PServerCommand;
 use crate::node::websocket::WebSocket;
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::signal;
 use tokio::sync::{mpsc, oneshot, Mutex};
-use rand::Rng; 
 
 pub struct Network;
 
 impl Network {
     pub async fn start_services(config: &AppConfig, blockchain: Blockchain) {
         let blockchain_arc = Arc::new(Mutex::new(blockchain));
-        let p2p_server_arc = Arc::new(Mutex::new(
-            P2PServer::new(&config.libp2p_topic_name).unwrap(),
-        ));
 
         let (libp2p_shutdown_tx, libp2p_shutdown_rx) = oneshot::channel();
-        let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
-
+        let (command_tx, command_rx) = mpsc::channel(32);
         Self::start_libp2p(
+            config,
             Arc::clone(&blockchain_arc),
-            Arc::clone(&p2p_server_arc),
             libp2p_shutdown_tx,
+            command_rx,
         );
 
+        let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
         Self::start_websocket(
             config,
             Arc::clone(&blockchain_arc),
-            Arc::clone(&p2p_server_arc),
+            command_tx,
             websocket_shutdown_tx,
         );
 
@@ -63,14 +60,15 @@ impl Network {
     }
 
     fn start_libp2p(
+        config: &AppConfig,
         blockchain: Arc<Mutex<Blockchain>>,
-        p2p_server: Arc<Mutex<P2PServer>>,
         libp2p_shutdown_tx: oneshot::Sender<()>,
+        command_rx: tokio::sync::mpsc::Receiver<P2PServerCommand>,
     ) {
-        let (command_tx, command_rx) = mpsc::channel(32);
+        // let (command_tx, command_rx) = mpsc::channel(32);
+        let mut p2p_server = P2PServer::new(&config.libp2p_topic_name).unwrap();
         tokio::spawn(async move {
             {
-                let mut p2p_server = p2p_server.lock().await;
                 if let Err(e) = p2p_server.run(Arc::clone(&blockchain), command_rx).await {
                     eprintln!("Error running libp2p: {}", e);
                 }
@@ -78,34 +76,34 @@ impl Network {
             let _ = libp2p_shutdown_tx.send(());
         });
 
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(3));
-            loop {
-                interval.tick().await;
-                
-                // Generate a random string
-                let random_string: String = rand::thread_rng()
-                    .sample_iter(&rand::distributions::Alphanumeric)
-                    .take(10)
-                    .map(char::from)
-                    .collect();
+        // tokio::spawn(async move {
+        //     let mut interval = tokio::time::interval(Duration::from_secs(3));
+        //     loop {
+        //         interval.tick().await;
 
-                // Example of sending a message               
-                P2PServer::send_message(command_tx.clone(), &random_string.clone()).await;
-            }
-        });
+        //         // Generate a random string
+        //         let random_string: String = rand::thread_rng()
+        //             .sample_iter(&rand::distributions::Alphanumeric)
+        //             .take(10)
+        //             .map(char::from)
+        //             .collect();
+
+        //         // Example of sending a message
+        //         P2PServer::send_message(command_tx.clone(), &random_string.clone()).await;
+        //     }
+        // });
     }
 
     fn start_websocket(
         config: &AppConfig,
         blockchain: Arc<Mutex<Blockchain>>,
-        p2p_server: Arc<Mutex<P2PServer>>,
+        command_tx: tokio::sync::mpsc::Sender<P2PServerCommand>,
         websocket_shutdown_tx: oneshot::Sender<()>,
     ) {
         let websocket_addr = config.websocket_addr.clone();
 
         tokio::spawn(async move {
-            if let Err(e) = WebSocket::run(&websocket_addr, blockchain, p2p_server).await {
+            if let Err(e) = WebSocket::run(&websocket_addr, blockchain, command_tx).await {
                 eprintln!("Error starting WebSocket server: {}", e);
             }
             let _ = websocket_shutdown_tx.send(());
