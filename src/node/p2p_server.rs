@@ -12,6 +12,7 @@ use std::error::Error;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::{mpsc, oneshot};
 use tokio::time;
 use tokio::{io, select, sync::Mutex};
 use tracing_subscriber::EnvFilter;
@@ -38,14 +39,37 @@ impl P2PServer {
         })
     }
 
-    pub fn send_gossip_message(
+    pub async fn send_gossip_message(
         &mut self,
         message: &str,
     ) -> Result<MessageId, gossipsub::PublishError> {
-        self.behaviour
-            .behaviour_mut()
-            .gossipsub
-            .publish(self.topic.clone(), message.as_bytes())
+        let (command_tx, command_rx) = mpsc::channel(32);
+        let (response_tx, response_rx) = oneshot::channel();
+
+        command_tx
+            .send(Command::SendMessage {
+                message: message.to_string(),
+                response_tx,
+            })
+            .await
+            .unwrap();
+
+        match response_rx.await {
+            Ok(result) => match result {
+                Ok(message_id) => {
+                    println!("Message sent with id: {:?}", message_id);
+                    Ok(message_id)
+                }
+                Err(e) => {
+                    eprintln!("Failed to send message: {:?}", e);
+                    Err(e)
+                }
+            },
+            Err(e) => {
+                eprintln!("Failed to receive response: {:?}", e);
+                Err(gossipsub::PublishError::Duplicate)
+            }
+        }
     }
 
     pub async fn run(
