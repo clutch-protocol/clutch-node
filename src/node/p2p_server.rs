@@ -48,10 +48,14 @@ impl P2PServer {
             .publish(self.topic.clone(), message.as_bytes())
     }
 
-    pub async fn run(&mut self, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn Error>> {
+    pub async fn run(
+        &mut self,
+        blockchain: Arc<Mutex<Blockchain>>,
+        mut command_rx: tokio::sync::mpsc::Receiver<Command>,
+    ) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
         Self::listen_for_connections(&mut self.behaviour)?;
-        self.process_messages(blockchain).await
+        self.process_messages(blockchain, &mut command_rx).await
     }
 
     fn setup_tracing() -> Result<(), Box<dyn Error>> {
@@ -118,6 +122,7 @@ impl P2PServer {
     async fn process_messages(
         &mut self,
         blockchain: Arc<Mutex<Blockchain>>,
+        command_rx: &mut tokio::sync::mpsc::Receiver<Command>,
     ) -> Result<(), Box<dyn Error>> {
         let mut interval = time::interval(Duration::from_secs(5));
         loop {
@@ -125,12 +130,22 @@ impl P2PServer {
                 event = self.behaviour.select_next_some().fuse() => {
                     Self::handle_swarm_event(event, &mut self.behaviour, &blockchain).await;
                 },
-                _ = interval.tick() => {
-                    let message = format!("Periodic message at {:?}", std::time::SystemTime::now());
-                    if let Err(e) = self.send_gossip_message(&message) {
-                        println!("Publish error: {e:?}");
+                command = command_rx.recv() => {
+                    if let Some(command) = command {
+                        match command {
+                            Command::SendMessage { message, response_tx } => {
+                                let result = self.send_gossip_message(&message);
+                                let _ = response_tx.send(result);
+                            }
+                        }
                     }
-                }
+                },
+                // _ = interval.tick() => {
+                //     let message = format!("Periodic message at {:?}", std::time::SystemTime::now());
+                //     if let Err(e) = self.send_gossip_message(&message) {
+                //         println!("Publish error: {e:?}");
+                //     }
+                // }
             }
         }
     }
@@ -215,4 +230,11 @@ async fn handle_received_transaction(
     } else {
         println!("Failed to deserialize transaction");
     }
+}
+
+pub enum Command {
+    SendMessage {
+        message: String,
+        response_tx: tokio::sync::oneshot::Sender<Result<MessageId, gossipsub::PublishError>>,
+    },
 }

@@ -1,17 +1,21 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
+use crate::node::p2p_server::Command;
 use crate::node::p2p_server::P2PServer;
 use crate::node::websocket::WebSocket;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::signal;
-use tokio::sync::{oneshot, Mutex};
+use tokio::sync::{mpsc, oneshot, Mutex};
 
 pub struct Network;
 
 impl Network {
     pub async fn start_services(config: &AppConfig, blockchain: Blockchain) {
         let blockchain_arc = Arc::new(Mutex::new(blockchain));
-        let p2p_server_arc = Arc::new(Mutex::new(P2PServer::new(&config.libp2p_topic_name).unwrap()));
+        let p2p_server_arc = Arc::new(Mutex::new(
+            P2PServer::new(&config.libp2p_topic_name).unwrap(),
+        ));
 
         let (libp2p_shutdown_tx, libp2p_shutdown_rx) = oneshot::channel();
         let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
@@ -63,14 +67,39 @@ impl Network {
         p2p_server: Arc<Mutex<P2PServer>>,
         libp2p_shutdown_tx: oneshot::Sender<()>,
     ) {
+        let (command_tx, command_rx) = mpsc::channel(32);
         tokio::spawn(async move {
             {
                 let mut p2p_server = p2p_server.lock().await;
-                if let Err(e) = p2p_server.run(Arc::clone(&blockchain)).await {
+                if let Err(e) = p2p_server.run(Arc::clone(&blockchain), command_rx).await {
                     eprintln!("Error running libp2p: {}", e);
                 }
             }
             let _ = libp2p_shutdown_tx.send(());
+        });
+
+        tokio::spawn(async move {
+            {
+                tokio::time::sleep(Duration::from_secs(10)).await;
+                // Example of sending a message
+                let message = "Hello, World!".to_string();
+                let (response_tx, response_rx) = oneshot::channel();
+                command_tx
+                    .send(Command::SendMessage {
+                        message,
+                        response_tx,
+                    })
+                    .await
+                    .unwrap();
+
+                match response_rx.await {
+                    Ok(result) => match result {
+                        Ok(message_id) => println!("Message sent with id: {:?}", message_id),
+                        Err(e) => eprintln!("Failed to send message: {:?}", e),
+                    },
+                    Err(e) => eprintln!("Failed to receive response: {:?}", e),
+                }
+            }
         });
     }
 
