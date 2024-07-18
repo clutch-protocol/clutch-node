@@ -7,6 +7,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::signal;
 use tokio::sync::{mpsc, oneshot, Mutex};
+use rand::Rng; // Add this import for random string generation
 
 pub struct Network;
 
@@ -79,14 +80,22 @@ impl Network {
         });
 
         tokio::spawn(async move {
-            {
-                tokio::time::sleep(Duration::from_secs(10)).await;
+            let mut interval = tokio::time::interval(Duration::from_secs(3));
+            loop {
+                interval.tick().await;
+                
+                // Generate a random string
+                let random_string: String = rand::thread_rng()
+                    .sample_iter(&rand::distributions::Alphanumeric)
+                    .take(10)
+                    .map(char::from)
+                    .collect();
+
                 // Example of sending a message
-                let message = "Hello, World!".to_string();
                 let (response_tx, response_rx) = oneshot::channel();
                 command_tx
                     .send(Command::SendMessage {
-                        message,
+                        message: random_string.clone(),
                         response_tx,
                     })
                     .await
