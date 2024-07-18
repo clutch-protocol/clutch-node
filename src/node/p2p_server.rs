@@ -216,7 +216,7 @@ impl P2PServer {
             String::from_utf8_lossy(&message.data),
         );
 
-        // handle_received_transaction(message, blockchain).await;
+        handle_received_transaction(message, blockchain).await;
     }
 }
 
@@ -227,7 +227,7 @@ async fn handle_received_transaction(
     let transaction_result: Result<Transaction, _> = serde_json::from_slice(&message.data);
 
     if let Ok(transaction) = transaction_result {
-        println!("Transaction received");
+        println!("Transaction received from wss");
 
         let transaction_added = {
             let blockchain = blockchain.lock().await;
@@ -235,7 +235,7 @@ async fn handle_received_transaction(
         };
 
         if transaction_added {
-            println!("Transaction added");
+            println!("Transaction added to mempool");
         } else {
             println!("Failed to add transaction to pool");
         }
