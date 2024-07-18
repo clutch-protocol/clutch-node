@@ -124,7 +124,6 @@ impl P2PServer {
         blockchain: Arc<Mutex<Blockchain>>,
         command_rx: &mut tokio::sync::mpsc::Receiver<Command>,
     ) -> Result<(), Box<dyn Error>> {
-        let mut interval = time::interval(Duration::from_secs(5));
         loop {
             select! {
                 event = self.behaviour.select_next_some().fuse() => {
@@ -139,13 +138,7 @@ impl P2PServer {
                             }
                         }
                     }
-                },
-                // _ = interval.tick() => {
-                //     let message = format!("Periodic message at {:?}", std::time::SystemTime::now());
-                //     if let Err(e) = self.send_gossip_message(&message) {
-                //         println!("Publish error: {e:?}");
-                //     }
-                // }
+                },               
             }
         }
     }
