@@ -48,7 +48,7 @@ impl P2PServer {
         Ok(())
     }
 
-    pub fn broadcast_message(&mut self, message: &str) -> Result<(), Box<dyn Error>> {        
+    pub fn send_gossip_message(&mut self, message: &str) -> Result<(), Box<dyn Error>> {
         self.behaviour
             .behaviour_mut()
             .gossipsub
@@ -126,9 +126,9 @@ impl P2PServer {
     async fn process_messages(
         swarm: &mut Swarm<P2PBehaviour>,
         blockchain: Arc<Mutex<Blockchain>>,
-    ) -> Result<(), Box<dyn Error>> {     
+    ) -> Result<(), Box<dyn Error>> {
         loop {
-            select! {            
+            select! {
                 event = swarm.select_next_some() => Self::handle_swarm_event(event, swarm, &blockchain).await,
             }
         }
