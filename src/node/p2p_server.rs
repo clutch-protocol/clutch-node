@@ -1,6 +1,7 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::transaction::Transaction;
 use futures::stream::StreamExt;
+use futures::FutureExt;
 use libp2p::{
     gossipsub, gossipsub::Event as GossipsubEvent, gossipsub::IdentTopic, gossipsub::MessageId,
     mdns, mdns::Event as MdnsEvent, noise, swarm::NetworkBehaviour, swarm::Swarm,
@@ -11,8 +12,9 @@ use std::error::Error;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::time;
 use tokio::{io, select, sync::Mutex};
-use tracing_subscriber::EnvFilter;
+use tracing_subscriber::EnvFilter; // Import FutureExt to use `.fuse()`
 
 #[derive(NetworkBehaviour)]
 pub struct P2PBehaviour {
@@ -36,18 +38,20 @@ impl P2PServer {
         })
     }
 
-    pub fn send_gossip_message(&mut self, message: &str) -> Result<(), Box<dyn Error>> {
+    pub fn send_gossip_message(
+        &mut self,
+        message: &str,
+    ) -> Result<MessageId, gossipsub::PublishError> {
         self.behaviour
             .behaviour_mut()
             .gossipsub
-            .publish(self.topic.clone(), message.as_bytes())?;
-        Ok(())
+            .publish(self.topic.clone(), message.as_bytes())
     }
 
     pub async fn run(&mut self, blockchain: Arc<Mutex<Blockchain>>) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
         Self::listen_for_connections(&mut self.behaviour)?;
-        Self::process_messages(&mut self.behaviour, blockchain).await
+        self.process_messages(blockchain).await
     }
 
     fn setup_tracing() -> Result<(), Box<dyn Error>> {
@@ -112,12 +116,21 @@ impl P2PServer {
     }
 
     async fn process_messages(
-        swarm: &mut Swarm<P2PBehaviour>,
+        &mut self,
         blockchain: Arc<Mutex<Blockchain>>,
     ) -> Result<(), Box<dyn Error>> {
+        let mut interval = time::interval(Duration::from_secs(5));
         loop {
             select! {
-                event = swarm.select_next_some() => Self::handle_swarm_event(event, swarm, &blockchain).await,
+                event = self.behaviour.select_next_some().fuse() => {
+                    Self::handle_swarm_event(event, &mut self.behaviour, &blockchain).await;
+                },
+                _ = interval.tick() => {
+                    let message = format!("Periodic message at {:?}", std::time::SystemTime::now());
+                    if let Err(e) = self.send_gossip_message(&message) {
+                        println!("Publish error: {e:?}");
+                    }
+                }
             }
         }
     }
@@ -176,7 +189,7 @@ impl P2PServer {
             String::from_utf8_lossy(&message.data),
         );
 
-        handle_received_transaction(message, blockchain).await;
+        // handle_received_transaction(message, blockchain).await;
     }
 }
 
