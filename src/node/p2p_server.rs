@@ -36,18 +36,6 @@ impl P2PServer {
         })
     }
 
-    pub fn broadcast_transaction(
-        &mut self,
-        transaction: &Transaction,
-    ) -> Result<(), Box<dyn Error>> {
-        let transaction_data = serde_json::to_vec(transaction)?;
-        self.behaviour
-            .behaviour_mut()
-            .gossipsub
-            .publish(self.topic.clone(), transaction_data)?;
-        Ok(())
-    }
-
     pub fn send_gossip_message(&mut self, message: &str) -> Result<(), Box<dyn Error>> {
         self.behaviour
             .behaviour_mut()
