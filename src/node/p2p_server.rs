@@ -14,7 +14,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time;
 use tokio::{io, select, sync::Mutex};
-use tracing_subscriber::EnvFilter; // Import FutureExt to use `.fuse()`
+use tracing_subscriber::EnvFilter;
 
 #[derive(NetworkBehaviour)]
 pub struct P2PBehaviour {
