@@ -8,6 +8,7 @@ pub mod confirm_arrival;
 pub mod consensus;
 pub mod coordinate;
 pub mod database;
+pub mod file_utils;
 pub mod function_call;
 pub mod network;
 pub mod p2p_server;

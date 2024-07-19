@@ -7,6 +7,7 @@ use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;
 use crate::node::block::Block;
 use crate::node::database::Database;
+use crate::node::file_utils::write_to_file;
 use crate::node::network::Network;
 use crate::node::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
@@ -112,7 +113,33 @@ impl Blockchain {
         Ok(new_block)
     }
 
-    pub async fn start_network_services(self, config: &AppConfig) {        
-        Network::start_services(config, self).await;   
+    pub async fn start_network_services(self, config: &AppConfig) {
+        Network::start_services(config, self).await;
+    }
+
+    fn blockchain_write_to_file(&mut self) {
+        match self.get_blocks() {
+            Ok(blocks) => match serde_json::to_string_pretty(&blocks) {
+                Ok(json_str) => {
+                    if let Err(e) = write_to_file(&json_str, "blockchain_blocks") {
+                        println!("{}", e);
+                    }
+                }
+                Err(e) => println!("Failed to serialize blocks: {}", e),
+            },
+            Err(e) => println!("Failed to retrieve blocks: {}", e),
+        }
+
+        match self.get_transactions_from_pool() {
+            Ok(transactions) => match serde_json::to_string_pretty(&transactions) {
+                Ok(json_str) => {
+                    if let Err(e) = write_to_file(&json_str, "tx_pool") {
+                        println!("{}", e);
+                    }
+                }
+                Err(e) => println!("Failed to serialize transactions: {}", e),
+            },
+            Err(e) => println!("Failed to retrieve transactions in transaction pool: {}", e),
+        }
     }
 }
