@@ -1,6 +1,6 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::transaction::Transaction;
-use crate::node::p2p_server::{P2PServer, P2PServerCommand};
+use crate::node::p2p_server::{MessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;
 use futures::{stream::StreamExt, SinkExt};
 use std::error::Error;
@@ -9,7 +9,6 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::protocol::Message;
-
 
 pub struct WebSocket;
 
@@ -87,7 +86,7 @@ impl WebSocket {
                     
                     // gossip transcation                                        
                     let encoded_tx = encode(&transaction);
-                    P2PServer::gossip_message(command_tx, &encoded_tx).await;
+                    P2PServer::gossip_message(command_tx,MessageType::Transaction, &encoded_tx).await;
                     
                     return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
                 } else {

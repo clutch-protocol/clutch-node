@@ -42,11 +42,18 @@ impl P2PServer {
         })
     }
 
-    pub async fn gossip_message(command_tx: Sender<P2PServerCommand>, message: &Vec<u8>) {
+    pub async fn gossip_message(
+        command_tx: Sender<P2PServerCommand>,
+        message_type: MessageType,
+        message: &Vec<u8>,
+    ) {
+        let mut message_with_type = vec![message_type.as_byte()];
+        message_with_type.extend(message);
+
         let (response_tx, response_rx) = oneshot::channel();
         command_tx
             .send(P2PServerCommand::SendMessage {
-                message: message.clone(),
+                message: message_with_type,
                 response_tx,
             })
             .await
@@ -218,17 +225,34 @@ impl P2PServer {
         println!(
             "Got message: '{}' with id: {id} from peer: {peer_id}",
             String::from_utf8_lossy(&message.data),
-        );   
-             
-        match decode::<Transaction>(&message.data) {
-            Ok(transaction) => {
-                println!("Decoded transaction: {:?}", &transaction);
-                handle_received_transaction(&transaction, blockchain).await;
+        );
+
+        let message_type = MessageType::from_byte(message.data[0]);
+        let payload = &message.data[1..];
+
+        match message_type {
+            Some(MessageType::Transaction) => match decode::<Transaction>(payload) {
+                Ok(transaction) => {
+                    println!("Decoded transaction: {:?}", &transaction);
+                    handle_received_transaction(&transaction, blockchain).await;
+                }
+                Err(e) => {
+                    eprintln!("Failed to decode transaction: {:?}", e);
+                }
+            },
+            // 0x02 => match decode::<Block>(payload) {
+            //     Ok(block) => {
+            //         println!("Decoded block: {:?}", &block);
+            //         handle_received_block(&block, blockchain).await;
+            //     }
+            //     Err(e) => {
+            //         eprintln!("Failed to decode block: {:?}", e);
+            //     }
+            // },
+            _ => {
+                eprintln!("Unknown message type: {:?}", message_type);
             }
-            Err(e) => {
-                eprintln!("Failed to decode transaction: {:?}", e);
-            }
-        }
+        }       
     }
 }
 
@@ -253,4 +277,27 @@ pub enum P2PServerCommand {
         message: Vec<u8>,
         response_tx: tokio::sync::oneshot::Sender<Result<MessageId, gossipsub::PublishError>>,
     },
+}
+
+#[derive(Debug)]
+pub enum MessageType {
+    Transaction,
+    Block,
+}
+
+impl MessageType {
+    fn as_byte(&self) -> u8 {
+        match self {
+            MessageType::Transaction => 0x01,
+            MessageType::Block => 0x02,
+        }
+    }
+
+    fn from_byte(byte: u8) -> Option<Self> {
+        match byte {
+            0x01 => Some(MessageType::Transaction),
+            0x02 => Some(MessageType::Block),
+            _ => None,
+        }
+    }
 }
