@@ -1,4 +1,5 @@
 use crate::node::blockchain::Blockchain;
+use crate::node::rlp_encoding::decode;
 use crate::node::transaction::Transaction;
 use futures::stream::StreamExt;
 use futures::FutureExt;
@@ -13,7 +14,10 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc::Sender;
-use tokio::{io, select, sync::{oneshot, Mutex}};
+use tokio::{
+    io, select,
+    sync::{oneshot, Mutex},
+};
 use tracing_subscriber::EnvFilter;
 
 #[derive(NetworkBehaviour)]
@@ -38,11 +42,11 @@ impl P2PServer {
         })
     }
 
-    pub async fn gossip_message(command_tx: Sender<P2PServerCommand>, message: &str) {
+    pub async fn gossip_message(command_tx: Sender<P2PServerCommand>, message: &Vec<u8>) {
         let (response_tx, response_rx) = oneshot::channel();
         command_tx
             .send(P2PServerCommand::SendMessage {
-                message: message.to_string(),
+                message: message.clone(),
                 response_tx,
             })
             .await
@@ -50,7 +54,7 @@ impl P2PServer {
 
         match response_rx.await {
             Ok(result) => match result {
-                Ok(message_id) => println!("Message sent with id: {:?}, message:{:?}", message_id, message),
+                Ok(message_id) => println!("Message sent with id: {:?}", message_id),
                 Err(e) => eprintln!("Failed to send message: {:?}", e),
             },
             Err(e) => eprintln!("Failed to receive response: {:?}", e),
@@ -142,7 +146,7 @@ impl P2PServer {
                     if let Some(command) = command {
                         match command {
                             P2PServerCommand::SendMessage { message, response_tx } => {
-                                let result = self.send_gossip_message(&message);
+                                let result = self.send_gossip_message(message);
                                 let _ = response_tx.send(result);
                             }
                         }
@@ -154,12 +158,12 @@ impl P2PServer {
 
     fn send_gossip_message(
         &mut self,
-        message: &str,
+        message: Vec<u8>,
     ) -> Result<MessageId, gossipsub::PublishError> {
         self.behaviour
             .behaviour_mut()
             .gossipsub
-            .publish(self.topic.clone(), message.as_bytes())
+            .publish(self.topic.clone(), message)
     }
 
     async fn handle_swarm_event(
@@ -214,37 +218,39 @@ impl P2PServer {
         println!(
             "Got message: '{}' with id: {id} from peer: {peer_id}",
             String::from_utf8_lossy(&message.data),
-        );
-
-        handle_received_transaction(message, blockchain).await;
+        );   
+             
+        match decode::<Transaction>(&message.data) {
+            Ok(transaction) => {
+                println!("Decoded transaction: {:?}", &transaction);
+                handle_received_transaction(&transaction, blockchain).await;
+            }
+            Err(e) => {
+                eprintln!("Failed to decode transaction: {:?}", e);
+            }
+        }
     }
 }
 
 async fn handle_received_transaction(
-    message: gossipsub::Message,
+    transaction: &Transaction,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) {
-    let transaction_result: Result<Transaction, _> = serde_json::from_slice(&message.data);
+    let transaction_added = {
+        let blockchain = blockchain.lock().await;
+        blockchain.add_transaction_to_pool(&transaction).is_ok()
+    };
 
-    if let Ok(transaction) = transaction_result {        
-        let transaction_added = {
-            let blockchain = blockchain.lock().await;
-            blockchain.add_transaction_to_pool(&transaction).is_ok()
-        };
-
-        if transaction_added {
-            println!("Transaction added to mempool from P2P");
-        } else {
-            println!("Failed to add transaction to pool");
-        }
+    if transaction_added {
+        println!("Transaction added to mempool from P2P");
     } else {
-        println!("Failed to deserialize transaction");
+        println!("Failed to add transaction to pool");
     }
 }
 
 pub enum P2PServerCommand {
     SendMessage {
-        message: String,
+        message: Vec<u8>,
         response_tx: tokio::sync::oneshot::Sender<Result<MessageId, gossipsub::PublishError>>,
     },
 }

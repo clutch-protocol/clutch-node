@@ -17,6 +17,7 @@ pub mod ride_offer;
 pub mod ride_pay;
 pub mod ride_payment;
 pub mod ride_request;
+pub mod rlp_encoding;
 pub mod signature_keys;
 pub mod transaction;
 pub mod transaction_pool;

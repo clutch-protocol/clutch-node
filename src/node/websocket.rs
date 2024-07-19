@@ -1,6 +1,7 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::transaction::Transaction;
 use crate::node::p2p_server::{P2PServer, P2PServerCommand};
+use crate::node::rlp_encoding::encode;
 use futures::{stream::StreamExt, SinkExt};
 use std::error::Error;
 use std::sync::Arc;
@@ -84,9 +85,9 @@ impl WebSocket {
                 if blockchain.add_transaction_to_pool(&transaction).is_ok() {
                     println!("Transaction added to pool from wss.");
                     
-                    // gossip transcation                    
-                    let message = serde_json::to_string(&transaction).unwrap();
-                    P2PServer::gossip_message(command_tx, &message).await;
+                    // gossip transcation                                        
+                    let encoded_tx = encode(&transaction);
+                    P2PServer::gossip_message(command_tx, &encoded_tx).await;
                     
                     return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
                 } else {
