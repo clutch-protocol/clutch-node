@@ -82,12 +82,11 @@ impl WebSocket {
 
                 let  blockchain = blockchain.lock().await;
                 if blockchain.add_transaction_to_pool(&transaction).is_ok() {
-                    println!("Transaction added to pool.");
+                    println!("Transaction added to pool from wss.");
                     
-                    // Logging before broadcasting
-                    println!("Attempting to lock P2P server to broadcast transaction.");
+                    // gossip transcation                    
                     let message = serde_json::to_string(&transaction).unwrap();
-                    P2PServer::send_message(command_tx, &message).await;
+                    P2PServer::gossip_message(command_tx, &message).await;
                     
                     return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
                 } else {

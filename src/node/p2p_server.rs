@@ -38,7 +38,7 @@ impl P2PServer {
         })
     }
 
-    pub async fn send_message(command_tx: Sender<P2PServerCommand>, message: &str) {
+    pub async fn gossip_message(command_tx: Sender<P2PServerCommand>, message: &str) {
         let (response_tx, response_rx) = oneshot::channel();
         command_tx
             .send(P2PServerCommand::SendMessage {
@@ -50,7 +50,7 @@ impl P2PServer {
 
         match response_rx.await {
             Ok(result) => match result {
-                Ok(message_id) => println!("Message sent with id: {:?}", message_id),
+                Ok(message_id) => println!("Message sent with id: {:?}, message:{:?}", message_id, message),
                 Err(e) => eprintln!("Failed to send message: {:?}", e),
             },
             Err(e) => eprintln!("Failed to receive response: {:?}", e),
@@ -226,16 +226,14 @@ async fn handle_received_transaction(
 ) {
     let transaction_result: Result<Transaction, _> = serde_json::from_slice(&message.data);
 
-    if let Ok(transaction) = transaction_result {
-        println!("Transaction received from wss");
-
+    if let Ok(transaction) = transaction_result {        
         let transaction_added = {
             let blockchain = blockchain.lock().await;
             blockchain.add_transaction_to_pool(&transaction).is_ok()
         };
 
         if transaction_added {
-            println!("Transaction added to mempool");
+            println!("Transaction added to mempool from P2P");
         } else {
             println!("Failed to add transaction to pool");
         }
