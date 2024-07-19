@@ -81,8 +81,9 @@ impl WebSocket {
                 };
 
                 let  blockchain = blockchain.lock().await;
-                if blockchain.add_transaction_to_pool(&transaction).is_err() {
-                    return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": "Failed to add transaction"}, "id": id}).to_string());
+                if let Err(e) = blockchain.add_transaction_to_pool(&transaction) {
+                    eprintln!("Failed to add transaction: {}", e);
+                    return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to add transaction: {}", e)}, "id": id}).to_string());
                 }
 
                 println!("Transaction added to pool from wss.");                    
