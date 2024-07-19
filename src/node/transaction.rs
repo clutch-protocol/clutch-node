@@ -147,9 +147,7 @@ impl Transaction {
             return Err("Verification failed: Nonce does not match.".to_string());
         }
 
-        if !self.verify_state(&db) {
-            return Err("Verification failed: State is not valid.".to_string());
-        }
+        self.verify_state(db)?;
 
         Ok(())
     }
@@ -169,7 +167,7 @@ impl Transaction {
         true
     }
 
-    fn verify_state(&self, db: &Database) -> bool {
+    fn verify_state(&self, db: &Database) -> Result<(), String> {
         return match self.data.function_call_type {
             FunctionCallType::Transfer => Transfer::verify_state(&self, db),
             FunctionCallType::RideRequest => RideRequest::verify_state(&self, db),
@@ -177,7 +175,7 @@ impl Transaction {
             FunctionCallType::RideAcceptance => RideAcceptance::verify_state(&self, db),
             FunctionCallType::RidePay => RidePay::verify_state(&self, db),
             FunctionCallType::RideCancel => RideCancel::verify_state(&self, db),
-            _ => false,
+            _ => Err("Unknown function call type.".to_string()),
         };
     }
 

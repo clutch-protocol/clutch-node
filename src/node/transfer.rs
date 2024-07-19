@@ -10,21 +10,23 @@ pub struct Transfer {
     pub value: u64,
 }
 
-impl Transfer {
-    pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
+impl Transfer {   
+    pub fn verify_state(transaction: &Transaction, db: &Database) -> Result<(), String> {
         let from = &transaction.from;
-        let transfer: Transfer = serde_json::from_str(&transaction.data.arguments).unwrap();
+        
+        let transfer: Transfer = serde_json::from_str(&transaction.data.arguments)
+            .map_err(|e| format!("Failed to parse transfer data: {}", e))?;
+        
         let from_account_state = AccountState::get_current_state(from, &db);
+        
         if from_account_state.balance < transfer.value {
-            println!(
-                "Error: Insufficient balance.From:{} Required: {}, Available: {}",
+            return Err(format!(
+                "Error: Insufficient balance. From: {} Required: {}, Available: {}",
                 transaction.from, transfer.value, from_account_state.balance
-            );
-
-            return false;
+            ));
         }
-
-        true
+    
+        Ok(())
     }
 
     pub fn state_transaction(

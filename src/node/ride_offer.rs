@@ -9,22 +9,21 @@ pub struct RideOffer {
 }
 
 impl RideOffer {
-    pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
-        let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
+    pub fn verify_state(transaction: &Transaction, db: &Database) -> Result<(), String> {
+        let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments)
+            .map_err(|_| "Failed to deserialize transaction data.".to_string())?;
         let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
-
+    
         if let Ok(Some(_)) = RideRequest::get_ride_request(&ride_request_tx_hash, db) {
             // Check if there is any ride linked to this ride offer's request.
             if let Ok(Some(_)) = RideRequest::get_ride_acceptance(&ride_request_tx_hash, db) {
-                println!("A ride for the requested ride offer already exists.");
-                return false;
+                return Err("A ride for the requested ride offer already exists.".to_string());
             }
         } else {
-            println!("Ride request does not exist or failed to retrieve.");
-            return false;
+            return Err("Ride request does not exist or failed to retrieve.".to_string());
         }
-
-        true
+    
+        Ok(())
     }
 
     pub fn state_transaction(

@@ -12,30 +12,23 @@ pub struct RideRequest {
     pub fare: u64,
 }
 
-impl RideRequest {
-    pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
-        let ride_request: Result<RideRequest, _> =
-            serde_json::from_str(&transaction.data.arguments);
-
-        if ride_request.is_err() {
-            println!("Failed to deserialize transaction data.");
-            return false;
-        }
-        let ride_request = ride_request.unwrap();
+impl RideRequest {  
+    pub fn verify_state(transaction: &Transaction, db: &Database) -> Result<(), String> {
+        let ride_request: RideRequest = serde_json::from_str(&transaction.data.arguments)
+            .map_err(|_| "Failed to deserialize transaction data.".to_string())?;
+    
         let from = &transaction.from;
-
         let passenger_account_state = AccountState::get_current_state(from, &db);
-        if &passenger_account_state.balance < &ride_request.fare {
-            println!(
+    
+        if passenger_account_state.balance < ride_request.fare {
+            return Err(format!(
                 "The account balance is insufficient to cover the fare for the requested ride. \
                  Account balance is: {}, fare: {}",
-                passenger_account_state.balance, &ride_request.fare
-            );
-
-            return false;
+                passenger_account_state.balance, ride_request.fare
+            ));
         }
-
-        true
+    
+        Ok(())
     }
 
     pub fn state_transaction(

@@ -9,66 +9,52 @@ pub struct RideAcceptance {
 }
 
 impl RideAcceptance {
-    pub fn verify_state(transaction: &Transaction, db: &Database) -> bool {
-        let ride_acceptance: Result<RideAcceptance, _> =
-            serde_json::from_str(&transaction.data.arguments);
-
-        if ride_acceptance.is_err() {
-            println!("Failed to deserialize transaction data.");
-            return false;
-        }
-
-        let ride_acceptance = ride_acceptance.unwrap();
+    pub fn verify_state(transaction: &Transaction, db: &Database) -> Result<(), String> {
+        let ride_acceptance: RideAcceptance = serde_json::from_str(&transaction.data.arguments)
+            .map_err(|_| "Failed to deserialize transaction data.".to_string())?;
+    
         let ride_offer_transaction_hash = &ride_acceptance.ride_offer_transaction_hash;
-
+    
         if let Ok(Some(ride_offer)) = RideOffer::get_ride_offer(ride_offer_transaction_hash, db) {
             let from = &transaction.from;
-
-            if let Ok(Some(passenger)) =
-                RideRequest::get_from(&ride_offer.ride_request_transaction_hash, &db)
-            {
-                if &passenger.to_string() != &transaction.from {
-                    println!("Ride request 'from' field does not match the transaction 'from' field. Expected: {}, found: {}.", transaction.from, passenger);
-                    return false;
+    
+            if let Ok(Some(passenger)) = RideRequest::get_from(&ride_offer.ride_request_transaction_hash, db) {
+                if &passenger.to_string() != from {
+                    return Err(format!(
+                        "Ride request 'from' field does not match the transaction 'from' field. Expected: {}, found: {}.",
+                        from, passenger
+                    ));
                 }
             } else {
-                println!(
+                return Err(format!(
                     "Failed to retrieve 'from' field for ride request with transaction hash '{}'.",
                     ride_offer.ride_request_transaction_hash
-                );
-                return false;
+                ));
             }
-
-            let passenger_account_state = AccountState::get_current_state(from, &db);
+    
+            let passenger_account_state = AccountState::get_current_state(from, db);
             if &passenger_account_state.balance < &ride_offer.fare {
-                println!(
+                return Err(format!(
                     "The account balance is insufficient to cover the fare for the requested ride. \
                      Account balance is: {}, fare: {}",
-                    passenger_account_state.balance, &ride_offer.fare
-                );
-
-                return false;
+                    passenger_account_state.balance, ride_offer.fare
+                ));
             }
-
+    
             // Check if there is any ride linked to this ride offer's request.
-            if let Ok(Some(_)) =
-                RideRequest::get_ride_acceptance(&ride_offer.ride_request_transaction_hash, db)
-            {
-                println!("A ride for the requested ride offer already exists.");
-                return false;
+            if let Ok(Some(_)) = RideRequest::get_ride_acceptance(&ride_offer.ride_request_transaction_hash, db) {
+                return Err("A ride for the requested ride offer already exists.".to_string());
             }
-
+    
             // Check if this ride offer is already used in another ride.
             if let Ok(Some(_)) = RideOffer::get_ride_acceptance(&ride_offer_transaction_hash, db) {
-                println!("Ride offer is already linked to a ride.");
-                return false;
+                return Err("Ride offer is already linked to a ride.".to_string());
             }
         } else {
-            println!("Ride offer does not exist or failed to retrieve.");
-            return false;
+            return Err("Ride offer does not exist or failed to retrieve.".to_string());
         }
-
-        true
+    
+        Ok(())
     }
 
     pub fn state_transaction(
