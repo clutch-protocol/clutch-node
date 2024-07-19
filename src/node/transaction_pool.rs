@@ -5,10 +5,7 @@ pub struct TransactionPool {}
 
 impl TransactionPool {
     pub fn add_transaction(db: &Database, transaction: &Transaction) -> Result<(), String> {
-        if !transaction.validate_transaction(&db) {
-            return Err("Transaction is invalid.".to_string());
-        }
-
+        transaction.validate_transaction(&db)?;
         let key = Self::construct_tx_pool_key(&transaction.hash);
         let value = serde_json::to_string(&transaction).unwrap().into_bytes();
 

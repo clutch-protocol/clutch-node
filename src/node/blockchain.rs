@@ -65,12 +65,7 @@ impl Blockchain {
         }
 
         for tx in block.transactions.iter() {
-            let is_valid_tx = tx.validate_transaction(&self.db);
-            if !is_valid_tx {
-                return Err(String::from(
-                    "Block contains invalid transactions and will not be added.",
-                ));
-            }
+            tx.validate_transaction(&self.db)?;
         }
 
         Block::add_block_to_chain(&self.db, block);
@@ -86,10 +81,8 @@ impl Blockchain {
         self.consensus.current_author()
     }
 
-    pub fn add_transaction_to_pool(&self, transaction: &Transaction) -> Result<(), String> {
-        if !transaction.validate_transaction(&self.db) {
-            return Err("Transaction is invalid.".to_string());
-        }
+    pub fn add_transaction_to_pool(&self, transaction: &Transaction) -> Result<(), String> {        
+        transaction.validate_transaction(&self.db)?;                
         TransactionPool::add_transaction(&self.db, &transaction)
     }
 

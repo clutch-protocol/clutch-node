@@ -135,25 +135,24 @@ impl Transaction {
         SignatureKeys::verify(from_public_key, data, r, s, v)
     }
 
-    pub fn validate_transaction(&self, db: &Database) -> bool {
+    pub fn validate_transaction(&self, db: &Database) -> Result<(), String> {
         if !self.verify_signature() {
-            println!(
+            return Err(format!(
                 "Verification failed: Signature does not match for transaction from {}",
                 self.from
-            );
-            return false;
+            ));
         }
 
         if !self.verify_nonce(&db) {
-            return false;
+            return Err("Verification failed: Nonce does not match.".to_string());
         }
 
         if !self.verify_state(&db) {
-            return false;
+            return Err("Verification failed: State is not valid.".to_string());
         }
 
-        true
-    }  
+        Ok(())
+    }
 
     fn verify_nonce(&self, db: &Database) -> bool {
         let last_nonce = AccountState::get_current_nonce(&self.from, &db);
