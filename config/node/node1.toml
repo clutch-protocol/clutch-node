@@ -1,5 +1,5 @@
 libp2p_topic_name = "test-net"
-blockchain_name = "clutch-node-test"
+blockchain_name = "clutch-node-test-1"
 developer_mode = true
 websocket_addr = "127.0.0.1:8081"
 authorities = [

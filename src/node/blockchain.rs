@@ -44,15 +44,10 @@ impl Blockchain {
     }
 
     pub fn shutdown_blockchain(&mut self) {
-        self.cleanup_if_developer_mode();
-        
-    }
-
-    fn cleanup_if_developer_mode(&mut self) {
         if self.developer_mode {
             self.blockchain_write_to_file();
             self.cleanup_db();
-        }
+        } 
     }
     
     fn cleanup_db(&mut self) {
@@ -131,7 +126,8 @@ impl Blockchain {
         match self.get_blocks() {
             Ok(blocks) => match serde_json::to_string_pretty(&blocks) {
                 Ok(json_str) => {
-                    if let Err(e) = write_to_file(&json_str, "blockchain_blocks") {
+                    let file_name = format!("{}_blockchain_blocks", &self.name);
+                    if let Err(e) = write_to_file(&json_str, &file_name) {
                         println!("{}", e);
                     }
                 }
@@ -143,7 +139,8 @@ impl Blockchain {
         match self.get_transactions_from_pool() {
             Ok(transactions) => match serde_json::to_string_pretty(&transactions) {
                 Ok(json_str) => {
-                    if let Err(e) = write_to_file(&json_str, "tx_pool") {
+                    let file_name = format!("{}_tx_pool", &self.name);
+                    if let Err(e) = write_to_file(&json_str, &file_name) {
                         println!("{}", e);
                     }
                 }
