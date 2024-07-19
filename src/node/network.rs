@@ -56,7 +56,7 @@ impl Network {
         }
 
         let mut blockchain = blockchain.lock().await;
-        blockchain.cleanup_if_developer_mode();
+        blockchain.shutdown_blockchain();
     }
 
     fn start_libp2p(

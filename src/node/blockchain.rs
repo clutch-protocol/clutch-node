@@ -43,16 +43,26 @@ impl Blockchain {
         AccountState::get_current_state(public_key, &self.db)
     }
 
-    pub fn cleanup_if_developer_mode(&mut self) {
-        if self.developer_mode {
-            self.db.close();
-            match self.db.delete_database(self.name.as_str()) {
-                Ok(_) => println!("Developer mode: Database cleaned up successfully."),
-                Err(e) => println!("Error cleaning up database: {}", e),
-            }
-        }
+    pub fn shutdown_blockchain(&mut self) {
+        self.cleanup_if_developer_mode();
+        
     }
 
+    fn cleanup_if_developer_mode(&mut self) {
+        if self.developer_mode {
+            self.blockchain_write_to_file();
+            self.cleanup_db();
+        }
+    }
+    
+    fn cleanup_db(&mut self) {
+        self.db.close();
+        match self.db.delete_database(self.name.as_str()) {
+            Ok(_) => println!("Developer mode: Database cleaned up successfully."),
+            Err(e) => println!("Error cleaning up database: {}", e),
+        }
+    }
+    
     pub fn block_import(&mut self, block: &Block) -> Result<(), String> {
         if !self.consensus.verify_block_author(&block) {
             return Err(String::from("Block author is invalid."));

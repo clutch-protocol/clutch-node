@@ -41,8 +41,7 @@ fn test_ride_sharing_blockchain() {
     import_blocks(&mut blockchain);
     author_blocks(&mut blockchain);
 
-    blockchain_write_to_file(&mut blockchain);
-    blockchain.cleanup_if_developer_mode();
+    blockchain.shutdown_blockchain();
 }
 
 fn import_blocks(blockchain: &mut Blockchain) {
@@ -136,52 +135,6 @@ fn current_author_keys(blockchain: &Blockchain) -> Option<(&str, &str)> {
         }
     }
     None
-}
-
-fn blockchain_write_to_file(blockchain: &mut Blockchain) {
-    match blockchain.get_blocks() {
-        Ok(blocks) => match serde_json::to_string_pretty(&blocks) {
-            Ok(json_str) => {
-                if let Err(e) = write_to_file(&json_str, "blockchain_blocks") {
-                    println!("{}", e);
-                }
-            }
-            Err(e) => println!("Failed to serialize blocks: {}", e),
-        },
-        Err(e) => println!("Failed to retrieve blocks: {}", e),
-    }
-
-    match blockchain.get_transactions_from_pool() {
-        Ok(transactions) => match serde_json::to_string_pretty(&transactions) {
-            Ok(json_str) => {
-                if let Err(e) = write_to_file(&json_str, "tx_pool") {
-                    println!("{}", e);
-                }
-            }
-            Err(e) => println!("Failed to serialize transactions: {}", e),
-        },
-        Err(e) => println!("Failed to retrieve transactions in transaction pool: {}", e),
-    }
-}
-
-fn write_to_file(content: &str, file_name: &str) -> Result<(), String> {
-    let address = format!("output/{}.json", file_name);
-    let path = Path::new(&address);
-
-    let mut file = match File::create(&path) {
-        Ok(file) => file,
-        Err(e) => return Err(format!("Failed to create file: {}", e)),
-    };
-
-    if let Err(e) = writeln!(file, "{}", content) {
-        return Err(format!("Failed to write to file: {}", e));
-    }
-
-    println!(
-        "Content has been successfully saved to '{}'.",
-        path.display()
-    );
-    Ok(())
 }
 
 fn ride_request_block(index: usize, nonce: u64, fare: u64) -> Block {

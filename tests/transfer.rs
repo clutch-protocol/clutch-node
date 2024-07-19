@@ -42,7 +42,7 @@ fn transfer_founds() {
     println!("From account state: {:#?}", from_account_state);
 
     save_blocks_to_file(&blockchain);
-    blockchain.cleanup_if_developer_mode();
+    blockchain.shutdown_blockchain();
 }
 
 fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), String> {
