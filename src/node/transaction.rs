@@ -142,11 +142,11 @@ impl Transaction {
         if transactions.is_empty() {
             return Err("No transactions to validate.".to_string());
         }
-    
+
         for tx in transactions.iter() {
             tx.validate_transaction(&db)?;
         }
-    
+
         Ok(())
     }
 

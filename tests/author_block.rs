@@ -1,9 +1,9 @@
 use std::vec;
 
-use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
+use clutch_node::node::{blockchain::Blockchain, function_call::FunctionCallType, *};
 use transaction::Transaction;
 
-const BLOCKCHAIN_NAME: &str = "clutch-node-test";
+const BLOCKCHAIN_NAME: &str = "clutch-node-transfer-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
 const FROM_SECRET_KEY: &str = "d2c446110cfcecbdf05b2be528e72483de5b6f7ef9c7856df2f81f48e9f2748f";
 const TO_ADDRESS_KEY: &str = "0x8f19077627cde4848b090c53c83b12956837d5e9";
@@ -27,13 +27,9 @@ fn author_block() {
         .add_transaction_to_pool(&transfer_tx)
         .expect("Failed to add transaction to pool");
 
-    let new_block = blockchain
+    blockchain
         .author_new_block()
         .expect("failed to author new block");
-
-    blockchain
-        .import_block(&new_block)
-        .expect("failed to import block.");
 
     let latest_block = blockchain
         .get_latest_block()
