@@ -39,7 +39,6 @@ fn transfer_founds() {
     let from_account_state = blockchain.get_account_state(&FROM_ADDRESS_KEY.to_string());
     println!("From account state: {:#?}", from_account_state);
 
-    save_blocks_to_file(&blockchain);
     blockchain.shutdown_blockchain();
 }
 
@@ -50,41 +49,6 @@ fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), St
         .hash;
 
     blockchain.block_import(block)
-}
-
-fn save_blocks_to_file(blockchain: &Blockchain) {
-    let path = Path::new("output/transfer_founds.json");
-    let mut file = match File::create(&path) {
-        Ok(file) => file,
-        Err(e) => {
-            println!("Failed to create file: {}", e);
-            return;
-        }
-    };
-
-    match blockchain.get_blocks() {
-        Ok(blocks) => {
-            match serde_json::to_string_pretty(&blocks) {
-                Ok(json_str) => {
-                    if let Err(e) = writeln!(file, "{}", json_str) {
-                        println!("Failed to write to file: {}", e);
-                        return;
-                    }
-                }
-                Err(e) => {
-                    println!("Failed to serialize block: {}", e);
-                    return;
-                }
-            }
-            println!(
-                "Blocks have been successfully saved to '{}'.",
-                path.display()
-            );
-        }
-        Err(e) => {
-            println!("Failed to retrieve blocks: {}", e);
-        }
-    }
 }
 
 fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
