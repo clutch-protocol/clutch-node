@@ -65,7 +65,6 @@ impl Network {
         libp2p_shutdown_tx: oneshot::Sender<()>,
         command_rx: tokio::sync::mpsc::Receiver<P2PServerCommand>,
     ) {
-        // let (command_tx, command_rx) = mpsc::channel(32);
         let mut p2p_server = P2PServer::new(&config.libp2p_topic_name).unwrap();
         tokio::spawn(async move {
             {
@@ -75,23 +74,6 @@ impl Network {
             }
             let _ = libp2p_shutdown_tx.send(());
         });
-
-        // tokio::spawn(async move {
-        //     let mut interval = tokio::time::interval(Duration::from_secs(3));
-        //     loop {
-        //         interval.tick().await;
-
-        //         // Generate a random string
-        //         let random_string: String = rand::thread_rng()
-        //             .sample_iter(&rand::distributions::Alphanumeric)
-        //             .take(10)
-        //             .map(char::from)
-        //             .collect();
-
-        //         // Example of sending a message
-        //         P2PServer::send_message(command_tx.clone(), &random_string.clone()).await;
-        //     }
-        // });
     }
 
     fn start_websocket(
