@@ -32,17 +32,16 @@ impl Consensus for Aura {
         &self.authorities[slot % self.authorities.len()]
     }
 
-    fn verify_block_author(&self, block: &Block) -> bool {
-        let is_valid = &block.author == self.current_author();
-        if !is_valid {
-            println!(
+    fn verify_block_author(&self, block: &Block) -> Result<(), String> {
+        let expected_author = self.current_author();
+        if &block.author == expected_author {
+            Ok(())
+        } else {
+            Err(format!(
                 "Block author verification failed: expected author {}, but found {}",
-                self.current_author(),
-                block.author
-            );
+                expected_author, block.author
+            ))
         }
-
-        is_valid
     }
 }
 

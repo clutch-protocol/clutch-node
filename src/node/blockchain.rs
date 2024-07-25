@@ -56,9 +56,7 @@ impl Blockchain {
     }
 
     pub fn block_import(&self, block: &Block) -> Result<(), String> {
-        if !self.consensus.verify_block_author(&block) {
-            return Err(String::from("Block author is invalid."));
-        }
+        self.consensus.verify_block_author(&block)?;
 
         if !block.validate_block(&self.db) {
             return Err(String::from("Block is invalid and will not be added."));
