@@ -80,13 +80,13 @@ impl Block {
         self.author = author.to_string();
     }
 
-    fn verify_signature(&self) -> bool {
+    fn verify_signature(&self) -> Result<bool, String> {
         let author = &self.author;
         let data = self.hash.as_bytes();
         let r = &self.signature_r;
         let s = &self.signature_s;
         let v = self.signature_v;
-
+    
         signature_keys::SignatureKeys::verify(author, data, r, s, v)
     }
 
@@ -102,37 +102,39 @@ impl Block {
         }
     }
 
-    pub fn validate_block(&self, db: &Database) -> bool {
+    pub fn validate_block(&self, db: &Database) -> Result<bool, String> {
         match Block::get_latest_block(db) {
             Some(latest_block) => {
-                if !self.verify_signature() {
-                    println!(
-                        "Verification failed: Signature does not match for block from author: {}",
-                        self.author
-                    );
-                    return false;
+                match self.verify_signature() {
+                    Ok(is_verified) => {
+                        if !is_verified {
+                            return Err(format!(
+                                "Verification failed: Signature does not match for block from author: {}",
+                                self.author
+                            ));
+                        }
+                    }
+                    Err(e) => return Err(format!("Signature verification error: {}", e)),
                 }
-
+    
                 if self.index != latest_block.index + 1 {
-                    println!(
+                    return Err(format!(
                         "Invalid block: The block index should be {}, but it was {}.",
                         latest_block.index + 1,
                         self.index
-                    );
-                    return false;
+                    ));
                 }
-
+    
                 if self.previous_hash != latest_block.hash {
-                    println!(
+                    return Err(format!(
                         "Invalid block: The previous hash should be {}, but it was {}.",
                         latest_block.hash, self.previous_hash
-                    );
-                    return false;
+                    ));
                 }
-
-                return true;
+    
+                Ok(true)
             }
-            None => true,
+            None => Ok(true),
         }
     }
 

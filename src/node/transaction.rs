@@ -125,7 +125,7 @@ impl Transaction {
         self.signature_v = v;
     }
 
-    fn verify_signature(&self) -> bool {
+    fn verify_signature(&self) -> Result<bool, String> {
         let from_public_key = &self.from;
         let data = self.hash.as_bytes();
         let r = &self.signature_r;
@@ -136,12 +136,7 @@ impl Transaction {
     }
 
     pub fn validate_transaction(&self, db: &Database) -> Result<(), String> {
-        if !self.verify_signature() {
-            return Err(format!(
-                "Verification failed: Signature does not match for transaction from {}",
-                self.from
-            ));
-        }
+        self.verify_signature()?;
 
         if !self.verify_nonce(&db) {
             return Err("Verification failed: Nonce does not match.".to_string());

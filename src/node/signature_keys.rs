@@ -65,26 +65,34 @@ impl SignatureKeys {
         (r, s, v)
     }
 
-    pub fn verify(derive_address: &str, data: &[u8], r: &str, s: &str, v: i32) -> bool {
+    pub fn verify(
+        derive_address: &str,
+        data: &[u8],
+        r: &str,
+        s: &str,
+        v: i32,
+    ) -> Result<bool, String> {
         let secp = Secp256k1::new();
         let mut hasher = Keccak256::new();
         hasher.update(data);
         let message_hash = hasher.finalize();
         let message = Message::from_digest_slice(&message_hash)
-            .expect("Message could not be created from hash");
+            .map_err(|_| "Message could not be created from hash".to_string())?;
 
-        let sig_r = Vec::from_hex(r).expect("Invalid hex in r");
-        let sig_s = Vec::from_hex(s).expect("Invalid hex in s");
+        let sig_r = Vec::from_hex(r).map_err(|_| "Invalid hex in r".to_string())?;
+        let sig_s = Vec::from_hex(s).map_err(|_| "Invalid hex in s".to_string())?;
         let signature_data = [&sig_r[..], &sig_s[..]].concat();
-        let recovery_id = RecoveryId::from_i32(v - 27).expect("Invalid recovery ID");
+        let recovery_id =
+            RecoveryId::from_i32(v - 27).map_err(|_| "Invalid recovery ID".to_string())?;
         let recoverable_sig = RecoverableSignature::from_compact(&signature_data, recovery_id)
-            .expect("Valid signature");
+            .map_err(|_| "Valid signature could not be created".to_string())?;
 
-        if let Ok(recovered_public_key) = secp.recover_ecdsa(&message, &recoverable_sig) {
-            let derived_address = Self::derive_address(&recovered_public_key);
-            derived_address == derive_address
-        } else {
-            false
+        match secp.recover_ecdsa(&message, &recoverable_sig) {
+            Ok(recovered_public_key) => {
+                let derived_address = Self::derive_address(&recovered_public_key);
+                Ok(derived_address == derive_address)
+            }
+            Err(_) => Err("Public key could not be recovered".to_string()),
         }
     }
 }
@@ -101,22 +109,23 @@ mod tests {
             keys.address_key, keys.secret_key, keys.public_key
         )
     }
-    
+
     #[test]
     fn test_sign_and_verify() {
         let keys = SignatureKeys::generate_new_keypair();
         let data = b"Blockchain technology";
-        println!("Public key:{:?}", keys.public_key);
-        println!("Address:{:?}", keys.address_key);
-        println!("secret key:{:?}", keys.secret_key);
+        println!("Public key: {:?}", keys.public_key);
+        println!("Address: {:?}", keys.address_key);
+        println!("Secret key: {:?}", keys.secret_key);
 
         // Test signing
         let (r, s, v) = SignatureKeys::sign(&keys.secret_key, data);
-        println!("Signature: r={:?}, s={:?} , v={:?}", r, s, v);
+        println!("Signature: r={:?}, s={:?}, v={:?}", r, s, v);
 
-        let is_verified = SignatureKeys::verify(&keys.address_key, data, &r, &s, v);
-
-        assert!(is_verified, "Signature verification should succeed");
+        match SignatureKeys::verify(&keys.address_key, data, &r, &s, v) {
+            Ok(is_verified) => assert!(is_verified, "Signature verification should succeed"),
+            Err(e) => panic!("Signature verification failed with error: {}", e),
+        }
     }
 
     #[test]
@@ -129,11 +138,13 @@ mod tests {
         let (r, s, v) = SignatureKeys::sign(&keys.secret_key, original_data);
 
         // Attempt to verify signature against modified data
-        let is_verified = SignatureKeys::verify(&keys.public_key, modified_data, &r, &s, v);
-        assert!(
-            !is_verified,
-            "Signature verification should fail on modified data"
-        );
+        match SignatureKeys::verify(&keys.address_key, modified_data, &r, &s, v) {
+            Ok(is_verified) => assert!(
+                !is_verified,
+                "Signature verification should fail on modified data"
+            ),
+            Err(_) => assert!(true, "Expected verification failure on modified data"),
+        }
     }
 
     #[test]
@@ -146,10 +157,15 @@ mod tests {
         let (r, s, v) = SignatureKeys::sign(&keys.secret_key, data);
 
         // Attempt to verify signature with a different public key
-        let is_verified = SignatureKeys::verify(&other_keys.public_key, data, &r, &s, v);
-        assert!(
-            !is_verified,
-            "Signature verification should fail with a different public key"
-        );
+        match SignatureKeys::verify(&other_keys.address_key, data, &r, &s, v) {
+            Ok(is_verified) => assert!(
+                !is_verified,
+                "Signature verification should fail with a different public key"
+            ),
+            Err(_) => assert!(
+                true,
+                "Expected verification failure with a different public key"
+            ),
+        }
     }
 }

@@ -14,9 +14,7 @@ const AUTHOR_SECRET_KEY: &str = "0883ddd3d07303b87c954b0c9383f7b78f45e002520fc03
 
 #[test]
 fn transfer_founds() {
-    let authorities = vec![
-        AUTHOR_PUBLIC_KEY.to_string(),
-    ];
+    let authorities = vec![AUTHOR_PUBLIC_KEY.to_string()];
     let mut blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true, authorities);
 
     let blocks = [|| transfer_block(1, 1, 20)];
@@ -103,12 +101,8 @@ fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
     );
     transfer_transaction.sign(FROM_SECRET_KEY);
 
-    let mut block = Block::new_block(        
-        index,
-        String::new(),
-        vec![transfer_transaction],
-    );
+    let mut block = Block::new_block(index, String::new(), vec![transfer_transaction]);
 
-    block.sign(AUTHOR_PUBLIC_KEY,AUTHOR_SECRET_KEY);
+    block.sign(AUTHOR_PUBLIC_KEY, AUTHOR_SECRET_KEY);
     block
 }
