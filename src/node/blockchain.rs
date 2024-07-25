@@ -15,10 +15,18 @@ pub struct Blockchain {
     db: Database,
     developer_mode: bool,
     consensus: Aura,
+    author_public_key: String,
+    author_secret_key: String,
 }
 
 impl Blockchain {
-    pub fn new(name: String, developer_mode: bool, authorities: Vec<String>) -> Blockchain {
+    pub fn new(
+        name: String,
+        author_public_key: String,
+        author_secret_key: String,
+        developer_mode: bool,
+        authorities: Vec<String>,
+    ) -> Blockchain {
         let db = Database::new_db(&name);
         let step_duration = 60 / authorities.len() as u64;
         let blockchain = Blockchain {
@@ -26,6 +34,8 @@ impl Blockchain {
             db,
             developer_mode,
             consensus: Aura::new(authorities, step_duration),
+            author_public_key,
+            author_secret_key,
         };
 
         Block::genesis_import_block(&blockchain.db);
@@ -85,7 +95,7 @@ impl Blockchain {
         TransactionPool::get_transactions(&self.db)
     }
 
-    pub fn author_new_block(&self) -> Result<Block, String> {        
+    pub fn author_new_block(&self) -> Result<Block, String> {
         let latest_block = match self.get_latest_block() {
             Some(block) => block,
             None => return Err("Failed to get the latest block in author_new_block".to_string()),
@@ -99,6 +109,7 @@ impl Blockchain {
         };
 
         let new_block = Block::new_block(index, previous_hash, transactions);
+        // new_block.sign(author, secret_key);
         Ok(new_block)
     }
 

@@ -31,6 +31,8 @@ fn load_configuration(env: &str) -> Result<AppConfig, Box<dyn std::error::Error>
 fn initialize_blockchain(config: &AppConfig) -> Blockchain {
     Blockchain::new(
         config.blockchain_name.clone(),
+        config.author_public_key.clone(),
+        config.author_secret_key.clone(),
         config.developer_mode.clone(),
         config.authorities.clone(),
     )

@@ -1,6 +1,7 @@
 use std::vec;
 
 use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
+use transaction::Transaction;
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
@@ -10,7 +11,7 @@ const AUTHOR_PUBLIC_KEY: &str = "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20";
 const AUTHOR_SECRET_KEY: &str = "0883ddd3d07303b87c954b0c9383f7b78f45e002520fc03a8adc80595dbf6509";
 
 #[test]
-fn transfer_founds() {
+fn author_block() {
     let authorities = vec![AUTHOR_PUBLIC_KEY.to_string()];
     let mut blockchain = Blockchain::new(
         BLOCKCHAIN_NAME.to_string(),
@@ -20,15 +21,19 @@ fn transfer_founds() {
         authorities,
     );
 
-    let blocks = [|| transfer_block(1, 1, 20)];
+    let transfer_tx = transfer_transaction(1, 20);
 
-    for block_creator in blocks.iter() {
-        let mut block = block_creator();
-        if let Err(e) = import_block(&mut blockchain, &mut block) {
-            println!("Error importing block: {}", e);
-            continue;
-        }
-    }
+    blockchain
+        .add_transaction_to_pool(&transfer_tx)
+        .expect("Failed to add transaction to pool");
+
+    let new_block = blockchain
+        .author_new_block()
+        .expect("failed to author new block");
+
+    blockchain
+        .import_block(&new_block)
+        .expect("failed to import block.");
 
     let latest_block = blockchain
         .get_latest_block()
@@ -45,16 +50,7 @@ fn transfer_founds() {
     blockchain.shutdown_blockchain();
 }
 
-fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), String> {
-    block.previous_hash = blockchain
-        .get_latest_block()
-        .expect("Failed to get the latest block")
-        .hash;
-
-    blockchain.import_block(block)
-}
-
-fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
+fn transfer_transaction(nonce: u64, transfer_value: u64) -> Transaction {
     let transfer = transfer::Transfer {
         to: TO_ADDRESS_KEY.to_string(),
         value: transfer_value,
@@ -67,9 +63,5 @@ fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
         transfer,
     );
     transfer_transaction.sign(FROM_SECRET_KEY);
-
-    let mut block = Block::new_block(index, String::new(), vec![transfer_transaction]);
-
-    block.sign(AUTHOR_PUBLIC_KEY, AUTHOR_SECRET_KEY);
-    block
+    transfer_transaction
 }

@@ -6,6 +6,8 @@ use serde::Deserialize;
 pub struct AppConfig {
     pub libp2p_topic_name: String,
     pub blockchain_name: String,
+    pub author_public_key: String,
+    pub author_secret_key: String,
     pub developer_mode: bool,
     pub websocket_addr: String,
     pub authorities: Vec<String>,

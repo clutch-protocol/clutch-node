@@ -93,7 +93,13 @@ fn new_blockchain() -> Blockchain {
         AUTHOR_2_PUBLIC_KEY.to_string(),
         AUTHOR_3_PUBLIC_KEY.to_string(),
     ];
-    let blockchain = Blockchain::new(BLOCKCHAIN_NAME.to_string(), true, authorities);
+    let blockchain = Blockchain::new(
+        BLOCKCHAIN_NAME.to_string(),
+        AUTHOR_1_PUBLIC_KEY.to_string(),
+        AUTHOR_1_SECRET_KEY.to_string(),
+        true,
+        authorities,
+    );
     blockchain
 }
 
