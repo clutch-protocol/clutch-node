@@ -276,7 +276,7 @@ async fn handle_received_transaction(
 async fn handle_received_block(block: &Block, blockchain: &Arc<Mutex<Blockchain>>) {
     let result = {
         let blockchain = blockchain.lock().await;
-        blockchain.block_import(&block)
+        blockchain.import_block(&block)
     };
 
     match result {

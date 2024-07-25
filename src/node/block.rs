@@ -187,7 +187,7 @@ impl Block {
         Some((keys, values))
     }
 
-    pub fn genesis_block_import(db: &Database) {
+    pub fn genesis_import_block(db: &Database) {
         match db.get("block", b"block_0") {
             Ok(Some(_)) => {
                 println!("Genesis block already exists.");

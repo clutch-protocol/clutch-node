@@ -45,7 +45,7 @@ fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), St
         .expect("Failed to get the latest block")
         .hash;
 
-    blockchain.block_import(block)
+    blockchain.import_block(block)
 }
 
 fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {

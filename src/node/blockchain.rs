@@ -28,7 +28,7 @@ impl Blockchain {
             consensus: Aura::new(authorities, step_duration),
         };
 
-        Block::genesis_block_import(&blockchain.db);
+        Block::genesis_import_block(&blockchain.db);
         blockchain
     }
 
@@ -55,7 +55,7 @@ impl Blockchain {
         }
     }
 
-    pub fn block_import(&self, block: &Block) -> Result<(), String> {
+    pub fn import_block(&self, block: &Block) -> Result<(), String> {
         self.consensus.verify_block_author(&block)?;
         block.validate_block(&self.db)?;
 

@@ -108,7 +108,7 @@ impl WebSocket {
                 };
     
                 let blockchain = blockchain.lock().await;
-                if let Err(e) = blockchain.block_import(&block) {
+                if let Err(e) = blockchain.import_block(&block) {
                     eprintln!("Failed to add block: {}", e);
                     return Some(
                         serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to add block: {}", e)}, "id": id})

@@ -106,7 +106,7 @@ fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), St
         return Err("Current author not found".to_string());
     }
 
-    blockchain.block_import(block)
+    blockchain.import_block(block)
 }
 
 fn get_previous_hash(blockchain: &Blockchain) -> String {
