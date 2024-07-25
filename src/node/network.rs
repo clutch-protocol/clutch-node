@@ -1,9 +1,12 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
+use crate::node::p2p_server::MessageType;
 use crate::node::p2p_server::P2PServer;
 use crate::node::p2p_server::P2PServerCommand;
+use crate::node::rlp_encoding::encode;
 use crate::node::websocket::WebSocket;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::signal;
 use tokio::sync::{mpsc, oneshot, Mutex};
 
@@ -14,21 +17,23 @@ impl Network {
         let blockchain_arc = Arc::new(Mutex::new(blockchain));
 
         let (libp2p_shutdown_tx, libp2p_shutdown_rx) = oneshot::channel();
-        let (command_tx, command_rx) = mpsc::channel(32);
+        let (command_tx_p2p, command_rx_p2p) = mpsc::channel(32);
         Self::start_libp2p(
             config,
             Arc::clone(&blockchain_arc),
             libp2p_shutdown_tx,
-            command_rx,
+            command_rx_p2p,
         );
 
         let (websocket_shutdown_tx, websocket_shutdown_rx) = oneshot::channel();
         Self::start_websocket(
             config,
             Arc::clone(&blockchain_arc),
-            command_tx,
+            command_tx_p2p.clone(),
             websocket_shutdown_tx,
         );
+
+        Self::start_authoring_job(Arc::clone(&blockchain_arc), 1, command_tx_p2p.clone());
 
         Self::wait_for_shutdown_signal(
             libp2p_shutdown_rx,
@@ -79,16 +84,44 @@ impl Network {
     fn start_websocket(
         config: &AppConfig,
         blockchain: Arc<Mutex<Blockchain>>,
-        command_tx: tokio::sync::mpsc::Sender<P2PServerCommand>,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
         websocket_shutdown_tx: oneshot::Sender<()>,
     ) {
         let websocket_addr = config.websocket_addr.clone();
 
         tokio::spawn(async move {
-            if let Err(e) = WebSocket::run(&websocket_addr, blockchain, command_tx).await {
+            if let Err(e) = WebSocket::run(&websocket_addr, blockchain, command_tx_p2p).await {
                 eprintln!("Error starting WebSocket server: {}", e);
             }
             let _ = websocket_shutdown_tx.send(());
+        });
+    }
+
+    pub fn start_authoring_job(
+        blockchain: Arc<Mutex<Blockchain>>,
+        interval_secs: u64,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
+    ) {
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(interval_secs));
+            loop {
+                interval.tick().await;
+                let blockchain = blockchain.lock().await;
+                match blockchain.author_new_block() {
+                    Ok(block) => {
+                        let encoded_block = encode(&block);
+                        P2PServer::gossip_message(
+                            command_tx_p2p.clone(),
+                            MessageType::Block,
+                            &encoded_block,
+                        )
+                        .await;
+                    }
+                    Err(e) => {
+                        eprintln!("Error authoring new block: {}", e);
+                    }
+                }
+            }
         });
     }
 }

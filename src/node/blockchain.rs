@@ -90,15 +90,8 @@ impl Blockchain {
         TransactionPool::get_transactions(&self.db)
     }
 
-    pub fn author_new_block(&self) -> Result<Block, String> {
-        let current_author = self.current_author();
-        if current_author != &self.author_public_key {
-            return Err(format!(
-                "This node is not authorized to author a new block at this time. Current authorized author is: {}",
-                current_author
-            ));
-        }
-
+    pub fn author_new_block(&self) -> Result<Block, String> {     
+        
         let latest_block = match self.get_latest_block() {
             Some(block) => block,
             None => return Err("Failed to get the latest block in author_new_block".to_string()),

@@ -17,14 +17,14 @@ impl WebSocket {
     pub async fn run(
         addr: &str,
         blockchain: Arc<Mutex<Blockchain>>,
-        command_tx: tokio::sync::mpsc::Sender<P2PServerCommand>,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
     ) -> Result<(), Box<dyn Error>> {
         let listener = TcpListener::bind(addr).await?;
         println!("WebSocket server started on {}", addr);
 
         while let Ok((stream, _)) = listener.accept().await {
             let blockchain = Arc::clone(&blockchain);
-            tokio::spawn(Self::handle_connection(stream, blockchain, command_tx.clone()));
+            tokio::spawn(Self::handle_connection(stream, blockchain, command_tx_p2p.clone()));
         }
 
         Ok(())
@@ -33,7 +33,7 @@ impl WebSocket {
     async fn handle_connection(
         stream: TcpStream,
         blockchain: Arc<Mutex<Blockchain>>,
-        command_tx: tokio::sync::mpsc::Sender<P2PServerCommand>,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
     ) {
         match accept_async(stream).await {
             Ok(ws_stream) => {
@@ -42,7 +42,7 @@ impl WebSocket {
                 while let Some(Ok(message)) = ws_receiver.next().await {
                     if let Message::Text(text) = message {
                         println!("Received from websocket: {}", text);
-                        let response = Self::handle_json_rpc_request(&text, &blockchain, command_tx.clone()).await;
+                        let response = Self::handle_json_rpc_request(&text, &blockchain, command_tx_p2p.clone()).await;
 
                         if let Some(response) = response {
                             if let Err(e) = ws_sender.send(Message::Text(response)).await {
@@ -60,7 +60,7 @@ impl WebSocket {
     async fn handle_json_rpc_request(
         request: &str,
         blockchain: &Arc<Mutex<Blockchain>>,
-        command_tx: tokio::sync::mpsc::Sender<P2PServerCommand>,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
     ) -> Option<String> {
         let request: serde_json::Value = match serde_json::from_str(request) {
             Ok(val) => val,
@@ -91,7 +91,7 @@ impl WebSocket {
                 
                 // gossip transcation                                        
                 let encoded_tx = encode(&transaction);
-                P2PServer::gossip_message(command_tx,MessageType::Transaction, &encoded_tx).await;
+                P2PServer::gossip_message(command_tx_p2p,MessageType::Transaction, &encoded_tx).await;
 
                 return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction imported", "id": id}).to_string());
                 
@@ -120,7 +120,7 @@ impl WebSocket {
     
                 // Gossip block
                 let encoded_block = encode(&block);
-                P2PServer::gossip_message(command_tx, MessageType::Block, &encoded_block).await;
+                P2PServer::gossip_message(command_tx_p2p, MessageType::Block, &encoded_block).await;
     
                 return Some(
                     serde_json::json!({"jsonrpc": "2.0", "result": "Block imported", "id": id})
@@ -144,7 +144,7 @@ impl WebSocket {
     
                 // Gossip new block
                 let encoded_block = encode(&new_block);
-                P2PServer::gossip_message(command_tx, MessageType::Block, &encoded_block).await;
+                P2PServer::gossip_message(command_tx_p2p, MessageType::Block, &encoded_block).await;
     
                 return Some(
                     serde_json::json!({"jsonrpc": "2.0", "result": "New block authored", "id": id})

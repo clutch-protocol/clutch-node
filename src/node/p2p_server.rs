@@ -45,7 +45,7 @@ impl P2PServer {
     }
 
     pub async fn gossip_message(
-        command_tx: Sender<P2PServerCommand>,
+        command_tx_p2p: Sender<P2PServerCommand>,
         message_type: MessageType,
         message: &Vec<u8>,
     ) {
@@ -53,7 +53,7 @@ impl P2PServer {
         message_with_type.extend(message);
 
         let (response_tx, response_rx) = oneshot::channel();
-        command_tx
+        command_tx_p2p
             .send(P2PServerCommand::SendMessage {
                 message: message_with_type,
                 response_tx,
