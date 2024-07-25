@@ -93,9 +93,10 @@ impl Blockchain {
     pub fn author_new_block(&self) -> Result<Block, String> {
         let current_author = self.current_author();
         if current_author != &self.author_public_key {
-            return Err(
-                "This node is not authorized to author a new block at this time.".to_string(),
-            );
+            return Err(format!(
+                "This node is not authorized to author a new block at this time. Current authorized author is: {}",
+                current_author
+            ));
         }
 
         let latest_block = match self.get_latest_block() {
