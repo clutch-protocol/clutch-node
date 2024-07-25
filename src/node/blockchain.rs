@@ -44,9 +44,9 @@ impl Blockchain {
         if self.developer_mode {
             self.blockchain_write_to_file();
             self.cleanup_db();
-        } 
+        }
     }
-    
+
     fn cleanup_db(&mut self) {
         self.db.close();
         match self.db.delete_database(self.name.as_str()) {
@@ -54,8 +54,8 @@ impl Blockchain {
             Err(e) => println!("Error cleaning up database: {}", e),
         }
     }
-    
-    pub fn block_import(&mut self, block: &Block) -> Result<(), String> {
+
+    pub fn block_import(&self, block: &Block) -> Result<(), String> {
         if !self.consensus.verify_block_author(&block) {
             return Err(String::from("Block author is invalid."));
         }
@@ -81,8 +81,8 @@ impl Blockchain {
         self.consensus.current_author()
     }
 
-    pub fn add_transaction_to_pool(&self, transaction: &Transaction) -> Result<(), String> {        
-        transaction.validate_transaction(&self.db)?;                
+    pub fn add_transaction_to_pool(&self, transaction: &Transaction) -> Result<(), String> {
+        transaction.validate_transaction(&self.db)?;
         TransactionPool::add_transaction(&self.db, &transaction)
     }
 

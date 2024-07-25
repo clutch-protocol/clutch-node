@@ -1,3 +1,4 @@
+use crate::node::block::Block;
 use crate::node::blockchain::Blockchain;
 use crate::node::rlp_encoding::decode;
 use crate::node::transaction::Transaction;
@@ -8,6 +9,7 @@ use libp2p::{
     mdns, mdns::Event as MdnsEvent, noise, swarm::NetworkBehaviour, swarm::Swarm,
     swarm::SwarmEvent, tcp, yamux, Multiaddr, PeerId,
 };
+
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::hash::{Hash, Hasher};
@@ -240,19 +242,19 @@ impl P2PServer {
                     eprintln!("Failed to decode transaction: {:?}", e);
                 }
             },
-            // 0x02 => match decode::<Block>(payload) {
-            //     Ok(block) => {
-            //         println!("Decoded block: {:?}", &block);
-            //         handle_received_block(&block, blockchain).await;
-            //     }
-            //     Err(e) => {
-            //         eprintln!("Failed to decode block: {:?}", e);
-            //     }
-            // },
+            Some(MessageType::Block) => match decode::<Block>(payload) {
+                Ok(block) => {
+                    println!("Decoded block: {:?}", &block);
+                    handle_received_block(&block, blockchain).await;
+                }
+                Err(e) => {
+                    eprintln!("Failed to decode block: {:?}", e);
+                }
+            },
             _ => {
                 eprintln!("Unknown message type: {:?}", message_type);
             }
-        }       
+        }
     }
 }
 
@@ -260,15 +262,26 @@ async fn handle_received_transaction(
     transaction: &Transaction,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) {
-    let transaction_added = {
+    let result = {
         let blockchain = blockchain.lock().await;
-        blockchain.add_transaction_to_pool(&transaction).is_ok()
+        blockchain.add_transaction_to_pool(&transaction)
     };
 
-    if transaction_added {
-        println!("Transaction added to mempool from P2P");
-    } else {
-        println!("Failed to add transaction to pool");
+    match result {
+        Ok(_) => println!("Transaction added to mempool from P2P"),
+        Err(e) => println!("Failed to add transaction to pool: {:?}", e),
+    }
+}
+
+async fn handle_received_block(block: &Block, blockchain: &Arc<Mutex<Blockchain>>) {
+    let result = {
+        let blockchain = blockchain.lock().await;
+        blockchain.block_import(&block)
+    };
+
+    match result {
+        Ok(_) => println!("Block added to blockchain from P2P"),
+        Err(e) => println!("Failed to add block to blockchain: {:?}", e),
     }
 }
 
