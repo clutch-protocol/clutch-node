@@ -1,5 +1,6 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::transaction::Transaction;
+use crate::node::block::Block;
 use crate::node::p2p_server::{MessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;
 use futures::{stream::StreamExt, SinkExt};
@@ -94,6 +95,37 @@ impl WebSocket {
 
                 return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
                 
+            }
+            "add_block" => {
+                let block: Block = match serde_json::from_value(params.clone()) {
+                    Ok(b) => b,
+                    Err(_) => {
+                        return Some(
+                            serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": id})
+                                .to_string(),
+                        )
+                    }
+                };
+    
+                let blockchain = blockchain.lock().await;
+                if let Err(e) = blockchain.block_import(&block) {
+                    eprintln!("Failed to add block: {}", e);
+                    return Some(
+                        serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to add block: {}", e)}, "id": id})
+                            .to_string(),
+                    );
+                }
+    
+                println!("Block added to blockchain from WSS.");
+    
+                // Gossip block
+                let encoded_block = encode(&block);
+                P2PServer::gossip_message(command_tx, MessageType::Block, &encoded_block).await;
+    
+                return Some(
+                    serde_json::json!({"jsonrpc": "2.0", "result": "Block added", "id": id})
+                        .to_string(),
+                );
             }
             _ => Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": id}).to_string()),
         }
