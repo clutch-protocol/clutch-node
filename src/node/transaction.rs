@@ -135,6 +135,21 @@ impl Transaction {
         SignatureKeys::verify(from_public_key, data, r, s, v)
     }
 
+    pub fn validate_transactions(
+        db: &Database,
+        transactions: &Vec<Transaction>,
+    ) -> Result<(), String> {
+        if transactions.is_empty() {
+            return Err("No transactions to validate.".to_string());
+        }
+    
+        for tx in transactions.iter() {
+            tx.validate_transaction(&db)?;
+        }
+    
+        Ok(())
+    }
+
     pub fn validate_transaction(&self, db: &Database) -> Result<(), String> {
         self.verify_signature()?;
         self.verify_nonce(db)?;

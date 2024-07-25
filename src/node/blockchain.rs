@@ -67,11 +67,7 @@ impl Blockchain {
     pub fn import_block(&self, block: &Block) -> Result<(), String> {
         self.consensus.verify_block_author(&block)?;
         block.validate_block(&self.db)?;
-
-        for tx in block.transactions.iter() {
-            tx.validate_transaction(&self.db)?;
-        }
-
+        Transaction::validate_transactions(&self.db, &block.transactions)?;
         Block::add_block_to_chain(&self.db, block);
 
         Ok(())
