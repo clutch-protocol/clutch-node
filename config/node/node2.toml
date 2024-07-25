@@ -1,11 +1,11 @@
 libp2p_topic_name = "test-net"
 blockchain_name = "clutch-node-test-2"
-author_public_key = "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20"
-author_secret_key = "0883ddd3d07303b87c954b0c9383f7b78f45e002520fc03a8adc80595dbf6509"
+author_public_key = "0x6fc11ba44483201f6e9c5eba6435805bb94ad080"
+author_secret_key = "9aba0d89bfa358d27cfc119657537b9c92c8e38a35d2333ddd5c62e6d1a9b15e"
 developer_mode = true
 websocket_addr = "127.0.0.1:8082"
 authorities = [
     "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20",
-    # "0x6fc11ba44483201f6e9c5eba6435805bb94ad080",
-    # "0xc4f3f661a43e099aedb8e396d9de1a831a1b4adc",
+    "0x6fc11ba44483201f6e9c5eba6435805bb94ad080",
+    "0xc4f3f661a43e099aedb8e396d9de1a831a1b4adc",
 ]
