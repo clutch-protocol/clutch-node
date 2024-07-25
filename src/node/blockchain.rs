@@ -85,12 +85,7 @@ impl Blockchain {
         TransactionPool::get_transactions(&self.db)
     }
 
-    pub fn author_new_block(&self) -> Result<Block, String> {
-        let transactions = match TransactionPool::get_transactions(&self.db) {
-            Ok(transactions) => transactions,
-            Err(e) => return Err(format!("Failed to get transactions from pool: {}", e)),
-        };
-
+    pub fn author_new_block(&self) -> Result<Block, String> {        
         let latest_block = match self.get_latest_block() {
             Some(block) => block,
             None => return Err("Failed to get the latest block in author_new_block".to_string()),
@@ -98,6 +93,10 @@ impl Blockchain {
 
         let index = latest_block.index + 1;
         let previous_hash = latest_block.hash;
+        let transactions = match TransactionPool::get_transactions(&self.db) {
+            Ok(transactions) => transactions,
+            Err(e) => return Err(format!("Failed to get transactions from pool: {}", e)),
+        };
 
         let new_block = Block::new_block(index, previous_hash, transactions);
         Ok(new_block)
