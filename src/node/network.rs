@@ -118,7 +118,7 @@ impl Network {
                         .await;
                     }
                     Err(e) => {
-                        eprintln!("Error authoring new block: {}", e);
+                        // eprintln!("Error authoring new block: {}", e);
                     }
                 }
             }
