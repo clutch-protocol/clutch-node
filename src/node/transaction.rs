@@ -137,29 +137,29 @@ impl Transaction {
 
     pub fn validate_transaction(&self, db: &Database) -> Result<(), String> {
         self.verify_signature()?;
-
-        if !self.verify_nonce(&db) {
-            return Err("Verification failed: Nonce does not match.".to_string());
-        }
-
+        self.verify_nonce(db)?;
         self.verify_state(db)?;
 
         Ok(())
     }
 
-    fn verify_nonce(&self, db: &Database) -> bool {
-        let last_nonce = AccountState::get_current_nonce(&self.from, &db);
-
-        let nonce = self.nonce;
-        if nonce != last_nonce + 1 {
-            println!(
-                "Verification failed: Incorrect nonce for transaction from '{}'. Expected: {}, got: {}.",
-                self.from, last_nonce + 1, self.nonce
-            );
-            return false;
+    fn verify_nonce(&self, db: &Database) -> Result<bool, String> {
+        match AccountState::get_current_nonce(&self.from, db) {
+            Ok(last_nonce) => {
+                let nonce = self.nonce;
+                if nonce != last_nonce + 1 {
+                    return Err(format!(
+                        "Verification failed: Incorrect nonce for transaction from '{}'. Expected: {}, got: {}.",
+                        self.from, last_nonce + 1, nonce
+                    ));
+                }
+                Ok(true)
+            }
+            Err(e) => Err(format!(
+                "Verification failed: Unable to retrieve nonce for transaction from '{}'. Error: {}",
+                self.from, e
+            )),
         }
-
-        true
     }
 
     fn verify_state(&self, db: &Database) -> Result<(), String> {
@@ -186,7 +186,7 @@ impl Transaction {
         };
 
         let (nonce_key, nonce_serialized) =
-            AccountState::increase_account_nonce_key(&self.from, db);
+            AccountState::increase_account_nonce_key(&self.from, db).unwrap();
 
         let mut results = states;
         results.push(Some((nonce_key, nonce_serialized)));
