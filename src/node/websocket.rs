@@ -93,10 +93,10 @@ impl WebSocket {
                 let encoded_tx = encode(&transaction);
                 P2PServer::gossip_message(command_tx,MessageType::Transaction, &encoded_tx).await;
 
-                return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction added", "id": id}).to_string());
+                return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction imported", "id": id}).to_string());
                 
             }
-            "add_block" => {
+            "import_block" => {
                 let block: Block = match serde_json::from_value(params.clone()) {
                     Ok(b) => b,
                     Err(_) => {
@@ -111,19 +111,19 @@ impl WebSocket {
                 if let Err(e) = blockchain.import_block(&block) {
                     eprintln!("Failed to add block: {}", e);
                     return Some(
-                        serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to add block: {}", e)}, "id": id})
+                        serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to import block: {}", e)}, "id": id})
                             .to_string(),
                     );
                 }
     
-                println!("Block added to blockchain from WSS.");
+                println!("Block imported to blockchain from WSS.");
     
                 // Gossip block
                 let encoded_block = encode(&block);
                 P2PServer::gossip_message(command_tx, MessageType::Block, &encoded_block).await;
     
                 return Some(
-                    serde_json::json!({"jsonrpc": "2.0", "result": "Block added", "id": id})
+                    serde_json::json!({"jsonrpc": "2.0", "result": "Block imported", "id": id})
                         .to_string(),
                 );
             }
