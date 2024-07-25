@@ -9,7 +9,6 @@ use crate::node::network::Network;
 use crate::node::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
 
-#[derive(Debug)]
 pub struct Blockchain {
     pub name: String,
     db: Database,
@@ -108,8 +107,9 @@ impl Blockchain {
             Err(e) => return Err(format!("Failed to get transactions from pool: {}", e)),
         };
 
-        let new_block = Block::new_block(index, previous_hash, transactions);
-        // new_block.sign(author, secret_key);
+        let mut new_block = Block::new_block(index, previous_hash, transactions);
+        new_block.sign(&self.author_public_key, &self.author_secret_key);
+        self.import_block(&new_block)?;
         Ok(new_block)
     }
 

@@ -6,6 +6,6 @@ developer_mode = true
 websocket_addr = "127.0.0.1:8082"
 authorities = [
     "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20",
-    "0x6fc11ba44483201f6e9c5eba6435805bb94ad080",
-    "0xc4f3f661a43e099aedb8e396d9de1a831a1b4adc",
+    # "0x6fc11ba44483201f6e9c5eba6435805bb94ad080",
+    # "0xc4f3f661a43e099aedb8e396d9de1a831a1b4adc",
 ]

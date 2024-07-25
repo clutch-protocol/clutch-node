@@ -69,5 +69,15 @@
         "hash": "bb2bf39a1a542346d3d4d7e33d4f8ee26aa18f022a7510aafaed3a3ce3e88b90"
       }
     ]
+  },
+  {
+    "index": 1,
+    "previous_hash": "2282c46637becfbe1f0f11d6d7d878ba1fa6c41fe5cad3bbdede42f6e5ac36e3",
+    "author": "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20",
+    "signature_r": "2314fe751fc4ee88ed7d59a69607827bacab79cdafe81224e2b1d72089adb457",
+    "signature_s": "49b3c4998fe2b285c22928ecec862e2e54479760c6db20f39a4311081d29158d",
+    "signature_v": 27,
+    "hash": "e30cf13cff9086f2455b1f56913ae4689413761b349c39eca88d8615760063e1",
+    "transactions": []
   }
 ]

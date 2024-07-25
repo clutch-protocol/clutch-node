@@ -126,6 +126,30 @@ impl WebSocket {
                     serde_json::json!({"jsonrpc": "2.0", "result": "Block imported", "id": id})
                         .to_string(),
                 );
+            },
+            "author_new_block" => {          
+                let blockchain = blockchain.lock().await;
+                let new_block = match blockchain.author_new_block() {
+                    Ok(block) => block,
+                    Err(e) => {
+                        eprintln!("Failed to author new block: {}", e);
+                        return Some(
+                            serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to author new block: {}", e)}, "id": id})
+                                .to_string(),
+                        );
+                    }
+                };
+    
+                println!("New block authored and added to the blockchain from WSS.");
+    
+                // Gossip new block
+                let encoded_block = encode(&new_block);
+                P2PServer::gossip_message(command_tx, MessageType::Block, &encoded_block).await;
+    
+                return Some(
+                    serde_json::json!({"jsonrpc": "2.0", "result": "New block authored", "id": id})
+                        .to_string(),
+                );
             }
             _ => Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": id}).to_string()),
         }
