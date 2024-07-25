@@ -10,9 +10,9 @@ use std::time::Duration;
 use tokio::signal;
 use tokio::sync::{mpsc, oneshot, Mutex};
 
-pub struct Network;
+pub struct NodeServices;
 
-impl Network {
+impl NodeServices {
     pub async fn start_services(config: &AppConfig, blockchain: Blockchain) {
         let blockchain_arc = Arc::new(Mutex::new(blockchain));
 

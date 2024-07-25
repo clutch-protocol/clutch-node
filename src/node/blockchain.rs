@@ -5,7 +5,7 @@ use crate::node::aura::Aura;
 use crate::node::block::Block;
 use crate::node::database::Database;
 use crate::node::file_utils::write_to_file;
-use crate::node::network::Network;
+use crate::node::node_services::NodeServices;
 use crate::node::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
 
@@ -111,7 +111,7 @@ impl Blockchain {
     }
 
     pub async fn start_network_services(self, config: &AppConfig) {
-        Network::start_services(config, self).await;
+        NodeServices::start_services(config, self).await;
     }
 
     fn blockchain_write_to_file(&mut self) {

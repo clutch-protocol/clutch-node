@@ -10,7 +10,7 @@ pub mod coordinate;
 pub mod database;
 pub mod file_utils;
 pub mod function_call;
-pub mod network;
+pub mod node_services;
 pub mod p2p_server;
 pub mod ride_acceptance;
 pub mod ride_cancel;
