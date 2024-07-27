@@ -1,5 +1,5 @@
 # Start with the official Rust image
-FROM rust:latest
+FROM rust:latest AS builder
 
 # Install libclang and other necessary dependencies
 RUN apt-get update && \
@@ -8,15 +8,31 @@ RUN apt-get update && \
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy
-COPY Cargo.toml ./
-COPY Cargo.lock ./
+# Copy Cargo.toml and Cargo.lock files
+COPY Cargo.toml Cargo.lock ./
+
+# Copy the source code and config directory
 COPY src ./src
 COPY config ./config
 
-# Build dependencies to create the Cargo.lock file
+# Build the project in release mode
 RUN cargo build --release
 
+# Second stage: create a smaller image
+FROM alpine:latest
+
+# Install necessary libraries
+RUN apk add --no-cache libgcc libstdc++
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy the binary from the builder stage
+COPY --from=builder /usr/src/app/target/release/clutch-node ./
+
+# Copy the config directory
+COPY --from=builder /usr/src/app/config ./config
+
 # Set the startup command to run the application with environment argument
-ENTRYPOINT ["./target/release/clutch-node", "--env"]
+ENTRYPOINT ["./clutch-node", "--env"]
 CMD ["node1"]
