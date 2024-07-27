@@ -76,7 +76,6 @@ impl P2PServer {
         mut command_rx: tokio::sync::mpsc::Receiver<P2PServerCommand>,
     ) -> Result<(), Box<dyn Error>> {
         Self::setup_tracing()?;
-        Self::listen_for_connections(&mut self.behaviour)?;
         self.process_messages(blockchain, &mut command_rx).await
     }
 
@@ -142,11 +141,6 @@ impl P2PServer {
         let topic = IdentTopic::new(topic_name);
         swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
         Ok(topic)
-    }
-
-    fn listen_for_connections(swarm: &mut Swarm<P2PBehaviour>) -> Result<(), Box<dyn Error>> {
-        //swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
-        Ok(())
     }
 
     async fn process_messages(
