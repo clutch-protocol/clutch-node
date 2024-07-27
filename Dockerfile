@@ -1,22 +1,20 @@
 # Start with the official Rust image
 FROM rust:latest
 
+# Install libclang and other necessary dependencies
+RUN apt-get update && \
+    apt-get install -y clang llvm-dev libclang-dev
+
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy the Cargo.toml file
+# Copy
 COPY Cargo.toml ./
-
-# This step will build the dependencies and create the Cargo.lock file
-RUN cargo build --release
-
-# Copy the source code
+COPY Cargo.lock ./
 COPY src ./src
-
-# Copy the config directory
 COPY config ./config
 
-# Build the application
+# Build dependencies to create the Cargo.lock file
 RUN cargo build --release
 
 # Set the startup command to run the application with environment argument

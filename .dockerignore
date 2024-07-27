@@ -1,6 +1,5 @@
 target/
 doc/
-Cargo.lock
 *_blockchain.db
 
 # IDE-specific files
