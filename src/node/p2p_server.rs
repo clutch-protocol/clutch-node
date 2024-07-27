@@ -84,7 +84,10 @@ impl P2PServer {
         tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_default_env())
             .try_init()
-            .expect("Failed to setup tracing");
+            .or_else(|_| {
+                println!("Global default trace dispatcher has already been set");
+                Ok::<(), Box<dyn Error>>(())
+            })?;
         Ok(())
     }
 
@@ -312,5 +315,70 @@ impl MessageType {
             0x02 => Some(MessageType::Block),
             _ => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio::sync::mpsc;
+
+    #[tokio::test]
+    async fn test_p2p_server_gossip_message() {
+        let topic_name = "test-topic";
+
+        // Create two P2P servers
+        let mut server1 = P2PServer::new(topic_name).unwrap();
+        let mut server2 = P2PServer::new(topic_name).unwrap();
+
+        // Set up blockchain instances
+
+        let blockchain = Arc::new(Mutex::new(initialize_blockchain(
+            "clutch-node-test-1".to_string(),
+        )));
+        let b1 = Arc::clone(&blockchain);
+        let b2 = Arc::clone(&blockchain);
+        // Set up command channels
+        let (command_tx1, command_rx1) = mpsc::channel(32);
+        let (command_tx2, command_rx2) = mpsc::channel(32);
+
+        // Run servers in the background
+        tokio::spawn(async move {
+            server1.run(b1, command_rx1).await.unwrap();
+        });
+        tokio::spawn(async move {
+            server2.run(b2, command_rx2).await.unwrap();
+        });
+
+        // Wait for servers to start
+        tokio::time::sleep(Duration::from_secs(1)).await;
+
+        // Send a message from server1 to server2
+        let message = b"Hello, world!".to_vec();
+        P2PServer::gossip_message(command_tx1.clone(), MessageType::Transaction, &message).await;
+
+        // Wait for the message to propagate
+        tokio::time::sleep(Duration::from_secs(5)).await;
+
+        // Check if the message was received by server2
+        // This part depends on how you want to validate the message reception.
+        // For simplicity, we're printing the message in the handle_gossipsub_message method.
+        // You can add a flag or counter to verify it here.
+
+        // Shut down the servers
+        drop(command_tx1);
+        drop(command_tx2);
+        let b3 = Arc::clone(&blockchain);
+        b3.lock().await.shutdown_blockchain();
+    }
+
+    fn initialize_blockchain(name: String) -> Blockchain {
+        Blockchain::new(
+            name,
+            "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20".to_string(),
+            "0883ddd3d07303b87c954b0c9383f7b78f45e002520fc03a8adc80595dbf6509".to_string(),
+            true,
+            vec!["0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20".to_string()],
+        )
     }
 }
