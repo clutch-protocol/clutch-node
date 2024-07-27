@@ -122,6 +122,7 @@ impl P2PServer {
                     mdns::Config::default(),
                     key.public().to_peer_id(),
                 )?;
+                
                 Ok(P2PBehaviour { gossipsub, mdns })
             })?
             .with_swarm_config(|c| c.with_idle_connection_timeout(Duration::from_secs(60)))
