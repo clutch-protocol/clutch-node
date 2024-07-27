@@ -11,6 +11,7 @@ pub struct AppConfig {
     pub developer_mode: bool,
     pub websocket_addr: String,
     pub authorities: Vec<String>,
+    pub listen_addrs: Vec<String>,
 }
 
 impl AppConfig {

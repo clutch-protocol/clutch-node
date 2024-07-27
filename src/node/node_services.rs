@@ -70,7 +70,10 @@ impl NodeServices {
         libp2p_shutdown_tx: oneshot::Sender<()>,
         command_rx: tokio::sync::mpsc::Receiver<P2PServerCommand>,
     ) {
-        let mut p2p_server = P2PServer::new(&config.libp2p_topic_name).unwrap();
+        let listen_addrs: Vec<&str> = config.listen_addrs.iter().map(|s| s.as_str()).collect();
+
+        let mut p2p_server =
+            P2PServer::new(&config.libp2p_topic_name, &listen_addrs).unwrap();
         tokio::spawn(async move {
             {
                 if let Err(e) = p2p_server.run(Arc::clone(&blockchain), command_rx).await {
@@ -117,7 +120,7 @@ impl NodeServices {
                         )
                         .await;
                     }
-                    Err(e) => {
+                    Err(_e) => {
                         // eprintln!("Error authoring new block: {}", e);
                     }
                 }
