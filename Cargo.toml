@@ -3,6 +3,11 @@ name = "clutch_node"
 version = "0.1.0"
 edition = "2021"
 
+# Specify the binary target
+[[bin]]
+name = "clutch-node"
+path = "src/main.rs"
+
 [dev-dependencies]
 serial_test = "3.1.1"
 

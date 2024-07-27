@@ -1,31 +1,24 @@
-# Use a Rust base image
+# Start with the official Rust image
 FROM rust:latest
 
-# Install Clang
-RUN apt-get update && \
-    apt-get install -y clang && \
-    rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
-
-# SET ENV
-ENV DB_PATH="/clutch-node-db"
-
 # Set the working directory inside the container
-WORKDIR /clutch-node
+WORKDIR /usr/src/app
 
-# First, copy only the files needed for compiling dependencies
+# Copy the Cargo.toml file
 COPY Cargo.toml ./
 
-# Create a dummy main file to build and cache dependencies
-RUN mkdir src && \
-    echo "fn main() {}" > src/main.rs && \
-    cargo build && \
-    rm -rf src
+# This step will build the dependencies and create the Cargo.lock file
+RUN cargo build --release
 
-# Copy the dependency manifest files
-COPY . .
+# Copy the source code
+COPY src ./src
 
-# Build dependencies to cache them
-RUN cargo build
+# Copy the config directory
+COPY config ./config
 
-# Command to run when starting the container
-CMD ["cargo", "run"]
+# Build the application
+RUN cargo build --release
+
+# Set the startup command to run the application with environment argument
+ENTRYPOINT ["./target/release/clutch-node", "--env"]
+CMD ["node1"]
