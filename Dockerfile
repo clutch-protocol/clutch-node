@@ -1,13 +1,11 @@
 # Start with the official Rust image as the builder stage
-FROM rust:latest AS builder
+FROM rust:1.80.0
 
-# Install libclang and other necessary dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends clang llvm-dev libclang-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install dependencies required for building librocksdb-sys
+RUN apt-get update && apt-get install -y clang
 
 # Set the working directory inside the container
-WORKDIR /usr/src/app
+WORKDIR /usr/src/clutch-node
 
 # Copy Cargo.toml and Cargo.lock files separately to leverage Docker cache
 COPY Cargo.toml Cargo.lock ./
@@ -20,22 +18,7 @@ COPY src ./src
 COPY config ./config
 
 # Build the project in release mode
-RUN cargo build --release && \
-    strip target/release/clutch-node
+RUN cargo build --release
 
-# Second stage: create a smaller image
-FROM alpine:latest
-
-# Install necessary libraries
-RUN apk add --no-cache libgcc libstdc++
-
-# Set the working directory inside the container
-WORKDIR /usr/src/app
-
-# Copy the binary and config directory from the builder stage
-COPY --from=builder /usr/src/app/target/release/clutch-node ./
-COPY --from=builder /usr/src/app/config ./config
-
-# Set the startup command to run the application with environment argument
-ENTRYPOINT ["./clutch-node", "--env"]
-CMD ["node1"]
+# Set the command to run the release binary
+CMD ["./target/release/clutch-node", "--env", "node1"]
