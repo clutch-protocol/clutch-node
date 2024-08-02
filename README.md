@@ -44,7 +44,7 @@ If you have any questions or comments, please feel free to contact us at mehran.
 
 ## Dcoker
 
-- Building the Project
+### Building the Project
 - The project is built using Docker to ensure a consistent environment. The provided Dockerfile handles all dependencies and builds the project in release mode.
 - docker build -t clutch-node .
 
