@@ -106,7 +106,7 @@ impl Blockchain {
 
         let mut new_block = Block::new_block(index, previous_hash, transactions);
         new_block.sign(&self.author_public_key, &self.author_secret_key);
-        self.import_block(&new_block)?;
+        self.import_block(&new_block)?;        
         Ok(new_block)
     }
 

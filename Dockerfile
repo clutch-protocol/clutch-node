@@ -10,12 +10,17 @@ WORKDIR /usr/src/clutch-node
 # Copy Cargo.toml and Cargo.lock files separately to leverage Docker cache
 COPY Cargo.toml Cargo.lock ./
 
-# Build dependencies
-RUN cargo fetch
+# This step will create a dummy main.rs, and build the dependencies.
+# This will leverage the caching of Docker layers, so subsequent builds will be faster.
+RUN mkdir src
+RUN echo "fn main() {}" > src/main.rs
+RUN cargo build --release
 
-# Copy the source code and config directory
+# Remove the dummy main.rs file
+RUN rm -f src/main.rs
+
+# Copy the actual source code
 COPY src ./src
-# COPY config ./config
 
 # Build the project in release mode
 RUN cargo build --release
