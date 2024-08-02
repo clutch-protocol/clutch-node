@@ -39,9 +39,10 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 If you have any questions or comments, please feel free to contact us at mehran.mazhar@gmail.com.
 
-## Dcoker commands TO BUILD and bash
+## Dcoker
 
-- docker build -t clutch-node:dev . && docker run -v c:\clutch-node:/clutch-node-db -it --rm --name clutch-node-container clutch-node:dev bash
+- Building the Project
+The project is built using Docker to ensure a consistent environment. The provided Dockerfile handles all dependencies and builds the project in release mode.
 
 ## Instarll Clang on windows
 ECHO %LIBCLANG_PATH%
