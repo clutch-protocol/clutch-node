@@ -54,3 +54,11 @@ You can run the node using Docker. Below are examples of running multiple nodes 
 - docker run --name clutch-node-container-node1 -it --rm -p 8081:8081 clutch-node node1  
 - docker run --name clutch-node-container-node2 -it --rm -p 8082:8082 clutch-node node2  
 - docker run --name clutch-node-container-node3 -it --rm -p 8083:8083 clutch-node node3
+
+- Running Multiple Nodes on Different Networks
+- docker network create clutch-network1
+- docker network create clutch-network2
+- docker network create clutch-network3
+- docker run --name clutch-node-container-node1 -it --rm --network clutch-network1 -p 8081:8081 clutch-node node1  
+- docker run --name clutch-node-container-node2 -it --rm --network clutch-network2 -p 8082:8082 clutch-node node2  
+- docker run --name clutch-node-container-node3 -it --rm --network clutch-network3 -p 8083:8083 clutch-node node3
