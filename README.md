@@ -31,21 +31,19 @@ ECHO %LIBCLANG_PATH%
 SET LIBCLANG_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin
 
 ## Contributing
-
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
 ## License
-
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
-
 If you have any questions or comments, please feel free to contact us at mehran.mazhar@gmail.com.
 
 ## Dcoker
 
 ### Building the Project
-- The project is built using Docker to ensure a consistent environment. The provided Dockerfile handles all dependencies and builds the project in release mode.
+The project is built using Docker to ensure a consistent environment. The provided Dockerfile handles all dependencies and builds the project in release mode.
+
 - docker build -t clutch-node .
 
 ### Running the Node
@@ -56,6 +54,8 @@ You can run the node using Docker. Below are examples of running multiple nodes 
 - docker run --name clutch-node-container-node3 -it --rm -p 8083:8083 clutch-node node3
 
 ### Running Multiple Nodes on Different Networks
+To run multiple nodes, you need to specify different networks and ports:
+
 - docker network create clutch-network1
 - docker network create clutch-network2
 - docker network create clutch-network3
