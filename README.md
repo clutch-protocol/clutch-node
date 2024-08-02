@@ -48,14 +48,14 @@ If you have any questions or comments, please feel free to contact us at mehran.
 - The project is built using Docker to ensure a consistent environment. The provided Dockerfile handles all dependencies and builds the project in release mode.
 - docker build -t clutch-node .
 
-- Running the Node
+### Running the Node
 You can run the node using Docker. Below are examples of running multiple nodes with different configurations.
 
 - docker run --name clutch-node-container-node1 -it --rm -p 8081:8081 clutch-node node1  
 - docker run --name clutch-node-container-node2 -it --rm -p 8082:8082 clutch-node node2  
 - docker run --name clutch-node-container-node3 -it --rm -p 8083:8083 clutch-node node3
 
-- Running Multiple Nodes on Different Networks
+### Running Multiple Nodes on Different Networks
 - docker network create clutch-network1
 - docker network create clutch-network2
 - docker network create clutch-network3
