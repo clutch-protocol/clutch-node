@@ -20,11 +20,9 @@ To get started with Clutch-Node, follow these steps:
 - Clone the repository:
 git clone https://github.com/MehranMazhar/clutch-node
 
-- Install dependencies:
-cd clutch-node
-
 - Start the application:
-cargo run -- --env node1
+- cd clutch-node
+- cargo run -- --env node1
 
 ## Instarll Clang on windows
 ECHO %LIBCLANG_PATH%
