@@ -21,7 +21,7 @@ COPY config ./config
 RUN cargo build --release
 
 # Create a new stage with a smaller base image
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Install required libraries to run the binary
 RUN apt-get update && apt-get install -y libclang-dev libc6 libstdc++6 && apt-get clean

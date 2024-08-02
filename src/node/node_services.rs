@@ -72,8 +72,7 @@ impl NodeServices {
     ) {
         let listen_addrs: Vec<&str> = config.listen_addrs.iter().map(|s| s.as_str()).collect();
 
-        let mut p2p_server =
-            P2PServer::new(&config.libp2p_topic_name, &listen_addrs).unwrap();
+        let mut p2p_server = P2PServer::new(&config.libp2p_topic_name, &listen_addrs).unwrap();
         tokio::spawn(async move {
             {
                 if let Err(e) = p2p_server.run(Arc::clone(&blockchain), command_rx).await {
