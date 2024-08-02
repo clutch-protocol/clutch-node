@@ -25,7 +25,11 @@ cd clutch-node
 cargo install
 
 - Start the application:
-cargo run
+cargo run -- --env node1
+
+## Instarll Clang on windows
+ECHO %LIBCLANG_PATH%
+SET LIBCLANG_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin
 
 ## Contributing
 
@@ -43,7 +47,10 @@ If you have any questions or comments, please feel free to contact us at mehran.
 
 - Building the Project
 The project is built using Docker to ensure a consistent environment. The provided Dockerfile handles all dependencies and builds the project in release mode.
-
-## Instarll Clang on windows
-ECHO %LIBCLANG_PATH%
-SET LIBCLANG_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin
+docker build -t clutch-node .
+<br>
+- Running the Node
+You can run the node using Docker. Below are examples of running multiple nodes with different configurations.
+docker run --name clutch-node-container-node1 -it --rm -p 8081:8081 clutch-node node1  
+docker run --name clutch-node-container-node2 -it --rm -p 8082:8082 clutch-node node2  
+docker run --name clutch-node-container-node3 -it --rm -p 8083:8083 clutch-node node3
