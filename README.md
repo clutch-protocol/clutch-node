@@ -51,6 +51,9 @@ docker build -t clutch-node .
 <br>
 - Running the Node
 You can run the node using Docker. Below are examples of running multiple nodes with different configurations.
+<br>
 docker run --name clutch-node-container-node1 -it --rm -p 8081:8081 clutch-node node1  
+<br>
 docker run --name clutch-node-container-node2 -it --rm -p 8082:8082 clutch-node node2  
+<br>
 docker run --name clutch-node-container-node3 -it --rm -p 8083:8083 clutch-node node3
