@@ -15,7 +15,7 @@ RUN cargo fetch
 
 # Copy the source code and config directory
 COPY src ./src
-COPY config ./config
+# COPY config ./config
 
 # Build the project in release mode
 RUN cargo build --release
