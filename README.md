@@ -13,7 +13,7 @@ Clutch-Node is designed to revolutionize the way we think about ridesharing. By 
 - User Empowerment: Provides users with more control over their ridesharing experiences.
 - Eco-friendly Options: Encourages the use of electric and hybrid vehicles to reduce carbon footprint.
 
-## Getting Started
+## Running the Project Locally
 
 To get started with Clutch-Node, follow these steps:
 
@@ -22,7 +22,6 @@ git clone https://github.com/MehranMazhar/clutch-node
 
 - Install dependencies:
 cd clutch-node
-cargo install
 
 - Start the application:
 cargo run -- --env node1
