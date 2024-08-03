@@ -2,6 +2,7 @@
 name = "clutch_node"
 version = "0.1.0"
 edition = "2021"
+author = "Mehran Mazhar <mehran.mazhar@gmail.com>"
 
 # Specify the binary target
 [[bin]]
