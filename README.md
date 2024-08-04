@@ -57,6 +57,6 @@ To run multiple nodes, you need to specify different networks and ports:
 - docker network create clutch-network1
 - docker network create clutch-network2
 - docker network create clutch-network3
-- docker run --name clutch-node-container-node1 -it --rm --network clutch-network1 -p 8081:8081 clutch-node node1  
-- docker run --name clutch-node-container-node2 -it --rm --network clutch-network2 -p 8082:8082 clutch-node node2  
-- docker run --name clutch-node-container-node3 -it --rm --network clutch-network3 -p 8083:8083 clutch-node node3
+- docker run --name clutch-node-container-node1 -it --rm --network clutch-network1 -p 8081:8081 -p 4001:4001 clutch-node node1  
+- docker run --name clutch-node-container-node2 -it --rm --network clutch-network2 -p 8082:8082 -p 4002:4002 clutch-node node2  
+- docker run --name clutch-node-container-node3 -it --rm --network clutch-network3 -p 8083:8083 -p 4003:4003 clutch-node node3

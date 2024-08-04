@@ -12,6 +12,7 @@ pub struct AppConfig {
     pub websocket_addr: String,
     pub authorities: Vec<String>,
     pub listen_addrs: Vec<String>,
+    pub bootstrap_nodes: Vec<String>,
 }
 
 impl AppConfig {

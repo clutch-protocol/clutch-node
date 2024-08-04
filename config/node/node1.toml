@@ -4,11 +4,11 @@ author_public_key = "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20"
 author_secret_key = "0883ddd3d07303b87c954b0c9383f7b78f45e002520fc03a8adc80595dbf6509"
 developer_mode = true
 websocket_addr = "0.0.0.0:8081"
-listen_addrs  = [        
-    "/ip4/0.0.0.0/tcp/4001"
-]
+listen_addrs = ["/ip4/0.0.0.0/tcp/4001"]
 authorities = [
     "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20",
     "0x6fc11ba44483201f6e9c5eba6435805bb94ad080",
     "0xc4f3f661a43e099aedb8e396d9de1a831a1b4adc",
 ]
+
+bootstrap_nodes = ["/ip4/192.168.1.161/tcp/4002", "/ip4/192.168.1.161/tcp/4003"]

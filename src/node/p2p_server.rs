@@ -34,9 +34,18 @@ pub struct P2PServer {
 }
 
 impl P2PServer {
-    pub fn new(topic_name: &str, listen_addrs: &[&str]) -> Result<Self, Box<dyn Error>> {
+    pub fn new(
+        topic_name: &str,
+        listen_addrs: &[&str],
+        peer_addrs: &[&str],
+    ) -> Result<Self, Box<dyn Error>> {
         let mut swarm = Self::build_swarm(listen_addrs)?;
         let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name)?;
+
+        for peer in peer_addrs {
+            let addr: Multiaddr = peer.parse()?;
+            Swarm::dial(&mut swarm, addr)?;
+        }
 
         Ok(Self {
             behaviour: swarm,
@@ -122,7 +131,7 @@ impl P2PServer {
                     mdns::Config::default(),
                     key.public().to_peer_id(),
                 )?;
-                
+
                 Ok(P2PBehaviour { gossipsub, mdns })
             })?
             .with_swarm_config(|c| c.with_idle_connection_timeout(Duration::from_secs(60)))
@@ -328,8 +337,18 @@ mod tests {
         let topic_name = "test-topic";
 
         // Create two P2P servers
-        let mut server1 = P2PServer::new(topic_name, &["/ip4/127.0.0.1/tcp/4001"]).unwrap();
-        let mut server2 = P2PServer::new(topic_name, &["/ip4/127.0.0.1/tcp/4002"]).unwrap();
+        let mut server1 = P2PServer::new(
+            topic_name,
+            &["/ip4/127.0.0.1/tcp/4001"],
+            &["/ip4/127.0.0.1/tcp/4002"],
+        )
+        .unwrap();
+        let mut server2 = P2PServer::new(
+            topic_name,
+            &["/ip4/127.0.0.1/tcp/4002"],
+            &["/ip4/127.0.0.1/tcp/4001"],
+        )
+        .unwrap();
 
         // Set up blockchain instances
 
