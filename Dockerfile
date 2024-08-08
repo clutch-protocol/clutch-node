@@ -37,9 +37,6 @@ WORKDIR /usr/src/clutch-node
 # Copy the compiled binary from the builder stage
 COPY --from=builder /usr/src/clutch-node/target/release/clutch-node .
 
-# Copy the configuration file
-COPY config ./config
-
 # Set the command to run the release binary
 ENTRYPOINT ["./clutch-node", "--env"]
 CMD ["default"]

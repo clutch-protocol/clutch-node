@@ -1,0 +1,44 @@
+services:
+  node1:
+    image: clutch-node
+    container_name: clutch-node-container-node1
+    networks:
+      - clutch-network1
+    ports:
+      - "8081:8081"
+      - "4001:4001"
+    volumes:
+      - D:/node_config:/usr/src/clutch-node/config
+    command: ["node1"]
+
+  node2:
+    image: clutch-node
+    container_name: clutch-node-container-node2
+    networks:
+      - clutch-network2
+    ports:
+      - "8082:8082"
+      - "4002:4002"
+    volumes:
+      - D:/node_config:/usr/src/clutch-node/config
+    command: ["node2"]
+
+  node3:
+    image: clutch-node
+    container_name: clutch-node-container-node3
+    networks:
+      - clutch-network3
+    ports:
+      - "8083:8083"
+      - "4003:4003"
+    volumes:
+      - D:/node_config:/usr/src/clutch-node/config
+    command: ["node3"]
+
+networks:
+  clutch-network1:
+    external: true
+  clutch-network2:
+    external: true
+  clutch-network3:
+    external: true
