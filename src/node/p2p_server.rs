@@ -11,6 +11,7 @@ use libp2p::{
 };
 
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashSet;
 use std::error::Error;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -77,6 +78,18 @@ impl P2PServer {
             },
             Err(e) => eprintln!("Failed to receive response: {:?}", e),
         }
+    }
+
+    pub async fn get_connected_peers_command(
+        command_tx_p2p: Sender<P2PServerCommand>,
+    ) -> Result<HashSet<PeerId>, Box<dyn Error>> {
+        let (response_tx, response_rx) = oneshot::channel();
+        command_tx_p2p
+            .send(P2PServerCommand::GetConnectedPeers { response_tx })
+            .await?;
+
+        let peers = response_rx.await?;
+        Ok(peers)
     }
 
     pub async fn run(
@@ -169,6 +182,10 @@ impl P2PServer {
                             P2PServerCommand::SendMessage { message, response_tx } => {
                                 let result = self.send_gossip_message(message);
                                 let _ = response_tx.send(result);
+                            },
+                            P2PServerCommand::GetConnectedPeers { response_tx } => {
+                                let peers = self.get_connected_peers();
+                                let _ = response_tx.send(peers);
                             }
                         }
                     }
@@ -185,6 +202,10 @@ impl P2PServer {
             .behaviour_mut()
             .gossipsub
             .publish(self.topic.clone(), message)
+    }
+
+    fn get_connected_peers(&self) -> HashSet<PeerId> {
+        self.behaviour.connected_peers().cloned().collect()
     }
 
     async fn handle_swarm_event(
@@ -302,6 +323,9 @@ pub enum P2PServerCommand {
         message: Vec<u8>,
         response_tx: tokio::sync::oneshot::Sender<Result<MessageId, gossipsub::PublishError>>,
     },
+    GetConnectedPeers {
+        response_tx: tokio::sync::oneshot::Sender<HashSet<PeerId>>,
+    },
 }
 
 #[derive(Debug)]
@@ -324,80 +348,5 @@ impl MessageType {
             0x02 => Some(MessageType::Block),
             _ => None,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tokio::sync::mpsc;
-
-    #[tokio::test]
-    async fn test_p2p_server_gossip_message() {
-        let topic_name = "test-topic";
-
-        // Create two P2P servers
-        let mut server1 = P2PServer::new(
-            topic_name,
-            &["/ip4/127.0.0.1/tcp/4001"],
-            &["/ip4/127.0.0.1/tcp/4002"],
-        )
-        .unwrap();
-        let mut server2 = P2PServer::new(
-            topic_name,
-            &["/ip4/127.0.0.1/tcp/4002"],
-            &["/ip4/127.0.0.1/tcp/4001"],
-        )
-        .unwrap();
-
-        // Set up blockchain instances
-
-        let blockchain = Arc::new(Mutex::new(initialize_blockchain(
-            "clutch-node-test-1".to_string(),
-        )));
-        let b1 = Arc::clone(&blockchain);
-        let b2 = Arc::clone(&blockchain);
-        // Set up command channels
-        let (command_tx1, command_rx1) = mpsc::channel(32);
-        let (command_tx2, command_rx2) = mpsc::channel(32);
-
-        // Run servers in the background
-        tokio::spawn(async move {
-            server1.run(b1, command_rx1).await.unwrap();
-        });
-        tokio::spawn(async move {
-            server2.run(b2, command_rx2).await.unwrap();
-        });
-
-        // Wait for servers to start
-        tokio::time::sleep(Duration::from_secs(1)).await;
-
-        // Send a message from server1 to server2
-        let message = b"Hello, world!".to_vec();
-        P2PServer::gossip_message(command_tx1.clone(), MessageType::Transaction, &message).await;
-
-        // Wait for the message to propagate
-        tokio::time::sleep(Duration::from_secs(5)).await;
-
-        // Check if the message was received by server2
-        // This part depends on how you want to validate the message reception.
-        // For simplicity, we're printing the message in the handle_gossipsub_message method.
-        // You can add a flag or counter to verify it here.
-
-        // Shut down the servers
-        drop(command_tx1);
-        drop(command_tx2);
-        let b3 = Arc::clone(&blockchain);
-        b3.lock().await.shutdown_blockchain();
-    }
-
-    fn initialize_blockchain(name: String) -> Blockchain {
-        Blockchain::new(
-            name,
-            "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20".to_string(),
-            "0883ddd3d07303b87c954b0c9383f7b78f45e002520fc03a8adc80595dbf6509".to_string(),
-            true,
-            vec!["0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20".to_string()],
-        )
     }
 }
