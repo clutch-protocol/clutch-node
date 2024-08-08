@@ -42,4 +42,4 @@ COPY config ./config
 
 # Set the command to run the release binary
 ENTRYPOINT ["./clutch-node", "--env"]
-CMD ["node1"]
+CMD ["default"]
