@@ -64,7 +64,7 @@ impl P2PServer {
 
         let (response_tx, response_rx) = oneshot::channel();
         command_tx_p2p
-            .send(P2PServerCommand::SendMessage {
+            .send(P2PServerCommand::SendGossipMessage {
                 message: message_with_type,
                 response_tx,
             })
@@ -179,7 +179,7 @@ impl P2PServer {
                 command = command_rx.recv() => {
                     if let Some(command) = command {
                         match command {
-                            P2PServerCommand::SendMessage { message, response_tx } => {
+                            P2PServerCommand::SendGossipMessage { message, response_tx } => {
                                 let result = self.send_gossip_message(message);
                                 let _ = response_tx.send(result);
                             },
@@ -319,7 +319,7 @@ async fn handle_received_block(block: &Block, blockchain: &Arc<Mutex<Blockchain>
 }
 
 pub enum P2PServerCommand {
-    SendMessage {
+    SendGossipMessage {
         message: Vec<u8>,
         response_tx: tokio::sync::oneshot::Sender<Result<MessageId, gossipsub::PublishError>>,
     },
