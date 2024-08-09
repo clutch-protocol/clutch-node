@@ -34,6 +34,8 @@ libp2p = { version = "0.53.2", features = [
     "tcp",
     "yamux",
     "quic",
+    "request-response",
+    "cbor"
 ] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
@@ -41,3 +43,4 @@ clap = { version = "4.5.7", features = ["derive"] }
 tokio-tungstenite = "0.23.1"
 tungstenite = "0.23.0"
 rlp = "0.5.2"
+async-trait = "0.1.81"

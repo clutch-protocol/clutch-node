@@ -1,16 +1,22 @@
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use tokio::sync::mpsc;
 use clutch_node::node::blockchain::Blockchain;
-use clutch_node::node::p2p_server::{P2PServer, P2PServerCommand, MessageType};
+use clutch_node::node::p2p_server::{MessageType, P2PServer, P2PServerCommand};
+use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::mpsc;
+use tokio::sync::Mutex;
 
-async fn setup_p2p_server(topic_name: &str, listen_addrs: &[&str], peer_addrs: &[&str], blockchain: Arc<Mutex<Blockchain>>) -> (Arc<Mutex<P2PServer>>, tokio::sync::mpsc::Sender<P2PServerCommand>) {
-    let server: Arc<Mutex<P2PServer>> = Arc::new(Mutex::new(P2PServer::new(
-        topic_name,
-        listen_addrs,
-        peer_addrs,
-    ).unwrap()));
+async fn setup_p2p_server(
+    topic_name: &str,
+    listen_addrs: &[&str],
+    peer_addrs: &[&str],
+    blockchain: Arc<Mutex<Blockchain>>,
+) -> (
+    Arc<Mutex<P2PServer>>,
+    tokio::sync::mpsc::Sender<P2PServerCommand>,
+) {
+    let server: Arc<Mutex<P2PServer>> = Arc::new(Mutex::new(
+        P2PServer::new(topic_name, listen_addrs, peer_addrs).unwrap(),
+    ));
 
     let (command_tx, command_rx) = mpsc::channel(32);
 
@@ -18,7 +24,12 @@ async fn setup_p2p_server(topic_name: &str, listen_addrs: &[&str], peer_addrs: &
     let server_clone = Arc::clone(&server);
 
     tokio::spawn(async move {
-        server_clone.lock().await.run(blockchain_clone, command_rx).await.unwrap();
+        server_clone
+            .lock()
+            .await
+            .run(blockchain_clone, command_rx)
+            .await
+            .unwrap();
     });
 
     tokio::time::sleep(Duration::from_secs(1)).await;
@@ -40,15 +51,29 @@ async fn test_p2p_server_gossip_message() {
     let topic_name = "test-topic";
 
     // Initialize blockchain
-    let blockchain = Arc::new(Mutex::new(initialize_blockchain("clutch-node-test-1".to_string())));
+    let blockchain = Arc::new(Mutex::new(initialize_blockchain(
+        "clutch-node-test-1".to_string(),
+    )));
 
     // Setup servers
-    let (_server1, command_tx1) = setup_p2p_server(topic_name, &["/ip4/127.0.0.1/tcp/4001"], &["/ip4/127.0.0.1/tcp/4002"], Arc::clone(&blockchain)).await;
-    let (_server2, command_tx2) = setup_p2p_server(topic_name, &["/ip4/127.0.0.1/tcp/4002"], &["/ip4/127.0.0.1/tcp/4001"], Arc::clone(&blockchain)).await;
+    let (_server1, command_tx1) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4001"],
+        &["/ip4/127.0.0.1/tcp/4002"],
+        Arc::clone(&blockchain),
+    )
+    .await;
+    let (_server2, command_tx2) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4002"],
+        &["/ip4/127.0.0.1/tcp/4001"],
+        Arc::clone(&blockchain),
+    )
+    .await;
 
     // Send a message from server1 to server2
     let message = b"Hello, world!".to_vec();
-    P2PServer::gossip_message(command_tx1.clone(), MessageType::Transaction, &message).await;
+    P2PServer::gossip_message_command(command_tx1.clone(), MessageType::Transaction, &message).await;
 
     // Wait for the message to propagate
     tokio::time::sleep(Duration::from_secs(1)).await;
@@ -69,21 +94,144 @@ async fn test_p2p_server_connected_peers() {
     let topic_name = "test-topic";
 
     // Initialize blockchain
-    let blockchain = Arc::new(Mutex::new(initialize_blockchain("clutch-node-test-1".to_string())));
+    let blockchain = Arc::new(Mutex::new(initialize_blockchain(
+        "clutch-node-test-1".to_string(),
+    )));
 
     // Setup servers
-    let (_server1, command_tx1) = setup_p2p_server(topic_name, &["/ip4/127.0.0.1/tcp/4001"], &["/ip4/127.0.0.1/tcp/4002"], Arc::clone(&blockchain)).await;
-    let (_server2, command_tx2) = setup_p2p_server(topic_name, &["/ip4/127.0.0.1/tcp/4002"], &["/ip4/127.0.0.1/tcp/4001"], Arc::clone(&blockchain)).await;
+    let (_server1, command_tx1) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4001"],
+        &["/ip4/127.0.0.1/tcp/4002"],
+        Arc::clone(&blockchain),
+    )
+    .await;
+    let (_server2, command_tx2) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4002"],
+        &["/ip4/127.0.0.1/tcp/4001"],
+        Arc::clone(&blockchain),
+    )
+    .await;
 
     // Wait for the peers to connect
     tokio::time::sleep(Duration::from_secs(1)).await;
 
     // // Check connected peers
-    let connected_peers_server1 = P2PServer::get_connected_peers_command(command_tx1.clone()).await.unwrap();
-    let connected_peers_server2 = P2PServer::get_connected_peers_command(command_tx2.clone()).await.unwrap();
+    let connected_peers_server1 = P2PServer::get_connected_peers_command(command_tx1.clone())
+        .await
+        .unwrap();
+    let connected_peers_server2 = P2PServer::get_connected_peers_command(command_tx2.clone())
+        .await
+        .unwrap();
 
     println!("Server 1 connected peers: {:?}", connected_peers_server1);
     println!("Server 2 connected peers: {:?}", connected_peers_server2);
+
+    // Shut down the servers
+    drop(command_tx1);
+    drop(command_tx2);
+    blockchain.lock().await.shutdown_blockchain();
+}
+
+#[tokio::test]
+async fn test_p2p_server_get_local_peer_id() {
+    let topic_name = "test-topic";
+
+    // Initialize blockchain
+    let blockchain = Arc::new(Mutex::new(initialize_blockchain(
+        "clutch-node-test-1".to_string(),
+    )));
+
+    // Setup servers
+    let (_server1, command_tx1) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4001"],
+        &["/ip4/127.0.0.1/tcp/4002"],
+        Arc::clone(&blockchain),
+    )
+    .await;
+    let (_server2, command_tx2) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4002"],
+        &["/ip4/127.0.0.1/tcp/4001"],
+        Arc::clone(&blockchain),
+    )
+    .await;
+
+    // Wait for the peers to connect
+    tokio::time::sleep(Duration::from_secs(1)).await;
+
+    // Send a direct message from server1 to server2
+    let peer_id = P2PServer::get_local_peer_id_command(command_tx1.clone()).await;
+    println!("peer_id server 1: {:?}", peer_id);
+
+    let peer_id = P2PServer::get_local_peer_id_command(command_tx2.clone()).await;
+    println!("peer_id server 2: {:?}", peer_id);
+
+    // Shut down the servers
+    drop(command_tx1);
+    drop(command_tx2);
+    blockchain.lock().await.shutdown_blockchain();
+}
+
+#[tokio::test]
+async fn test_p2p_server_direct_message() {
+    let topic_name = "test-topic";
+
+    // Initialize blockchain
+    let blockchain = Arc::new(Mutex::new(initialize_blockchain(
+        "clutch-node-test-1".to_string(),
+    )));
+
+    // Setup servers
+    let (_server1, command_tx1) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4001"],
+        &["/ip4/127.0.0.1/tcp/4002"],
+        Arc::clone(&blockchain),
+    )
+    .await;
+    let (_server2, command_tx2) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4002"],
+        &["/ip4/127.0.0.1/tcp/4001"],
+        Arc::clone(&blockchain),
+    )
+    .await;
+
+    // Wait for the peers to connect
+    tokio::time::sleep(Duration::from_secs(5)).await;
+
+    // Get peer IDs
+    let peer_id_server1 = P2PServer::get_local_peer_id_command(command_tx1.clone()).await;
+    let peer_id_server2 = P2PServer::get_local_peer_id_command(command_tx2.clone()).await;
+    println!("peer_id server 1: {:?}", peer_id_server1);
+    println!("peer_id server 2: {:?}", peer_id_server2);
+
+    // Ensure peers are connected
+    let connected_peers = P2PServer::get_connected_peers_command(command_tx1.clone())
+        .await
+        .unwrap();
+    assert!(connected_peers.contains(&peer_id_server2));
+
+    let direct_message = clutch_node::node::p2p_server::DirectMessageRequest {
+        message: "Hello from Server 1".to_string(),
+    };
+
+    // Send a direct message from server2 to server1
+    let request_id = P2PServer::send_direct_message_command(
+        command_tx2.clone(),
+        peer_id_server1,
+        direct_message,
+    )
+    .await
+    .unwrap();
+
+    println!("Request ID: {:?}", request_id);
+
+    // Wait for the response or the event that handles the message
+    tokio::time::sleep(Duration::from_secs(5)).await;
 
     // Shut down the servers
     drop(command_tx1);

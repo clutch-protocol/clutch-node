@@ -91,7 +91,7 @@ impl WebSocket {
                 
                 // gossip transcation                                        
                 let encoded_tx = encode(&transaction);
-                P2PServer::gossip_message(command_tx_p2p,MessageType::Transaction, &encoded_tx).await;
+                P2PServer::gossip_message_command(command_tx_p2p,MessageType::Transaction, &encoded_tx).await;
 
                 return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction imported", "id": id}).to_string());
                 
@@ -120,7 +120,7 @@ impl WebSocket {
     
                 // Gossip block
                 let encoded_block = encode(&block);
-                P2PServer::gossip_message(command_tx_p2p, MessageType::Block, &encoded_block).await;
+                P2PServer::gossip_message_command(command_tx_p2p, MessageType::Block, &encoded_block).await;
     
                 return Some(
                     serde_json::json!({"jsonrpc": "2.0", "result": "Block imported", "id": id})
@@ -144,7 +144,7 @@ impl WebSocket {
     
                 // Gossip new block
                 let encoded_block = encode(&new_block);
-                P2PServer::gossip_message(command_tx_p2p, MessageType::Block, &encoded_block).await;
+                P2PServer::gossip_message_command(command_tx_p2p, MessageType::Block, &encoded_block).await;
     
                 return Some(
                     serde_json::json!({"jsonrpc": "2.0", "result": "New block authored", "id": id})

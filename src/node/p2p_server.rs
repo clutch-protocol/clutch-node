@@ -5,11 +5,19 @@ use crate::node::transaction::Transaction;
 use futures::stream::StreamExt;
 use futures::FutureExt;
 use libp2p::{
-    gossipsub, gossipsub::Event as GossipsubEvent, gossipsub::IdentTopic, gossipsub::MessageId,
-    mdns, mdns::Event as MdnsEvent, noise, swarm::NetworkBehaviour, swarm::Swarm,
-    swarm::SwarmEvent, tcp, yamux, Multiaddr, PeerId,
+    gossipsub::{self, Event as GossipsubEvent, IdentTopic, MessageId},
+    mdns::{self, Event as MdnsEvent},
+    noise,
+    request_response::{
+        cbor::Behaviour as RequestResponseBehavior, Config as RequestResponseConfig,
+        Event as RequestResponseEvent, Message as RequestResponseMessage, OutboundRequestId,
+        ProtocolSupport as RequestResponseProtocolSupport,
+    },
+    swarm::{NetworkBehaviour, Swarm, SwarmEvent},
+    tcp, yamux, Multiaddr, PeerId, StreamProtocol,
 };
 
+use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
 use std::error::Error;
@@ -27,6 +35,7 @@ use tracing_subscriber::EnvFilter;
 pub struct P2PBehaviour {
     pub gossipsub: gossipsub::Behaviour,
     pub mdns: mdns::tokio::Behaviour,
+    pub request_response: RequestResponseBehavior<DirectMessageRequest, DirectMessageResponse>,
 }
 
 pub struct P2PServer {
@@ -54,7 +63,7 @@ impl P2PServer {
         })
     }
 
-    pub async fn gossip_message(
+    pub async fn gossip_message_command(
         command_tx_p2p: Sender<P2PServerCommand>,
         message_type: MessageType,
         message: &Vec<u8>,
@@ -90,6 +99,39 @@ impl P2PServer {
 
         let peers = response_rx.await?;
         Ok(peers)
+    }
+
+    pub async fn send_direct_message_command(
+        command_tx_p2p: Sender<P2PServerCommand>,
+        peer_id: PeerId,
+        message: DirectMessageRequest,
+    ) -> Result<OutboundRequestId, Box<dyn Error>> {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        command_tx_p2p
+            .send(P2PServerCommand::SendDirectMessage {
+                peer_id,
+                message,
+                response_tx,
+            })
+            .await?;
+
+        // Await the response and return the OutboundRequestId
+        match response_rx.await {
+            Ok(request_id) => Ok(request_id),
+            Err(e) => Err(Box::new(e)),
+        }
+    }
+
+    pub async fn get_local_peer_id_command(command_tx_p2p: Sender<P2PServerCommand>) -> PeerId {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        command_tx_p2p
+            .send(P2PServerCommand::GetLocalPeerId { response_tx })
+            .await
+            .unwrap();
+
+        response_rx.await.unwrap()
     }
 
     pub async fn run(
@@ -145,7 +187,18 @@ impl P2PServer {
                     key.public().to_peer_id(),
                 )?;
 
-                Ok(P2PBehaviour { gossipsub, mdns })
+                let rr_config = RequestResponseConfig::default();
+                let rr_protocol = StreamProtocol::new("/agent/message/1.0.0");
+                let rr_behavior = RequestResponseBehavior::<DirectMessageRequest, DirectMessageResponse>::new(
+                    [(rr_protocol, RequestResponseProtocolSupport::Full)],
+                    rr_config,
+                );
+
+                Ok(P2PBehaviour {
+                    gossipsub,
+                    mdns,
+                    request_response: rr_behavior,
+                })
             })?
             .with_swarm_config(|c| c.with_idle_connection_timeout(Duration::from_secs(60)))
             .build();
@@ -186,7 +239,15 @@ impl P2PServer {
                             P2PServerCommand::GetConnectedPeers { response_tx } => {
                                 let peers = self.get_connected_peers();
                                 let _ = response_tx.send(peers);
-                            }
+                            },
+                            P2PServerCommand::SendDirectMessage { peer_id, message, response_tx } => {
+                                let result = self.send_direct_message(peer_id, message);
+                                let _ = response_tx.send(result);
+                            },
+                            P2PServerCommand::GetLocalPeerId { response_tx } => {
+                                let peer_id = self.get_local_peer_id();
+                                let _ = response_tx.send(peer_id);
+                            },
                         }
                     }
                 },
@@ -208,6 +269,21 @@ impl P2PServer {
         self.behaviour.connected_peers().cloned().collect()
     }
 
+    fn send_direct_message(
+        &mut self,
+        peer_id: PeerId,
+        message: DirectMessageRequest,
+    ) -> libp2p::request_response::OutboundRequestId {
+        self.behaviour
+            .behaviour_mut()
+            .request_response
+            .send_request(&peer_id, message)
+    }
+
+    fn get_local_peer_id(&self) -> PeerId {
+        *self.behaviour.local_peer_id()
+    }
+
     async fn handle_swarm_event(
         event: SwarmEvent<P2PBehaviourEvent>,
         swarm: &mut Swarm<P2PBehaviour>,
@@ -226,6 +302,9 @@ impl P2PServer {
                 message,
             })) => {
                 Self::handle_gossipsub_message(peer_id, id, message, blockchain).await;
+            }
+            SwarmEvent::Behaviour(P2PBehaviourEvent::RequestResponse(event)) => {
+                Self::handle_request_response(event, swarm);
             }
             SwarmEvent::NewListenAddr { address, .. } => {
                 println!("Local node is listening on {address}");
@@ -289,6 +368,58 @@ impl P2PServer {
             }
         }
     }
+
+    fn handle_request_response(
+        event: RequestResponseEvent<DirectMessageRequest, DirectMessageResponse>,
+        swarm: &mut Swarm<P2PBehaviour>,
+    ) {
+        match event {
+            RequestResponseEvent::Message { peer, message } => {
+                match message {
+                    RequestResponseMessage::Request {
+                        request_id,
+                        request,
+                        channel,
+                    } => {
+                        println!("Received request from {:?}: {:?}", peer, request);
+                        // Prepare the response
+                        let response = DirectMessageResponse {
+                            message: format!("Hello back, {}", request.message),
+                        };
+
+                        swarm
+                            .behaviour_mut()
+                            .request_response
+                            .send_response(channel, response)
+                            .expect("Failed to send response");
+                    }
+                    RequestResponseMessage::Response {
+                        request_id,
+                        response,
+                    } => {
+                        println!("Received response from {:?}: {:?}", peer, response);
+                    }
+                }
+            }
+            RequestResponseEvent::OutboundFailure {
+                peer,
+                request_id,
+                error,
+            } => {
+                eprintln!("Failed to send request to peer {}: {:?}", peer, error);
+            }
+            RequestResponseEvent::InboundFailure {
+                peer,
+                request_id,
+                error,
+            } => {
+                eprintln!("Failed to receive request from peer {}: {:?}", peer, error);
+            }
+            RequestResponseEvent::ResponseSent { peer, request_id } => {
+                println!("Response sent to peer {} for request {}", peer, request_id);
+            }
+        }
+    }
 }
 
 async fn handle_received_transaction(
@@ -326,6 +457,14 @@ pub enum P2PServerCommand {
     GetConnectedPeers {
         response_tx: tokio::sync::oneshot::Sender<HashSet<PeerId>>,
     },
+    SendDirectMessage {
+        peer_id: PeerId,
+        message: DirectMessageRequest,
+        response_tx: tokio::sync::oneshot::Sender<OutboundRequestId>,
+    },
+    GetLocalPeerId {
+        response_tx: tokio::sync::oneshot::Sender<PeerId>,
+    },
 }
 
 #[derive(Debug)]
@@ -349,4 +488,14 @@ impl MessageType {
             _ => None,
         }
     }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DirectMessageRequest {
+    pub message: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DirectMessageResponse {
+    pub message: String,
 }
