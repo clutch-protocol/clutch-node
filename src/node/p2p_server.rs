@@ -273,14 +273,12 @@ impl P2PServer {
         &mut self,
         peer_id: PeerId,
         message: GreeRequest,
-    ) -> libp2p::request_response::OutboundRequestId {            
-         self
-            .behaviour
+    ) -> libp2p::request_response::OutboundRequestId {
+        self.behaviour
             .behaviour_mut()
             .request_response
             .send_request(&peer_id, message)
     }
-    
 
     fn get_local_peer_id(&self) -> PeerId {
         *self.behaviour.local_peer_id()
@@ -305,29 +303,8 @@ impl P2PServer {
             })) => {
                 Self::handle_gossipsub_message(peer_id, id, message, blockchain).await;
             }
-            SwarmEvent::Behaviour(P2PBehaviourEvent::RequestResponse(event)) => {             
-                match event {
-                    RequestResponseEvent::Message { peer, message } => {
-                        println!("Received messages from direct message {:?}:", message);
-                    },
-                    RequestResponseEvent::OutboundFailure {
-                        peer,
-                        request_id,
-                        error,
-                    } => {
-                        eprintln!("Failed to send request to peer {}: {:?}", peer, error);
-                    }
-                    RequestResponseEvent::InboundFailure {
-                        peer,
-                        request_id,
-                        error,
-                    } => {
-                        eprintln!("Failed to receive request from peer {}: {:?}", peer, error);
-                    }
-                    RequestResponseEvent::ResponseSent { peer, request_id } => {
-                        println!("Response sent to peer {} for request {}", peer, request_id);
-                    }
-                }
+            SwarmEvent::Behaviour(P2PBehaviourEvent::RequestResponse(event)) => {
+                Self::handle_request_response(event, swarm);
             }
             SwarmEvent::NewListenAddr { address, .. } => {
                 println!("Local node is listening on {address}");
@@ -338,7 +315,7 @@ impl P2PServer {
 
     fn handle_mdns_discovered(swarm: &mut Swarm<P2PBehaviour>, list: Vec<(PeerId, Multiaddr)>) {
         for (peer_id, _multiaddr) in list {
-            // println!("mDNS discovered a new peer: {peer_id}");
+            println!("mDNS discovered a new peer: {peer_id}");
             swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
         }
     }
@@ -388,6 +365,58 @@ impl P2PServer {
             },
             _ => {
                 eprintln!("Unknown message type: {:?}", message_type);
+            }
+        }
+    }
+
+    fn handle_request_response(
+        event: RequestResponseEvent<GreeRequest, GreetResponse>,
+        swarm: &mut Swarm<P2PBehaviour>,
+    ) {
+        match event {
+            RequestResponseEvent::Message { peer, message } => {
+                match message {
+                    RequestResponseMessage::Request {
+                        request_id,
+                        request,
+                        channel,
+                    } => {
+                        println!("Received request from {:?}: {:?}", peer, request);
+                        // Prepare the response
+                        let response = GreetResponse {
+                            message: format!("Hello back, {}", request.message),
+                        };
+
+                        swarm
+                            .behaviour_mut()
+                            .request_response
+                            .send_response(channel, response)
+                            .expect("Failed to send response");
+                    }
+                    RequestResponseMessage::Response {
+                        request_id,
+                        response,
+                    } => {
+                        println!("Received response from {:?}: {:?}", peer, response);
+                    }
+                }
+            }
+            RequestResponseEvent::OutboundFailure {
+                peer,
+                request_id,
+                error,
+            } => {
+                eprintln!("Failed to send request to peer {}: {:?}", peer, error);
+            }
+            RequestResponseEvent::InboundFailure {
+                peer,
+                request_id,
+                error,
+            } => {
+                eprintln!("Failed to receive request from peer {}: {:?}", peer, error);
+            }
+            RequestResponseEvent::ResponseSent { peer, request_id } => {
+                println!("Response sent to peer {} for request {}", peer, request_id);
             }
         }
     }
