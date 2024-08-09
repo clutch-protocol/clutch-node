@@ -65,7 +65,7 @@ impl P2PServer {
 
     pub async fn gossip_message_command(
         command_tx_p2p: Sender<P2PServerCommand>,
-        message_type: MessageType,
+        message_type: GossipMessageType,
         message: &Vec<u8>,
     ) {
         let mut message_with_type = vec![message_type.as_byte()];
@@ -341,11 +341,11 @@ impl P2PServer {
             String::from_utf8_lossy(&message.data),
         );
 
-        let message_type = MessageType::from_byte(message.data[0]);
+        let message_type = GossipMessageType::from_byte(message.data[0]);
         let payload = &message.data[1..];
 
         match message_type {
-            Some(MessageType::Transaction) => match decode::<Transaction>(payload) {
+            Some(GossipMessageType::Transaction) => match decode::<Transaction>(payload) {
                 Ok(transaction) => {
                     println!("Decoded transaction: {:?}", &transaction);
                     handle_received_transaction(&transaction, blockchain).await;
@@ -354,7 +354,7 @@ impl P2PServer {
                     eprintln!("Failed to decode transaction: {:?}", e);
                 }
             },
-            Some(MessageType::Block) => match decode::<Block>(payload) {
+            Some(GossipMessageType::Block) => match decode::<Block>(payload) {
                 Ok(block) => {
                     println!("Decoded block: {:?}", &block);
                     handle_received_block(&block, blockchain).await;
@@ -468,23 +468,23 @@ pub enum P2PServerCommand {
 }
 
 #[derive(Debug)]
-pub enum MessageType {
+pub enum GossipMessageType {
     Transaction,
     Block,
 }
 
-impl MessageType {
+impl GossipMessageType {
     fn as_byte(&self) -> u8 {
         match self {
-            MessageType::Transaction => 0x01,
-            MessageType::Block => 0x02,
+            GossipMessageType::Transaction => 0x01,
+            GossipMessageType::Block => 0x02,
         }
     }
 
     fn from_byte(byte: u8) -> Option<Self> {
         match byte {
-            0x01 => Some(MessageType::Transaction),
-            0x02 => Some(MessageType::Block),
+            0x01 => Some(GossipMessageType::Transaction),
+            0x02 => Some(GossipMessageType::Block),
             _ => None,
         }
     }

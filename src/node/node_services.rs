@@ -1,6 +1,6 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
-use crate::node::p2p_server::MessageType;
+use crate::node::p2p_server::GossipMessageType;
 use crate::node::p2p_server::P2PServer;
 use crate::node::p2p_server::P2PServerCommand;
 use crate::node::rlp_encoding::encode;
@@ -122,7 +122,7 @@ impl NodeServices {
                         let encoded_block = encode(&block);
                         P2PServer::gossip_message_command(
                             command_tx_p2p.clone(),
-                            MessageType::Block,
+                            GossipMessageType::Block,
                             &encoded_block,
                         )
                         .await;

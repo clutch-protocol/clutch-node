@@ -1,7 +1,7 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::transaction::Transaction;
 use crate::node::block::Block;
-use crate::node::p2p_server::{MessageType, P2PServer, P2PServerCommand};
+use crate::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;
 use futures::{stream::StreamExt, SinkExt};
 use std::error::Error;
@@ -91,7 +91,7 @@ impl WebSocket {
                 
                 // gossip transcation                                        
                 let encoded_tx = encode(&transaction);
-                P2PServer::gossip_message_command(command_tx_p2p,MessageType::Transaction, &encoded_tx).await;
+                P2PServer::gossip_message_command(command_tx_p2p,GossipMessageType::Transaction, &encoded_tx).await;
 
                 return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction imported", "id": id}).to_string());
                 
@@ -120,7 +120,7 @@ impl WebSocket {
     
                 // Gossip block
                 let encoded_block = encode(&block);
-                P2PServer::gossip_message_command(command_tx_p2p, MessageType::Block, &encoded_block).await;
+                P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Block, &encoded_block).await;
     
                 return Some(
                     serde_json::json!({"jsonrpc": "2.0", "result": "Block imported", "id": id})
@@ -144,7 +144,7 @@ impl WebSocket {
     
                 // Gossip new block
                 let encoded_block = encode(&new_block);
-                P2PServer::gossip_message_command(command_tx_p2p, MessageType::Block, &encoded_block).await;
+                P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Block, &encoded_block).await;
     
                 return Some(
                     serde_json::json!({"jsonrpc": "2.0", "result": "New block authored", "id": id})

@@ -1,5 +1,5 @@
 use clutch_node::node::blockchain::Blockchain;
-use clutch_node::node::p2p_server::{MessageType, P2PServer, P2PServerCommand};
+use clutch_node::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
@@ -73,7 +73,7 @@ async fn test_p2p_server_gossip_message() {
 
     // Send a message from server1 to server2
     let message = b"Hello, world!".to_vec();
-    P2PServer::gossip_message_command(command_tx1.clone(), MessageType::Transaction, &message).await;
+    P2PServer::gossip_message_command(command_tx1.clone(), GossipMessageType::Transaction, &message).await;
 
     // Wait for the message to propagate
     tokio::time::sleep(Duration::from_secs(1)).await;
