@@ -35,7 +35,7 @@ use tracing_subscriber::EnvFilter;
 pub struct P2PBehaviour {
     pub gossipsub: gossipsub::Behaviour,
     pub mdns: mdns::tokio::Behaviour,
-    pub request_response: RequestResponseBehavior<GreeRequest, GreetResponse>,
+    pub request_response: RequestResponseBehavior<DirectMessageRequest, DirectMessageResponse>,
 }
 
 pub struct P2PServer {
@@ -104,7 +104,7 @@ impl P2PServer {
     pub async fn send_direct_message_command(
         command_tx_p2p: Sender<P2PServerCommand>,
         peer_id: PeerId,
-        message: GreeRequest,
+        message: DirectMessageRequest,
     ) -> Result<OutboundRequestId, Box<dyn Error>> {
         let (response_tx, response_rx) = oneshot::channel();
 
@@ -189,7 +189,7 @@ impl P2PServer {
 
                 let rr_config = RequestResponseConfig::default();
                 let rr_protocol = StreamProtocol::new("/agent/message/1.0.0");
-                let rr_behavior = RequestResponseBehavior::<GreeRequest, GreetResponse>::new(
+                let rr_behavior = RequestResponseBehavior::<DirectMessageRequest, DirectMessageResponse>::new(
                     [(rr_protocol, RequestResponseProtocolSupport::Full)],
                     rr_config,
                 );
@@ -272,7 +272,7 @@ impl P2PServer {
     fn send_direct_message(
         &mut self,
         peer_id: PeerId,
-        message: GreeRequest,
+        message: DirectMessageRequest,
     ) -> libp2p::request_response::OutboundRequestId {
         self.behaviour
             .behaviour_mut()
@@ -370,7 +370,7 @@ impl P2PServer {
     }
 
     fn handle_request_response(
-        event: RequestResponseEvent<GreeRequest, GreetResponse>,
+        event: RequestResponseEvent<DirectMessageRequest, DirectMessageResponse>,
         swarm: &mut Swarm<P2PBehaviour>,
     ) {
         match event {
@@ -383,7 +383,7 @@ impl P2PServer {
                     } => {
                         println!("Received request from {:?}: {:?}", peer, request);
                         // Prepare the response
-                        let response = GreetResponse {
+                        let response = DirectMessageResponse {
                             message: format!("Hello back, {}", request.message),
                         };
 
@@ -459,7 +459,7 @@ pub enum P2PServerCommand {
     },
     SendDirectMessage {
         peer_id: PeerId,
-        message: GreeRequest,
+        message: DirectMessageRequest,
         response_tx: tokio::sync::oneshot::Sender<OutboundRequestId>,
     },
     GetLocalPeerId {
@@ -491,11 +491,11 @@ impl MessageType {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct GreeRequest {
+pub struct DirectMessageRequest {
     pub message: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct GreetResponse {
+pub struct DirectMessageResponse {
     pub message: String,
 }

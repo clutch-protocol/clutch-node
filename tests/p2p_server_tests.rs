@@ -215,7 +215,7 @@ async fn test_p2p_server_direct_message() {
         .unwrap();
     assert!(connected_peers.contains(&peer_id_server2));
 
-    let direct_message = clutch_node::node::p2p_server::GreeRequest {
+    let direct_message = clutch_node::node::p2p_server::DirectMessageRequest {
         message: "Hello from Server 1".to_string(),
     };
 
