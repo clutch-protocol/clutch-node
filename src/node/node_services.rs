@@ -120,7 +120,7 @@ impl NodeServices {
                 match blockchain.author_new_block() {
                     Ok(block) => {
                         let encoded_block = encode(&block);
-                        P2PServer::gossip_message(
+                        P2PServer::gossip_message_command(
                             command_tx_p2p.clone(),
                             MessageType::Block,
                             &encoded_block,

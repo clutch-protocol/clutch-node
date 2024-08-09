@@ -63,7 +63,7 @@ impl P2PServer {
         })
     }
 
-    pub async fn gossip_message(
+    pub async fn gossip_message_command(
         command_tx_p2p: Sender<P2PServerCommand>,
         message_type: MessageType,
         message: &Vec<u8>,

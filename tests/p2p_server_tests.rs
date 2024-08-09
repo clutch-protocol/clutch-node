@@ -73,7 +73,7 @@ async fn test_p2p_server_gossip_message() {
 
     // Send a message from server1 to server2
     let message = b"Hello, world!".to_vec();
-    P2PServer::gossip_message(command_tx1.clone(), MessageType::Transaction, &message).await;
+    P2PServer::gossip_message_command(command_tx1.clone(), MessageType::Transaction, &message).await;
 
     // Wait for the message to propagate
     tokio::time::sleep(Duration::from_secs(1)).await;
