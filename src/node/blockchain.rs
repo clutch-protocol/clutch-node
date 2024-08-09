@@ -45,6 +45,7 @@ impl Blockchain {
         Block::get_latest_block(&self.db)
     }
 
+    #[allow(dead_code)]
     pub fn get_account_state(&self, public_key: &String) -> AccountState {
         AccountState::get_current_state(public_key, &self.db)
     }
@@ -77,6 +78,7 @@ impl Blockchain {
         Block::get_blocks(&self.db)
     }
 
+    #[allow(dead_code)]
     pub fn current_author(&self) -> &String {
         self.consensus.current_author()
     }

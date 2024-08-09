@@ -116,6 +116,7 @@ impl Transaction {
         format!("{:x}", result)
     }
 
+    #[allow(dead_code)]
     pub fn sign(&mut self, secret_key: &str) {
         let hash_bytes = self.hash.as_bytes();
         let (r, s, v) = signature_keys::SignatureKeys::sign(secret_key, hash_bytes);

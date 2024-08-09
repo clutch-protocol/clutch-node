@@ -89,6 +89,7 @@ impl P2PServer {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn get_connected_peers_command(
         command_tx_p2p: Sender<P2PServerCommand>,
     ) -> Result<HashSet<PeerId>, Box<dyn Error>> {
@@ -101,6 +102,7 @@ impl P2PServer {
         Ok(peers)
     }
 
+    #[allow(dead_code)]
     pub async fn send_direct_message_command(
         command_tx_p2p: Sender<P2PServerCommand>,
         peer_id: PeerId,
@@ -123,6 +125,7 @@ impl P2PServer {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn get_local_peer_id_command(command_tx_p2p: Sender<P2PServerCommand>) -> PeerId {
         let (response_tx, response_rx) = oneshot::channel();
 
@@ -189,10 +192,11 @@ impl P2PServer {
 
                 let rr_config = RequestResponseConfig::default();
                 let rr_protocol = StreamProtocol::new("/agent/message/1.0.0");
-                let rr_behavior = RequestResponseBehavior::<DirectMessageRequest, DirectMessageResponse>::new(
-                    [(rr_protocol, RequestResponseProtocolSupport::Full)],
-                    rr_config,
-                );
+                let rr_behavior =
+                    RequestResponseBehavior::<DirectMessageRequest, DirectMessageResponse>::new(
+                        [(rr_protocol, RequestResponseProtocolSupport::Full)],
+                        rr_config,
+                    );
 
                 Ok(P2PBehaviour {
                     gossipsub,
@@ -381,7 +385,10 @@ impl P2PServer {
                         request,
                         channel,
                     } => {
-                        println!("Received request from {:?}: {:?}", peer, request);
+                        println!(
+                            "Received request from {:?} with request_id {:?}: {:?}",
+                            peer, request_id, request
+                        );
                         // Prepare the response
                         let response = DirectMessageResponse {
                             message: format!("Hello back, {}", request.message),
@@ -397,7 +404,10 @@ impl P2PServer {
                         request_id,
                         response,
                     } => {
-                        println!("Received response from {:?}: {:?}", peer, response);
+                        println!(
+                            "Received response from {:?} with request_id {:?}: {:?}",
+                            peer, request_id, response
+                        );
                     }
                 }
             }
@@ -406,14 +416,20 @@ impl P2PServer {
                 request_id,
                 error,
             } => {
-                eprintln!("Failed to send request to peer {}: {:?}", peer, error);
+                eprintln!(
+                    "Failed to send request to peer {:?} with request_id {:?}: {:?}",
+                    peer, request_id, error
+                );
             }
             RequestResponseEvent::InboundFailure {
                 peer,
                 request_id,
                 error,
             } => {
-                eprintln!("Failed to receive request from peer {}: {:?}", peer, error);
+                eprintln!(
+                    "Failed to receive request from peer {:?} with request_id {:?}: {:?}",
+                    peer, request_id, error
+                );
             }
             RequestResponseEvent::ResponseSent { peer, request_id } => {
                 println!("Response sent to peer {} for request {}", peer, request_id);
@@ -449,6 +465,7 @@ async fn handle_received_block(block: &Block, blockchain: &Arc<Mutex<Blockchain>
     }
 }
 
+#[allow(dead_code)]
 pub enum P2PServerCommand {
     SendGossipMessage {
         message: Vec<u8>,

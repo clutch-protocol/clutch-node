@@ -101,6 +101,7 @@ impl Database {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn get_keys_by_cf_name(&self, cf_name: &str) -> Result<Vec<Vec<u8>>, String> {
         match &self.db {
             Some(db) => {
