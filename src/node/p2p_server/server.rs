@@ -1,7 +1,4 @@
-use crate::node::block::Block;
 use crate::node::blockchain::Blockchain;
-use crate::node::rlp_encoding::decode;
-use crate::node::transaction::Transaction;
 use futures::stream::StreamExt;
 use futures::FutureExt;
 use libp2p::{
@@ -9,15 +6,13 @@ use libp2p::{
     mdns::{self, Event as MdnsEvent},
     noise,
     request_response::{
-        cbor::Behaviour as RequestResponseBehavior, Config as RequestResponseConfig,
-        Event as RequestResponseEvent, Message as RequestResponseMessage, OutboundRequestId,
+        cbor::Behaviour as RequestResponseBehavior, Config as RequestResponseConfig, OutboundRequestId,
         ProtocolSupport as RequestResponseProtocolSupport,
     },
-    swarm::{NetworkBehaviour, Swarm, SwarmEvent},
+    swarm::{Swarm, SwarmEvent},
     tcp, yamux, Multiaddr, PeerId, StreamProtocol,
 };
 
-use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
 use std::error::Error;
@@ -31,12 +26,7 @@ use tokio::{
 };
 use tracing_subscriber::EnvFilter;
 
-#[derive(NetworkBehaviour)]
-pub struct P2PBehaviour {
-    pub gossipsub: gossipsub::Behaviour,
-    pub mdns: mdns::tokio::Behaviour,
-    pub request_response: RequestResponseBehavior<DirectMessageRequest, DirectMessageResponse>,
-}
+use super::{behaviour::{DirectMessageRequest, DirectMessageResponse, P2PBehaviourEvent}, gossipsub_handler::handle_gossipsub_message, request_response_handler::handle_request_response, GossipMessageType, P2PBehaviour, P2PServerCommand};
 
 pub struct P2PServer {
     pub behaviour: Swarm<P2PBehaviour>,
@@ -305,10 +295,10 @@ impl P2PServer {
                 message_id: id,
                 message,
             })) => {
-                Self::handle_gossipsub_message(peer_id, id, message, blockchain).await;
+                handle_gossipsub_message(peer_id, id, message, blockchain).await;
             }
             SwarmEvent::Behaviour(P2PBehaviourEvent::RequestResponse(event)) => {
-                Self::handle_request_response(event, swarm);
+                handle_request_response(event, swarm);
             }
             SwarmEvent::NewListenAddr { address, .. } => {
                 println!("Local node is listening on {address}");
@@ -333,186 +323,4 @@ impl P2PServer {
                 .remove_explicit_peer(&peer_id);
         }
     }
-
-    async fn handle_gossipsub_message(
-        peer_id: PeerId,
-        id: MessageId,
-        message: gossipsub::Message,
-        blockchain: &Arc<Mutex<Blockchain>>,
-    ) {
-        println!(
-            "Got message: '{}' with id: {id} from peer: {peer_id}",
-            String::from_utf8_lossy(&message.data),
-        );
-
-        let message_type = GossipMessageType::from_byte(message.data[0]);
-        let payload = &message.data[1..];
-
-        match message_type {
-            Some(GossipMessageType::Transaction) => match decode::<Transaction>(payload) {
-                Ok(transaction) => {
-                    println!("Decoded transaction: {:?}", &transaction);
-                    handle_received_transaction(&transaction, blockchain).await;
-                }
-                Err(e) => {
-                    eprintln!("Failed to decode transaction: {:?}", e);
-                }
-            },
-            Some(GossipMessageType::Block) => match decode::<Block>(payload) {
-                Ok(block) => {
-                    println!("Decoded block: {:?}", &block);
-                    handle_received_block(&block, blockchain).await;
-                }
-                Err(e) => {
-                    eprintln!("Failed to decode block: {:?}", e);
-                }
-            },
-            _ => {
-                eprintln!("Unknown message type: {:?}", message_type);
-            }
-        }
-    }
-
-    fn handle_request_response(
-        event: RequestResponseEvent<DirectMessageRequest, DirectMessageResponse>,
-        swarm: &mut Swarm<P2PBehaviour>,
-    ) {
-        match event {
-            RequestResponseEvent::Message { peer, message } => {
-                match message {
-                    RequestResponseMessage::Request {
-                        request_id,
-                        request,
-                        channel,
-                    } => {
-                        println!(
-                            "Received request from {:?} with request_id {:?}: {:?}",
-                            peer, request_id, request
-                        );
-                        // Prepare the response
-                        let response = DirectMessageResponse {
-                            message: format!("Hello back, {}", request.message),
-                        };
-
-                        swarm
-                            .behaviour_mut()
-                            .request_response
-                            .send_response(channel, response)
-                            .expect("Failed to send response");
-                    }
-                    RequestResponseMessage::Response {
-                        request_id,
-                        response,
-                    } => {
-                        println!(
-                            "Received response from {:?} with request_id {:?}: {:?}",
-                            peer, request_id, response
-                        );
-                    }
-                }
-            }
-            RequestResponseEvent::OutboundFailure {
-                peer,
-                request_id,
-                error,
-            } => {
-                eprintln!(
-                    "Failed to send request to peer {:?} with request_id {:?}: {:?}",
-                    peer, request_id, error
-                );
-            }
-            RequestResponseEvent::InboundFailure {
-                peer,
-                request_id,
-                error,
-            } => {
-                eprintln!(
-                    "Failed to receive request from peer {:?} with request_id {:?}: {:?}",
-                    peer, request_id, error
-                );
-            }
-            RequestResponseEvent::ResponseSent { peer, request_id } => {
-                println!("Response sent to peer {} for request {}", peer, request_id);
-            }
-        }
-    }
-}
-
-async fn handle_received_transaction(
-    transaction: &Transaction,
-    blockchain: &Arc<Mutex<Blockchain>>,
-) {
-    let result = {
-        let blockchain = blockchain.lock().await;
-        blockchain.add_transaction_to_pool(&transaction)
-    };
-
-    match result {
-        Ok(_) => println!("Transaction added to mempool from P2P"),
-        Err(e) => println!("Failed to add transaction to pool: {:?}", e),
-    }
-}
-
-async fn handle_received_block(block: &Block, blockchain: &Arc<Mutex<Blockchain>>) {
-    let result = {
-        let blockchain = blockchain.lock().await;
-        blockchain.import_block(&block)
-    };
-
-    match result {
-        Ok(_) => println!("Block added to blockchain from P2P"),
-        Err(e) => println!("Failed to add block to blockchain: {:?}", e),
-    }
-}
-
-#[allow(dead_code)]
-pub enum P2PServerCommand {
-    SendGossipMessage {
-        message: Vec<u8>,
-        response_tx: tokio::sync::oneshot::Sender<Result<MessageId, gossipsub::PublishError>>,
-    },
-    GetConnectedPeers {
-        response_tx: tokio::sync::oneshot::Sender<HashSet<PeerId>>,
-    },
-    SendDirectMessage {
-        peer_id: PeerId,
-        message: DirectMessageRequest,
-        response_tx: tokio::sync::oneshot::Sender<OutboundRequestId>,
-    },
-    GetLocalPeerId {
-        response_tx: tokio::sync::oneshot::Sender<PeerId>,
-    },
-}
-
-#[derive(Debug)]
-pub enum GossipMessageType {
-    Transaction,
-    Block,
-}
-
-impl GossipMessageType {
-    fn as_byte(&self) -> u8 {
-        match self {
-            GossipMessageType::Transaction => 0x01,
-            GossipMessageType::Block => 0x02,
-        }
-    }
-
-    fn from_byte(byte: u8) -> Option<Self> {
-        match byte {
-            0x01 => Some(GossipMessageType::Transaction),
-            0x02 => Some(GossipMessageType::Block),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DirectMessageRequest {
-    pub message: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DirectMessageResponse {
-    pub message: String,
 }

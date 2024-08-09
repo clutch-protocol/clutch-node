@@ -1,10 +1,9 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
-use crate::node::p2p_server::GossipMessageType;
-use crate::node::p2p_server::P2PServer;
-use crate::node::p2p_server::P2PServerCommand;
+use crate::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;
 use crate::node::websocket::WebSocket;
+
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::signal;
@@ -71,15 +70,17 @@ impl NodeServices {
         command_rx: tokio::sync::mpsc::Receiver<P2PServerCommand>,
     ) {
         let listen_addrs: Vec<&str> = config.listen_addrs.iter().map(|s| s.as_str()).collect();
-        let bootstrap_nodes: Vec<&str> = config.bootstrap_nodes.iter().map(|s| s.as_str()).collect();
-        
-        let mut p2p_server = match P2PServer::new(&config.libp2p_topic_name, &listen_addrs,&bootstrap_nodes) {
-            Ok(server) => server,
-            Err(e) => {
-                eprintln!("Failed to create P2PServer: {}", e);
-                return;
-            }
-        };
+        let bootstrap_nodes: Vec<&str> =
+            config.bootstrap_nodes.iter().map(|s| s.as_str()).collect();
+
+        let mut p2p_server =
+            match P2PServer::new(&config.libp2p_topic_name, &listen_addrs, &bootstrap_nodes) {
+                Ok(server) => server,
+                Err(e) => {
+                    eprintln!("Failed to create P2PServer: {}", e);
+                    return;
+                }
+            };
 
         tokio::spawn(async move {
             {

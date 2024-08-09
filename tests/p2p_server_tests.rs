@@ -1,5 +1,5 @@
 use clutch_node::node::blockchain::Blockchain;
-use clutch_node::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
+use clutch_node::node::p2p_server::{behaviour::DirectMessageRequest, GossipMessageType, P2PServer, P2PServerCommand};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
@@ -215,7 +215,7 @@ async fn test_p2p_server_direct_message() {
         .unwrap();
     assert!(connected_peers.contains(&peer_id_server2));
 
-    let direct_message = clutch_node::node::p2p_server::DirectMessageRequest {
+    let direct_message = DirectMessageRequest {
         message: "Hello from Server 1".to_string(),
     };
 
