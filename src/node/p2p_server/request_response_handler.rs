@@ -20,12 +20,19 @@ pub fn handle_request_response(
                 } => {
                     println!(
                         "Received request from {:?} with request_id {:?}: {}",
-                        peer, request_id, String::from_utf8_lossy(&request.message)
+                        peer,
+                        request_id,
+                        String::from_utf8_lossy(&request.message)
                     );
-                                    
+
                     // Prepare the response
                     let response = DirectMessageResponse {
-                        message: format!("Hello back, {}",  String::from_utf8_lossy(&request.message)),
+                        message: format!(
+                            "Hello back, {}",
+                            String::from_utf8_lossy(&request.message)
+                        )
+                        .as_bytes()
+                        .to_vec(),
                     };
 
                     swarm
@@ -40,7 +47,9 @@ pub fn handle_request_response(
                 } => {
                     println!(
                         "Received response from {:?} with request_id {:?}: {:?}",
-                        peer, request_id, response
+                        peer,
+                        request_id,
+                        String::from_utf8_lossy(&response.message)
                     );
                 }
             }

@@ -19,5 +19,5 @@ pub struct DirectMessageRequest {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DirectMessageResponse {
-    pub message: String,
+    pub message: Vec<u8>,
 }
