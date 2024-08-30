@@ -256,6 +256,7 @@ async fn test_p2p_server_handshake_direct_message() {
     let handshake = Handshake {
         genesis_block_hash: "0xgenesis".to_string(),
         latest_block_hash: "0xlatest".to_string(),
+        latest_block_index: 0,
     };
 
     let encoded_handshake = encode(&handshake);

@@ -120,6 +120,7 @@ impl Encodable for Handshake {
         stream.begin_list(2);
         stream.append(&self.genesis_block_hash);
         stream.append(&self.latest_block_hash);
+        stream.append(&self.latest_block_index);
     }
 }
 
@@ -128,6 +129,7 @@ impl Decodable for Handshake {
         Ok(Handshake {
             genesis_block_hash: rlp.val_at(0)?,
             latest_block_hash: rlp.val_at(1)?,
+            latest_block_index: rlp.val_at(2)?,
         })
     }
 }

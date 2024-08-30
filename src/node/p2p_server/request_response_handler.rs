@@ -130,6 +130,7 @@ async fn handshake_response(
     let handshake = Handshake {
         genesis_block_hash : genesis_block.hash,
         latest_block_hash: latest_block.hash,
+        latest_block_index: latest_block.index,
     };
 
     let message = encode(&handshake);
