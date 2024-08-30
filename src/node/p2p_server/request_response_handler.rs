@@ -19,12 +19,13 @@ pub fn handle_request_response(
                     channel,
                 } => {
                     println!(
-                        "Received request from {:?} with request_id {:?}: {:?}",
-                        peer, request_id, request
+                        "Received request from {:?} with request_id {:?}: {}",
+                        peer, request_id, String::from_utf8_lossy(&request.message)
                     );
+                                    
                     // Prepare the response
                     let response = DirectMessageResponse {
-                        message: format!("Hello back, {}", request.message),
+                        message: format!("Hello back, {}",  String::from_utf8_lossy(&request.message)),
                     };
 
                     swarm

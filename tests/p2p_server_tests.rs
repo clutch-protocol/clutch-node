@@ -252,7 +252,7 @@ async fn test_p2p_server_direct_message() {
     assert!(connected_peers.contains(&peer_id_server2));
 
     let direct_message = DirectMessageRequest {
-        message: "Hello from Server 1".to_string(),
+        message: "Hello from Server 1".as_bytes().to_vec(),
     };
 
     // Send a direct message from server2 to server1

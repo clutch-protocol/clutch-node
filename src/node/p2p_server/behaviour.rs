@@ -1,8 +1,6 @@
 use libp2p::{
-    gossipsub::Behaviour as GossipsubBehaviour,
-    mdns::tokio::Behaviour as MsdnBehaviour,
-    request_response::cbor::Behaviour as RequestResponseBehavior,
-    swarm::NetworkBehaviour,
+    gossipsub::Behaviour as GossipsubBehaviour, mdns::tokio::Behaviour as MsdnBehaviour,
+    request_response::cbor::Behaviour as RequestResponseBehavior, swarm::NetworkBehaviour,
 };
 
 use serde::{Deserialize, Serialize};
@@ -16,7 +14,7 @@ pub struct P2PBehaviour {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DirectMessageRequest {
-    pub message: String,
+    pub message: Vec<u8>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
