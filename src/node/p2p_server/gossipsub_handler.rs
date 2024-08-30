@@ -1,14 +1,14 @@
-use crate::node::{block::Block, p2p_server::GossipMessageType};
 use crate::node::blockchain::Blockchain;
-use crate::node::transaction::Transaction;
 use crate::node::rlp_encoding::decode;
+use crate::node::transaction::Transaction;
+use crate::node::{block::Block, p2p_server::GossipMessageType};
 
 use libp2p::{
-    gossipsub::{self, MessageId}, PeerId,
+    gossipsub::{self, MessageId},
+    PeerId,
 };
 use std::sync::Arc;
 use tokio::sync::Mutex;
-
 
 pub async fn handle_gossipsub_message(
     peer_id: PeerId,
@@ -17,7 +17,9 @@ pub async fn handle_gossipsub_message(
     blockchain: &Arc<Mutex<Blockchain>>,
 ) {
     println!(
-        "Got message: '{}' with id: {id} from peer: {peer_id}",
+        "Received gossip message from peer: {} with id:'{}': {} ",
+        peer_id,
+        id,
         String::from_utf8_lossy(&message.data),
     );
 

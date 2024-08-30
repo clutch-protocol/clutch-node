@@ -1,10 +1,13 @@
 use libp2p::{
     request_response::{Event as RequestResponseEvent, Message as RequestResponseMessage},
-    swarm::Swarm,
+    swarm::Swarm,    
 };
 
+use crate::node::rlp_encoding::decode;
+use crate::node::p2p_server::commands::DirectMessageType;
 use super::behaviour::{DirectMessageRequest, DirectMessageResponse};
 use super::P2PBehaviour;
+use crate::node::transaction::Transaction;
 
 pub fn handle_request_response(
     event: RequestResponseEvent<DirectMessageRequest, DirectMessageResponse>,
@@ -19,11 +22,29 @@ pub fn handle_request_response(
                     channel,
                 } => {
                     println!(
-                        "Received request from {:?} with request_id {:?}: {}",
+                        "Received direct message from peer:{:?} with id {:?}: {}",
                         peer,
                         request_id,
                         String::from_utf8_lossy(&request.message)
                     );
+
+                    let message_type = DirectMessageType::from_byte(request.message[0]);
+                    let payload = &request.message[1..];
+
+                    match message_type {
+                        Some(DirectMessageType::Handshake) => match decode::<Transaction>(payload) {
+                            Ok(transaction) => {
+                                println!("Decoded transaction: {:?}", &transaction);
+                                // handle_received_handshake(&transaction, blockchain).await;
+                            }
+                            Err(e) => {
+                                eprintln!("Failed to decode transaction: {:?}", e);
+                            }
+                        },                      
+                        _ => {
+                            eprintln!("Unknown message type: {:?}", message_type);
+                        }
+                    }
 
                     // Prepare the response
                     let response = DirectMessageResponse {

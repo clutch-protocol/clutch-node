@@ -1,5 +1,9 @@
+use libp2p::{
+    gossipsub::{self, MessageId},
+    request_response::OutboundRequestId,
+    PeerId,
+};
 use std::collections::HashSet;
-use libp2p::{gossipsub::{self, MessageId}, request_response::OutboundRequestId, PeerId};
 use tokio::sync::oneshot;
 
 use super::behaviour::DirectMessageRequest;
@@ -41,6 +45,26 @@ impl GossipMessageType {
         match byte {
             0x01 => Some(GossipMessageType::Transaction),
             0x02 => Some(GossipMessageType::Block),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum DirectMessageType {
+    Handshake,
+}
+
+impl DirectMessageType {
+    pub fn as_byte(&self) -> u8 {
+        match self {
+            DirectMessageType::Handshake => 0x01,
+        }
+    }
+
+    pub fn from_byte(byte: u8) -> Option<Self> {
+        match byte {
+            0x01 => Some(DirectMessageType::Handshake),
             _ => None,
         }
     }
