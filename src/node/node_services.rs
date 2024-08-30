@@ -128,8 +128,8 @@ impl NodeServices {
                         )
                         .await;
                     }
-                    Err(_e) => {
-                        // eprintln!("Error authoring new block: {}", e);
+                    Err(e) => {
+                         eprintln!("Error authoring new block: {}", e);
                     }
                 }
             }
