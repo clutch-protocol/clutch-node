@@ -1,5 +1,7 @@
 use clutch_node::node::blockchain::Blockchain;
-use clutch_node::node::p2p_server::{behaviour::DirectMessageRequest, GossipMessageType, P2PServer, P2PServerCommand};
+use clutch_node::node::p2p_server::{
+    behaviour::DirectMessageRequest, GossipMessageType, P2PServer, P2PServerCommand,
+};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
@@ -73,7 +75,12 @@ async fn test_p2p_server_gossip_message() {
 
     // Send a message from server1 to server2
     let message = b"Hello, world!".to_vec();
-    P2PServer::gossip_message_command(command_tx1.clone(), GossipMessageType::Transaction, &message).await;
+    P2PServer::gossip_message_command(
+        command_tx1.clone(),
+        GossipMessageType::Transaction,
+        &message,
+    )
+    .await;
 
     // Wait for the message to propagate
     tokio::time::sleep(Duration::from_secs(1)).await;
@@ -102,7 +109,7 @@ async fn test_p2p_server_connected_peers() {
     let (_server1, command_tx1) = setup_p2p_server(
         topic_name,
         &["/ip4/127.0.0.1/tcp/4001"],
-        &["/ip4/127.0.0.1/tcp/4002"],
+        &["/ip4/127.0.0.1/tcp/4003"],
         Arc::clone(&blockchain),
     )
     .await;
@@ -114,19 +121,48 @@ async fn test_p2p_server_connected_peers() {
     )
     .await;
 
+    let (_server3, command_tx3) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4003"],
+        &["/ip4/127.0.0.1/tcp/4002"],
+        Arc::clone(&blockchain),
+    )
+    .await;
+
     // Wait for the peers to connect
     tokio::time::sleep(Duration::from_secs(1)).await;
+
+    let peer_id_server1 = P2PServer::get_local_peer_id_command(command_tx1.clone()).await;
+    let peer_id_server2 = P2PServer::get_local_peer_id_command(command_tx2.clone()).await;
+    let peer_id_server3 = P2PServer::get_local_peer_id_command(command_tx3.clone()).await;
 
     // // Check connected peers
     let connected_peers_server1 = P2PServer::get_connected_peers_command(command_tx1.clone())
         .await
         .unwrap();
+
     let connected_peers_server2 = P2PServer::get_connected_peers_command(command_tx2.clone())
         .await
         .unwrap();
 
-    println!("Server 1 connected peers: {:?}", connected_peers_server1);
-    println!("Server 2 connected peers: {:?}", connected_peers_server2);
+    let connected_peers_server3 = P2PServer::get_connected_peers_command(command_tx3.clone())
+        .await
+        .unwrap();
+
+    println!(
+        "peer_id server 1: {:?}, connected peers: {:?}",
+        peer_id_server1, connected_peers_server1
+    );
+
+    println!(
+        "peer_id server 2: {:?}, connected peers: {:?}",
+        peer_id_server2, connected_peers_server2
+    );
+
+    println!(
+        "peer_id server 3: {:?}, connected peers: {:?}",
+        peer_id_server3, connected_peers_server3
+    );
 
     // Shut down the servers
     drop(command_tx1);
