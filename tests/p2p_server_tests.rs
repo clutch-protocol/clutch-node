@@ -1,7 +1,8 @@
 use clutch_node::node::blockchain::Blockchain;
-use clutch_node::node::p2p_server::{
-    behaviour::DirectMessageRequest, GossipMessageType, P2PServer, P2PServerCommand,
-};
+use clutch_node::node::handshake::Handshake;
+use clutch_node::node::p2p_server::commands::DirectMessageType;
+use clutch_node::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
+use clutch_node::node::rlp_encoding::encode;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
@@ -212,7 +213,7 @@ async fn test_p2p_server_get_local_peer_id() {
 }
 
 #[tokio::test]
-async fn test_p2p_server_direct_message() {
+async fn test_p2p_server_handshake_direct_message() {
     let topic_name = "test-topic";
 
     // Initialize blockchain
@@ -251,15 +252,18 @@ async fn test_p2p_server_direct_message() {
         .unwrap();
     assert!(connected_peers.contains(&peer_id_server2));
 
-    let direct_message = DirectMessageRequest {
-        message: "Hello from Server 1".as_bytes().to_vec(),
+    let handshake = Handshake {
+        latest_block_hash: "0x".to_string(),
     };
+
+    let encoded_handshake = encode(&handshake);
 
     // Send a direct message from server2 to server1
     let request_id = P2PServer::send_direct_message_command(
         command_tx2.clone(),
         peer_id_server1,
-        direct_message,
+        DirectMessageType::Handshake,
+        &encoded_handshake,
     )
     .await
     .unwrap();

@@ -2,7 +2,9 @@ extern crate rlp;
 
 use crate::node::block::Block;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
+use crate::node::handshake::Handshake;
 use crate::node::transaction::Transaction;
+
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 impl Encodable for FunctionCallType {
@@ -113,6 +115,21 @@ impl Decodable for Block {
     }
 }
 
+impl Encodable for Handshake {
+    fn rlp_append(&self, stream: &mut RlpStream) {
+        stream.begin_list(1);
+        stream.append(&self.latest_block_hash);
+    }
+}
+
+impl Decodable for Handshake {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        Ok(Handshake {
+            latest_block_hash: rlp.val_at(0)?,
+        })
+    }
+}
+
 pub fn encode<T: Encodable>(data: &T) -> Vec<u8> {
     let mut stream = RlpStream::new();
     data.rlp_append(&mut stream);
@@ -192,7 +209,8 @@ mod tests {
 
         let block = Block {
             index: 1,
-            previous_hash: "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+            previous_hash: "0000000000000000000000000000000000000000000000000000000000000000"
+                .to_string(),
             author: "0x1234cfb63db134698e1879ea24904df074726cc0".to_string(),
             signature_r: "4b0cb46ae73d852bb75653ed1f1710676b0b736cd33aefc0c96e6e11417a4c34"
                 .to_string(),

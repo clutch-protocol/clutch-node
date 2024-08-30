@@ -6,8 +6,8 @@ use libp2p::{
     mdns::{self, Event as MdnsEvent},
     noise,
     request_response::{
-        cbor::Behaviour as RequestResponseBehavior, Config as RequestResponseConfig, OutboundRequestId,
-        ProtocolSupport as RequestResponseProtocolSupport,
+        cbor::Behaviour as RequestResponseBehavior, Config as RequestResponseConfig,
+        OutboundRequestId, ProtocolSupport as RequestResponseProtocolSupport,
     },
     swarm::{Swarm, SwarmEvent},
     tcp, yamux, Multiaddr, PeerId, StreamProtocol,
@@ -26,7 +26,13 @@ use tokio::{
 };
 use tracing_subscriber::EnvFilter;
 
-use super::{behaviour::{DirectMessageRequest, DirectMessageResponse, P2PBehaviourEvent}, gossipsub_handler::handle_gossipsub_message, request_response_handler::handle_request_response, GossipMessageType, P2PBehaviour, P2PServerCommand};
+use super::{
+    behaviour::{DirectMessageRequest, DirectMessageResponse, P2PBehaviourEvent},
+    commands::DirectMessageType,
+    gossipsub_handler::handle_gossipsub_message,
+    request_response_handler::handle_request_response,
+    GossipMessageType, P2PBehaviour, P2PServerCommand,
+};
 
 pub struct P2PServer {
     pub behaviour: Swarm<P2PBehaviour>,
@@ -80,30 +86,25 @@ impl P2PServer {
     }
 
     #[allow(dead_code)]
-    pub async fn get_connected_peers_command(
-        command_tx_p2p: Sender<P2PServerCommand>,
-    ) -> Result<HashSet<PeerId>, Box<dyn Error>> {
-        let (response_tx, response_rx) = oneshot::channel();
-        command_tx_p2p
-            .send(P2PServerCommand::GetConnectedPeers { response_tx })
-            .await?;
-
-        let peers = response_rx.await?;
-        Ok(peers)
-    }
-
-    #[allow(dead_code)]
     pub async fn send_direct_message_command(
         command_tx_p2p: Sender<P2PServerCommand>,
         peer_id: PeerId,
-        message: DirectMessageRequest,
+        message_type: DirectMessageType,
+        message: &Vec<u8>,
     ) -> Result<OutboundRequestId, Box<dyn Error>> {
         let (response_tx, response_rx) = oneshot::channel();
+
+        let mut message_with_type = vec![message_type.as_byte()];
+        message_with_type.extend(message);
+
+        let direct_message = DirectMessageRequest {
+            message: message_with_type,
+        };
 
         command_tx_p2p
             .send(P2PServerCommand::SendDirectMessage {
                 peer_id,
-                message,
+                message: direct_message,
                 response_tx,
             })
             .await?;
@@ -125,6 +126,19 @@ impl P2PServer {
             .unwrap();
 
         response_rx.await.unwrap()
+    }
+
+    #[allow(dead_code)]
+    pub async fn get_connected_peers_command(
+        command_tx_p2p: Sender<P2PServerCommand>,
+    ) -> Result<HashSet<PeerId>, Box<dyn Error>> {
+        let (response_tx, response_rx) = oneshot::channel();
+        command_tx_p2p
+            .send(P2PServerCommand::GetConnectedPeers { response_tx })
+            .await?;
+
+        let peers = response_rx.await?;
+        Ok(peers)
     }
 
     pub async fn run(
@@ -298,7 +312,7 @@ impl P2PServer {
                 handle_gossipsub_message(peer_id, id, message, blockchain).await;
             }
             SwarmEvent::Behaviour(P2PBehaviourEvent::RequestResponse(event)) => {
-                handle_request_response(event, swarm);
+                handle_request_response(event, swarm, blockchain).await;
             }
             SwarmEvent::NewListenAddr { address, .. } => {
                 println!("Local node is listening on {address}");
