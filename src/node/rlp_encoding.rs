@@ -117,7 +117,8 @@ impl Decodable for Block {
 
 impl Encodable for Handshake {
     fn rlp_append(&self, stream: &mut RlpStream) {
-        stream.begin_list(1);
+        stream.begin_list(2);
+        stream.append(&self.genesis_block_hash);
         stream.append(&self.latest_block_hash);
     }
 }
@@ -125,7 +126,8 @@ impl Encodable for Handshake {
 impl Decodable for Handshake {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         Ok(Handshake {
-            latest_block_hash: rlp.val_at(0)?,
+            genesis_block_hash: rlp.val_at(0)?,
+            latest_block_hash: rlp.val_at(1)?,
         })
     }
 }

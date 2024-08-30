@@ -45,6 +45,10 @@ impl Blockchain {
         Block::get_latest_block(&self.db)
     }
 
+    pub fn get_genesis_block(&self) -> Option<Block> {
+        Block::get_genesis_block(&self.db)
+    }
+
     #[allow(dead_code)]
     pub fn get_account_state(&self, public_key: &String) -> AccountState {
         AccountState::get_current_state(public_key, &self.db)

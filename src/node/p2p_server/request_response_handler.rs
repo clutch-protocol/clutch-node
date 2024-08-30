@@ -24,10 +24,8 @@ pub async fn handle_request_response(
                 channel,
             } => {
                 println!(
-                    "Received direct message from peer:{:?} with id {:?}: {}",
-                    peer,
-                    request_id,
-                    String::from_utf8_lossy(&request.message)
+                    "Received direct message from peer:{:?} with id {:?}",
+                    peer, request_id,
                 );
 
                 let message_type = DirectMessageType::from_byte(request.message[0]);
@@ -36,9 +34,38 @@ pub async fn handle_request_response(
                 match message_type {
                     Some(DirectMessageType::Handshake) => match decode::<Handshake>(payload) {
                         Ok(handshake) => {
-                            println!("Decoded handshake: {:?}", &handshake);
+                            println!("Received and decoded handshake: {:?}", &handshake);
                             let response_message = handshake_response(&handshake, blockchain).await;
-                            send_response(response_message, swarm, channel);
+                            send_message(response_message, swarm, channel);
+                        }
+                        Err(e) => {
+                            eprintln!("Failed to decode handshake: {:?}", e);
+                        }
+                    },
+                    _ => {
+                        eprintln!(
+                            "Received direct message: unknown DirectMessageType: {:?}",
+                            message_type
+                        );
+                    }
+                }
+            }
+            RequestResponseMessage::Response {
+                request_id,
+                response,
+            } => {
+                println!(
+                    "Received response from {:?} with request_id {:?}",
+                    peer, request_id,
+                );
+
+                let message_type = DirectMessageType::from_byte(response.message[0]);
+                let payload = &response.message[1..];
+
+                match message_type {
+                    Some(DirectMessageType::Handshake) => match decode::<Handshake>(payload) {
+                        Ok(handshake) => {
+                            println!("Decoded handshake: {:?}", &handshake);
                         }
                         Err(e) => {
                             eprintln!("Failed to decode handshake: {:?}", e);
@@ -48,17 +75,6 @@ pub async fn handle_request_response(
                         eprintln!("Unknown DirectMessageType: {:?}", message_type);
                     }
                 }
-            }
-            RequestResponseMessage::Response {
-                request_id,
-                response,
-            } => {
-                println!(
-                    "Received response from {:?} with request_id {:?}: {:?}",
-                    peer,
-                    request_id,
-                    String::from_utf8_lossy(&response.message)
-                );
             }
         },
         RequestResponseEvent::OutboundFailure {
@@ -87,7 +103,7 @@ pub async fn handle_request_response(
     }
 }
 
-fn send_response(
+fn send_message(
     response_message: Vec<u8>,
     swarm: &mut Swarm<P2PBehaviour>,
     channel: libp2p::request_response::ResponseChannel<DirectMessageResponse>,
@@ -109,10 +125,15 @@ async fn handshake_response(
 ) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
     let latest_block = blockchain.get_latest_block().unwrap();
+    let genesis_block = blockchain.get_genesis_block().unwrap();
 
     let handshake = Handshake {
+        genesis_block_hash : genesis_block.hash,
         latest_block_hash: latest_block.hash,
     };
 
-    encode(&handshake)
+    let message = encode(&handshake);
+    let mut message_with_type = vec![DirectMessageType::Handshake.as_byte()];
+    message_with_type.extend(message);
+    message_with_type
 }

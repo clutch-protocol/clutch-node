@@ -86,7 +86,7 @@ impl Block {
         let r = &self.signature_r;
         let s = &self.signature_s;
         let v = self.signature_v;
-    
+
         signature_keys::SignatureKeys::verify(author, data, r, s, v)
     }
 
@@ -116,7 +116,7 @@ impl Block {
                     }
                     Err(e) => return Err(format!("Signature verification error: {}", e)),
                 }
-    
+
                 if self.index != latest_block.index + 1 {
                     return Err(format!(
                         "Invalid block: The block index should be {}, but it was {}.",
@@ -124,14 +124,14 @@ impl Block {
                         self.index
                     ));
                 }
-    
+
                 if self.previous_hash != latest_block.hash {
                     return Err(format!(
                         "Invalid block: The previous hash should be {}, but it was {}.",
                         latest_block.hash, self.previous_hash
                     ));
                 }
-    
+
                 Ok(true)
             }
             None => Ok(true),
@@ -186,18 +186,29 @@ impl Block {
 
         Some((keys, values))
     }
-
+    
     pub fn genesis_import_block(db: &Database) {
-        match db.get("block", b"block_0") {
-            Ok(Some(_)) => {
+        match Self::get_genesis_block(db) {
+            Some(_) => {
                 println!("Genesis block already exists.");
             }
-            Ok(None) => {
+            None => {
                 println!("Genesis block does not exist, creating new one...");
                 let genesis_block = Self::new_genesis_block();
                 Self::add_block_to_chain(db, &genesis_block);
             }
-            Err(e) => panic!("Failed to check for genesis block: {}", e),
+        }
+    }
+
+    pub fn get_genesis_block(db: &Database) -> Option<Block> {
+        match db.get("block", b"block_0") {
+            Ok(Some(value)) => {
+                let block_str = String::from_utf8(value).unwrap();
+                let block: Block = serde_json::from_str(&block_str).unwrap();
+                Some(block)
+            }
+            Ok(None) => None,
+            Err(_) => panic!("Failed to retrieve the genesis block"),
         }
     }
 
@@ -246,8 +257,8 @@ impl Block {
                 }
             }
 
-            // Prepare keys for deletion from tx_pool            
-            let tx_key =TransactionPool::construct_tx_pool_key(&tx.hash);
+            // Prepare keys for deletion from tx_pool
+            let tx_key = TransactionPool::construct_tx_pool_key(&tx.hash);
             tx_keys_to_delete.push(tx_key);
         }
 

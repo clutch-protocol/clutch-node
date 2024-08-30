@@ -165,6 +165,13 @@ async fn test_p2p_server_connected_peers() {
         peer_id_server3, connected_peers_server3
     );
 
+    // Ensure peers are connected
+    let connected_peers = P2PServer::get_connected_peers_command(command_tx1.clone())
+        .await
+        .unwrap();
+
+    assert!(connected_peers.contains(&peer_id_server2));
+
     // Shut down the servers
     drop(command_tx1);
     drop(command_tx2);
@@ -238,7 +245,7 @@ async fn test_p2p_server_handshake_direct_message() {
     .await;
 
     // Wait for the peers to connect
-    tokio::time::sleep(Duration::from_secs(5)).await;
+    tokio::time::sleep(Duration::from_secs(1)).await;
 
     // Get peer IDs
     let peer_id_server1 = P2PServer::get_local_peer_id_command(command_tx1.clone()).await;
@@ -246,14 +253,9 @@ async fn test_p2p_server_handshake_direct_message() {
     println!("peer_id server 1: {:?}", peer_id_server1);
     println!("peer_id server 2: {:?}", peer_id_server2);
 
-    // Ensure peers are connected
-    let connected_peers = P2PServer::get_connected_peers_command(command_tx1.clone())
-        .await
-        .unwrap();
-    assert!(connected_peers.contains(&peer_id_server2));
-
     let handshake = Handshake {
-        latest_block_hash: "0x".to_string(),
+        genesis_block_hash: "0xgenesis".to_string(),
+        latest_block_hash: "0xlatest".to_string(),
     };
 
     let encoded_handshake = encode(&handshake);
