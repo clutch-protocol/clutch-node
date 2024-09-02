@@ -53,18 +53,21 @@ impl GossipMessageType {
 #[derive(Debug)]
 pub enum DirectMessageType {
     Handshake,
+    GetBlockHeaders,
 }
 
 impl DirectMessageType {
     pub fn as_byte(&self) -> u8 {
         match self {
             DirectMessageType::Handshake => 0x01,
+            DirectMessageType::GetBlockHeaders => 0x02,
         }
     }
 
     pub fn from_byte(byte: u8) -> Option<Self> {
         match byte {
             0x01 => Some(DirectMessageType::Handshake),
+            0x02 => Some(DirectMessageType::GetBlockHeaders),
             _ => None,
         }
     }

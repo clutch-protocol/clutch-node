@@ -10,5 +10,5 @@ authorities = [
     "0x6fc11ba44483201f6e9c5eba6435805bb94ad080",
     "0xc4f3f661a43e099aedb8e396d9de1a831a1b4adc",
 ]
-
 bootstrap_nodes = []
+sync = true

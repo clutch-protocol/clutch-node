@@ -7,6 +7,8 @@ use crate::node::transaction::Transaction;
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
+use super::get_block_header::GetBlockHeaders;
+
 impl Encodable for FunctionCallType {
     fn rlp_append(&self, stream: &mut RlpStream) {
         let value = match *self {
@@ -130,6 +132,25 @@ impl Decodable for Handshake {
             genesis_block_hash: rlp.val_at(0)?,
             latest_block_hash: rlp.val_at(1)?,
             latest_block_index: rlp.val_at(2)?,
+        })
+    }
+}
+
+impl Encodable for GetBlockHeaders {
+    fn rlp_append(&self, stream: &mut RlpStream) {
+        stream.begin_list(3);
+        stream.append(&self.start_block_hash);
+        stream.append(&self.skip);
+        stream.append(&self.limit);
+    }
+}
+
+impl Decodable for GetBlockHeaders {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        Ok(GetBlockHeaders {
+            start_block_hash: rlp.val_at(0)?,
+            skip: rlp.val_at(1)?,
+            limit: rlp.val_at(2)?,
         })
     }
 }

@@ -2,6 +2,7 @@ use super::behaviour::{DirectMessageRequest, DirectMessageResponse};
 use super::P2PBehaviour;
 use crate::node::blockchain::Blockchain;
 use crate::node::handshake::Handshake;
+use crate::node::get_block_header::GetBlockHeaders;
 use crate::node::p2p_server::commands::DirectMessageType;
 use crate::node::rlp_encoding::{decode, encode};
 use libp2p::{
@@ -37,7 +38,17 @@ pub async fn handle_request_response(
                             println!("Received and decoded handshake: {:?}", &handshake);
                             let response_message = handshake_response(&handshake, blockchain).await;
                             send_message(response_message, swarm, channel);
+                        },
+                        Err(e) => {
+                            eprintln!("Failed to decode handshake: {:?}", e);
                         }
+                    },
+                    Some(DirectMessageType::GetBlockHeaders) => match decode::<GetBlockHeaders>(payload) {
+                        Ok(get_block_header) => {
+                            println!("Received and decoded getBlockHeader: {:?}", &get_block_header);
+                            let response_message = get_block_header_response(&get_block_header, blockchain).await;
+                            send_message(response_message, swarm, channel);
+                        },
                         Err(e) => {
                             eprintln!("Failed to decode handshake: {:?}", e);
                         }
@@ -124,8 +135,8 @@ async fn handshake_response(
     blockchain: &Arc<Mutex<Blockchain>>,
 ) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
-    let latest_block = blockchain.get_latest_block().unwrap();
-    let genesis_block = blockchain.get_genesis_block().unwrap();
+    let latest_block = blockchain.get_latest_block().expect("Failed to get latest block");
+    let genesis_block = blockchain.get_genesis_block().expect("Failed to get genesis block");
 
     let handshake = Handshake {
         genesis_block_hash : genesis_block.hash,
@@ -133,8 +144,36 @@ async fn handshake_response(
         latest_block_index: latest_block.index,
     };
 
-    let message = encode(&handshake);
-    let mut message_with_type = vec![DirectMessageType::Handshake.as_byte()];
-    message_with_type.extend(message);
+    let encoded_handshake = encode(&handshake);
+    
+    let mut message_with_type = Vec::with_capacity(1 + encoded_handshake.len());
+    message_with_type.push(DirectMessageType::Handshake.as_byte());
+    message_with_type.extend(encoded_handshake);
+
     message_with_type
 }
+
+
+async fn get_block_header_response(
+    _get_block_header: &GetBlockHeaders,
+    blockchain: &Arc<Mutex<Blockchain>>,
+) -> Vec<u8> {
+    let blockchain = blockchain.lock().await;
+    let latest_block = blockchain.get_latest_block().expect("Failed to get latest block");
+    let genesis_block = blockchain.get_genesis_block().expect("Failed to get genesis block");
+
+    let handshake = Handshake {
+        genesis_block_hash : genesis_block.hash,
+        latest_block_hash: latest_block.hash,
+        latest_block_index: latest_block.index,
+    };
+
+    let encoded_handshake = encode(&handshake);
+    
+    let mut message_with_type = Vec::with_capacity(1 + encoded_handshake.len());
+    message_with_type.push(DirectMessageType::GetBlockHeaders.as_byte());
+    message_with_type.extend(encoded_handshake);
+
+    message_with_type
+}
+
