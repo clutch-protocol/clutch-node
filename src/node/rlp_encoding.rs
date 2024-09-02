@@ -7,7 +7,9 @@ use crate::node::transaction::Transaction;
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
+use super::block_bodies::{BlockBodies, BlockBody};
 use super::block_headers::{BlockHeader, BlockHeaders};
+use super::get_block_bodies::GetBlockBodies;
 use super::get_block_header::GetBlockHeaders;
 
 impl Encodable for FunctionCallType {
@@ -199,6 +201,51 @@ impl Decodable for BlockHeaders {
     }
 }
 
+impl Encodable for GetBlockBodies {
+    fn rlp_append(&self, stream: &mut RlpStream) {
+        stream.begin_list(1);
+        stream.append_list(&self.block_indexes);
+    }
+}
+
+impl Decodable for GetBlockBodies {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        Ok(GetBlockBodies {
+            block_indexes: rlp.list_at(0)?,
+        })
+    }
+}
+
+impl Encodable for BlockBody {
+    fn rlp_append(&self, stream: &mut RlpStream) {
+        stream.begin_list(1);
+        stream.append_list(&self.transactions);
+    }
+}
+
+impl Decodable for BlockBody {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        Ok(BlockBody {
+            transactions: rlp.list_at(0)?,
+        })
+    }
+}
+
+impl Encodable for BlockBodies {
+    fn rlp_append(&self, stream: &mut RlpStream) {
+        stream.begin_list(1);
+        stream.append_list(&self.block_bodies);
+    }
+}
+
+impl Decodable for BlockBodies {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        Ok(BlockBodies {
+            block_bodies: rlp.list_at(0)?,
+        })
+    }
+}
+
 pub fn encode<T: Encodable>(data: &T) -> Vec<u8> {
     let mut stream = RlpStream::new();
     data.rlp_append(&mut stream);
@@ -303,7 +350,7 @@ mod tests {
     #[test]
     fn test_encode_decode_get_block_headers() {
         let get_block_headers = GetBlockHeaders {
-            start_block_index:0,            
+            start_block_index: 0,
             skip: 0,
             limit: 100,
         };
@@ -347,7 +394,6 @@ mod tests {
         };
 
         let block_headers = BlockHeaders {
-
             block_headers: vec![block_header_1, block_header_2],
         };
 

@@ -4,7 +4,7 @@ use super::transaction::Transaction;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BlockBodies {
-    pub block_headers: Vec<BlockBody>,
+    pub block_bodies: Vec<BlockBody>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
