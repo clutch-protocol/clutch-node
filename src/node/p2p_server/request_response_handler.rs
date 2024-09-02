@@ -1,8 +1,9 @@
 use super::behaviour::{DirectMessageRequest, DirectMessageResponse};
 use super::P2PBehaviour;
+use crate::node::block_headers::{BlockHeader, BlockHeaders};
 use crate::node::blockchain::Blockchain;
-use crate::node::handshake::Handshake;
 use crate::node::get_block_header::GetBlockHeaders;
+use crate::node::handshake::Handshake;
 use crate::node::p2p_server::commands::DirectMessageType;
 use crate::node::rlp_encoding::{decode, encode};
 use libp2p::{
@@ -38,21 +39,27 @@ pub async fn handle_request_response(
                             println!("Received and decoded handshake: {:?}", &handshake);
                             let response_message = handshake_response(&handshake, blockchain).await;
                             send_message(response_message, swarm, channel);
-                        },
+                        }
                         Err(e) => {
                             eprintln!("Failed to decode handshake: {:?}", e);
                         }
                     },
-                    Some(DirectMessageType::GetBlockHeaders) => match decode::<GetBlockHeaders>(payload) {
-                        Ok(get_block_header) => {
-                            println!("Received and decoded getBlockHeader: {:?}", &get_block_header);
-                            let response_message = get_block_header_response(&get_block_header, blockchain).await;
-                            send_message(response_message, swarm, channel);
-                        },
-                        Err(e) => {
-                            eprintln!("Failed to decode handshake: {:?}", e);
+                    Some(DirectMessageType::GetBlockHeaders) => {
+                        match decode::<GetBlockHeaders>(payload) {
+                            Ok(get_block_header) => {
+                                println!(
+                                    "Received and decoded getBlockHeader: {:?}",
+                                    &get_block_header
+                                );
+                                let response_message =
+                                    get_block_header_response(&get_block_header, blockchain).await;
+                                send_message(response_message, swarm, channel);
+                            }
+                            Err(e) => {
+                                eprintln!("Failed to decode handshake: {:?}", e);
+                            }
                         }
-                    },
+                    }
                     _ => {
                         eprintln!(
                             "Received direct message: unknown DirectMessageType: {:?}",
@@ -82,6 +89,16 @@ pub async fn handle_request_response(
                             eprintln!("Failed to decode handshake: {:?}", e);
                         }
                     },
+                    Some(DirectMessageType::GetBlockHeaders) => {
+                        match decode::<BlockHeaders>(payload) {
+                            Ok(block_headers) => {
+                                println!("Decoded get_block_headers: {:?}", &block_headers);
+                            }
+                            Err(e) => {
+                                eprintln!("Failed to decode get_block_headers: {:?}", e);
+                            }
+                        }
+                    }
                     _ => {
                         eprintln!("Unknown DirectMessageType: {:?}", message_type);
                     }
@@ -135,17 +152,21 @@ async fn handshake_response(
     blockchain: &Arc<Mutex<Blockchain>>,
 ) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
-    let latest_block = blockchain.get_latest_block().expect("Failed to get latest block");
-    let genesis_block = blockchain.get_genesis_block().expect("Failed to get genesis block");
+    let latest_block = blockchain
+        .get_latest_block()
+        .expect("Failed to get latest block");
+    let genesis_block = blockchain
+        .get_genesis_block()
+        .expect("Failed to get genesis block");
 
     let handshake = Handshake {
-        genesis_block_hash : genesis_block.hash,
+        genesis_block_hash: genesis_block.hash,
         latest_block_hash: latest_block.hash,
         latest_block_index: latest_block.index,
     };
 
     let encoded_handshake = encode(&handshake);
-    
+
     let mut message_with_type = Vec::with_capacity(1 + encoded_handshake.len());
     message_with_type.push(DirectMessageType::Handshake.as_byte());
     message_with_type.extend(encoded_handshake);
@@ -153,27 +174,27 @@ async fn handshake_response(
     message_with_type
 }
 
-
 async fn get_block_header_response(
-    _get_block_header: &GetBlockHeaders,
+    get_block_header: &GetBlockHeaders,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
-    let latest_block = blockchain.get_latest_block().expect("Failed to get latest block");
-    let genesis_block = blockchain.get_genesis_block().expect("Failed to get genesis block");
 
-    let handshake = Handshake {
-        genesis_block_hash : genesis_block.hash,
-        latest_block_hash: latest_block.hash,
-        latest_block_index: latest_block.index,
-    };
+    let skip = get_block_header.skip;
+    let limit = get_block_header.limit;
+    let blocks = blockchain
+        .get_blocks_with_limit_and_skip(skip, limit)
+        .expect("Failed to get blocks");
 
-    let encoded_handshake = encode(&handshake);
-    
-    let mut message_with_type = Vec::with_capacity(1 + encoded_handshake.len());
+    let block_headers: Vec<BlockHeader> =
+        blocks.iter().map(|block| block.to_block_header()).collect();
+
+    let block_headers = BlockHeaders { block_headers };
+    let encoded_block_headers = encode(&block_headers);
+
+    let mut message_with_type = Vec::with_capacity(1 + encoded_block_headers.len());
     message_with_type.push(DirectMessageType::GetBlockHeaders.as_byte());
-    message_with_type.extend(encoded_handshake);
+    message_with_type.extend(encoded_block_headers);
 
     message_with_type
 }
-

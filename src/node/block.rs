@@ -6,6 +6,8 @@ use crate::node::signature_keys;
 use crate::node::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
 
+use super::block_headers::BlockHeader;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
     pub index: usize,
@@ -160,6 +162,36 @@ impl Block {
         }
     }
 
+    pub fn get_blocks_with_limit_and_skip(
+        db: &Database,
+        skip: usize,
+        limit: usize,
+    ) -> Result<Vec<Block>, String> {
+        match db.get_keys_values_by_cf_name("block") {
+            Ok(entries) => {
+                let mut blocks = Vec::new();
+
+                // Skip the specified number of blocks
+                let skipped_entries = entries.into_iter().skip(skip);
+
+                // Limit the number of blocks retrieved
+                for (_key, value) in skipped_entries.take(limit) {
+                    match serde_json::from_slice::<Block>(&value) {
+                        Ok(block) => {
+                            blocks.push(block);
+                        }
+                        Err(e) => {
+                            return Err(format!("Failed to deserialize block: {}", e));
+                        }
+                    }
+                }
+
+                Ok(blocks)
+            }
+            Err(e) => Err(format!("Failed to retrieve blocks: {}", e)),
+        }
+    }
+
     pub fn state_block(&self) -> Option<(Vec<Vec<u8>>, Vec<Vec<u8>>)> {
         let mut keys: Vec<Vec<u8>> = Vec::new();
         let mut values: Vec<Vec<u8>> = Vec::new();
@@ -186,7 +218,7 @@ impl Block {
 
         Some((keys, values))
     }
-    
+
     pub fn genesis_import_block(db: &Database) {
         match Self::get_genesis_block(db) {
             Some(_) => {
@@ -283,6 +315,18 @@ impl Block {
                 block.hash, block.index
             ),
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
+        }
+    }
+
+    pub fn to_block_header(&self) -> BlockHeader {
+        BlockHeader {
+            index: self.index,
+            previous_hash: self.previous_hash.clone(),
+            author: self.author.clone(),
+            signature_r: self.signature_r.clone(),
+            signature_s: self.signature_s.clone(),
+            signature_v: self.signature_v,
+            hash: self.hash.clone(),
         }
     }
 }

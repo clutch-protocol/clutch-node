@@ -7,6 +7,7 @@ use crate::node::transaction::Transaction;
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
+use super::block_headers::{BlockHeader, BlockHeaders};
 use super::get_block_header::GetBlockHeaders;
 
 impl Encodable for FunctionCallType {
@@ -155,6 +156,49 @@ impl Decodable for GetBlockHeaders {
     }
 }
 
+impl Encodable for BlockHeader {
+    fn rlp_append(&self, stream: &mut RlpStream) {
+        stream.begin_list(7);
+        stream.append(&self.index);
+        stream.append(&self.previous_hash);
+        stream.append(&self.author);
+        stream.append(&self.signature_r);
+        stream.append(&self.signature_s);
+        let signature_v_as_u64 = self.signature_v as u64;
+        stream.append(&signature_v_as_u64);
+        stream.append(&self.hash);
+    }
+}
+
+impl Decodable for BlockHeader {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        Ok(BlockHeader {
+            index: rlp.val_at(0)?,
+            previous_hash: rlp.val_at(1)?,
+            author: rlp.val_at(2)?,
+            signature_r: rlp.val_at(3)?,
+            signature_s: rlp.val_at(4)?,
+            signature_v: rlp.val_at::<u64>(5)? as i32,
+            hash: rlp.val_at(6)?,
+        })
+    }
+}
+
+impl Encodable for BlockHeaders {
+    fn rlp_append(&self, stream: &mut RlpStream) {
+        stream.begin_list(1);
+        stream.append_list(&self.block_headers);
+    }
+}
+
+impl Decodable for BlockHeaders {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        Ok(BlockHeaders {
+            block_headers: rlp.list_at(0)?,
+        })
+    }
+}
+
 pub fn encode<T: Encodable>(data: &T) -> Vec<u8> {
     let mut stream = RlpStream::new();
     data.rlp_append(&mut stream);
@@ -253,6 +297,68 @@ mod tests {
         match decoded {
             Ok(block) => println!("Decoded Block: {:?}", block),
             Err(e) => println!("Failed to decode block: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_encode_decode_get_block_headers() {
+        let get_block_headers = GetBlockHeaders {
+            start_block_hash: "2282c46637becfbe1f0f11d6d7d878ba1fa6c41fe5cad3bbdede42f6e5ac36e3"
+                .to_string(),
+            skip: 0,
+            limit: 100,
+        };
+
+        let encoded = encode(&get_block_headers);
+        println!("Encoded: {:?}", encoded);
+
+        let decoded = decode::<GetBlockHeaders>(&encoded);
+        match decoded {
+            Ok(tx) => println!("Decoded: {:?}", tx),
+            Err(e) => println!("Failed to decode transaction: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_encode_decode_block_headers() {
+        let block_header_1 = BlockHeader {
+            index: 1,
+            previous_hash: "0000000000000000000000000000000000000000000000000000000000000000"
+                .to_string(),
+            author: "0x1234cfb63db134698e1879ea24904df074726cc0".to_string(),
+            signature_r: "4b0cb46ae73d852bb75653ed1f1710676b0b736cd33aefc0c96e6e11417a4c34"
+                .to_string(),
+            signature_s: "496086bdc703286c0727c59e07b727cadfc2fe7b9c061149e4a86e726ed23910"
+                .to_string(),
+            signature_v: 27,
+            hash: "2086095648e3160d0dfa5d40bdf4693d8a00d77ed3fb3b607156465b3e0de2dc".to_string(),
+        };
+
+        let block_header_2 = BlockHeader {
+            index: 1,
+            previous_hash: "0000000000000000000000000000000000000000000000000000000000000002"
+                .to_string(),
+            author: "0x1234cfb63db134698e1879ea24904df074726cc0".to_string(),
+            signature_r: "4b0cb46ae73d852bb75653ed1f1710676b0b736cd33aefc0c96e6e11417a4c34"
+                .to_string(),
+            signature_s: "496086bdc703286c0727c59e07b727cadfc2fe7b9c061149e4a86e726ed23910"
+                .to_string(),
+            signature_v: 27,
+            hash: "2086095648e3160d0dfa5d40bdf4693d8a00d77ed3fb3b607156465b3e0de2dc".to_string(),
+        };
+
+        let block_headers = BlockHeaders {
+
+            block_headers: vec![block_header_1, block_header_2],
+        };
+
+        let encoded = encode(&block_headers);
+        println!("Encoded: {:?}", encoded);
+
+        let decoded = decode::<BlockHeaders>(&encoded);
+        match decoded {
+            Ok(tx) => println!("Decoded: {:?}", tx),
+            Err(e) => println!("Failed to decode transaction: {:?}", e),
         }
     }
 }

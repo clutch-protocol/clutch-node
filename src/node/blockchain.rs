@@ -82,6 +82,14 @@ impl Blockchain {
         Block::get_blocks(&self.db)
     }
 
+    pub fn get_blocks_with_limit_and_skip(
+        &self,
+        skip: usize,
+        limit: usize,
+    ) -> Result<Vec<Block>, String> {
+        Block::get_blocks_with_limit_and_skip(&self.db, skip, limit)
+    }
+
     #[allow(dead_code)]
     pub fn current_author(&self) -> &String {
         self.consensus.current_author()
@@ -96,8 +104,7 @@ impl Blockchain {
         TransactionPool::get_transactions(&self.db)
     }
 
-    pub fn author_new_block(&self) -> Result<Block, String> {     
-        
+    pub fn author_new_block(&self) -> Result<Block, String> {
         let latest_block = match self.get_latest_block() {
             Some(block) => block,
             None => return Err("Failed to get the latest block in author_new_block".to_string()),
@@ -112,7 +119,7 @@ impl Blockchain {
 
         let mut new_block = Block::new_block(index, previous_hash, transactions);
         new_block.sign(&self.author_public_key, &self.author_secret_key);
-        self.import_block(&new_block)?;        
+        self.import_block(&new_block)?;
         Ok(new_block)
     }
 

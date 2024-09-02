@@ -26,3 +26,4 @@ pub mod transaction_pool;
 pub mod transfer;
 pub mod websocket;
 pub mod get_block_header;
+pub mod block_headers;

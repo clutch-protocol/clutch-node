@@ -1,4 +1,5 @@
 use clutch_node::node::blockchain::Blockchain;
+use clutch_node::node::get_block_header::GetBlockHeaders;
 use clutch_node::node::handshake::Handshake;
 use clutch_node::node::p2p_server::commands::DirectMessageType;
 use clutch_node::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
@@ -267,6 +268,69 @@ async fn test_p2p_server_handshake_direct_message() {
         peer_id_server1,
         DirectMessageType::Handshake,
         &encoded_handshake,
+    )
+    .await
+    .unwrap();
+
+    println!("Request ID: {:?}", request_id);
+
+    // Wait for the response or the event that handles the message
+    tokio::time::sleep(Duration::from_secs(5)).await;
+
+    // Shut down the servers
+    drop(command_tx1);
+    drop(command_tx2);
+    blockchain.lock().await.shutdown_blockchain();
+}
+
+#[tokio::test]
+async fn test_p2p_server_get_block_headers_direct_message() {
+    let topic_name = "test-topic";
+
+    // Initialize blockchain
+    let blockchain = Arc::new(Mutex::new(initialize_blockchain(
+        "clutch-node-test-1".to_string(),
+    )));
+
+    // Setup servers
+    let (_server1, command_tx1) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4001"],
+        &["/ip4/127.0.0.1/tcp/4002"],
+        Arc::clone(&blockchain),
+    )
+    .await;
+    let (_server2, command_tx2) = setup_p2p_server(
+        topic_name,
+        &["/ip4/127.0.0.1/tcp/4002"],
+        &["/ip4/127.0.0.1/tcp/4001"],
+        Arc::clone(&blockchain),
+    )
+    .await;
+
+    // Wait for the peers to connect
+    tokio::time::sleep(Duration::from_secs(1)).await;
+
+    // Get peer IDs
+    let peer_id_server1 = P2PServer::get_local_peer_id_command(command_tx1.clone()).await;
+    let peer_id_server2 = P2PServer::get_local_peer_id_command(command_tx2.clone()).await;
+    println!("peer_id server 1: {:?}", peer_id_server1);
+    println!("peer_id server 2: {:?}", peer_id_server2);
+
+    let get_block_headers = GetBlockHeaders {
+        start_block_hash: "2282c46637becfbe1f0f11d6d7d878ba1fa6c41fe5cad3bbdede42f6e5ac36e3".to_string(),
+        skip: 0,
+        limit: 100,
+    };
+
+    let encoded_get_block_headers = encode(&get_block_headers);
+
+    // Send a direct message from server2 to server1
+    let request_id = P2PServer::send_direct_message_command(
+        command_tx2.clone(),
+        peer_id_server1,
+        DirectMessageType::GetBlockHeaders,
+        &encoded_get_block_headers,
     )
     .await
     .unwrap();
