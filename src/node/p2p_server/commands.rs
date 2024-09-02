@@ -55,6 +55,8 @@ pub enum DirectMessageType {
     Handshake,
     GetBlockHeaders,
     BlockHeaders,
+    GetBlockBodies,
+    BlockBodies 
 }
 
 impl DirectMessageType {
@@ -63,6 +65,8 @@ impl DirectMessageType {
             DirectMessageType::Handshake => 0x01,
             DirectMessageType::GetBlockHeaders => 0x02,
             DirectMessageType::BlockHeaders => 0x03,
+            DirectMessageType::GetBlockBodies => 0x04,
+            DirectMessageType::BlockBodies => 0x05,
         }
     }
 
@@ -71,6 +75,8 @@ impl DirectMessageType {
             0x01 => Some(DirectMessageType::Handshake),
             0x02 => Some(DirectMessageType::GetBlockHeaders),
             0x03 => Some(DirectMessageType::BlockHeaders),
+            0x04 => Some(DirectMessageType::GetBlockBodies),
+            0x05 => Some(DirectMessageType::BlockBodies),
             _ => None,
         }
     }
