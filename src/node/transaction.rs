@@ -19,7 +19,7 @@ use std::vec;
 
 const FROM_GENESIS: &str = "0xGENESIS";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize,Clone)]
 pub struct Transaction {
     pub from: String,
     pub data: FunctionCall,

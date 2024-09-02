@@ -1,7 +1,9 @@
 use super::behaviour::{DirectMessageRequest, DirectMessageResponse};
 use super::P2PBehaviour;
+use crate::node::block_bodies::{BlockBodies, BlockBody};
 use crate::node::block_headers::{BlockHeader, BlockHeaders};
 use crate::node::blockchain::Blockchain;
+use crate::node::get_block_bodies::GetBlockBodies;
 use crate::node::get_block_header::GetBlockHeaders;
 use crate::node::handshake::Handshake;
 use crate::node::p2p_server::commands::DirectMessageType;
@@ -52,11 +54,27 @@ pub async fn handle_request_response(
                                     &get_block_header
                                 );
                                 let response_message =
-                                    get_block_header_response(&get_block_header, blockchain).await;
+                                    get_block_headers_response(&get_block_header, blockchain).await;
                                 send_message(response_message, swarm, channel);
                             }
                             Err(e) => {
-                                eprintln!("Failed to decode handshake: {:?}", e);
+                                eprintln!("Failed to decode getBlockHeader: {:?}", e);
+                            }
+                        }
+                    }
+                    Some(DirectMessageType::GetBlockBodies) => {
+                        match decode::<GetBlockBodies>(payload) {
+                            Ok(get_block_bodies) => {
+                                println!(
+                                    "Received and decoded GetBlockBodies: {:?}",
+                                    &get_block_bodies
+                                );
+                                let response_message =
+                                    get_block_bodies_response(&get_block_bodies, blockchain).await;
+                                send_message(response_message, swarm, channel);
+                            }
+                            Err(e) => {
+                                eprintln!("Failed to decode GetBlockBodies: {:?}", e);
                             }
                         }
                     }
@@ -83,19 +101,29 @@ pub async fn handle_request_response(
                 match message_type {
                     Some(DirectMessageType::Handshake) => match decode::<Handshake>(payload) {
                         Ok(handshake) => {
-                            println!("Decoded handshake: {:?}", &handshake);
+                            println!("Decoded Handshake: {:?}", &handshake);
                         }
                         Err(e) => {
-                            eprintln!("Failed to decode handshake: {:?}", e);
+                            eprintln!("Failed to decode Handshake: {:?}", e);
                         }
                     },
                     Some(DirectMessageType::BlockHeaders) => {
                         match decode::<BlockHeaders>(payload) {
                             Ok(block_headers) => {
-                                println!("Decoded get_block_headers: {:?}", &block_headers);
+                                println!("Decoded BlockHeaders: {:?}", &block_headers);
                             }
                             Err(e) => {
-                                eprintln!("Failed to decode get_block_headers: {:?}", e);
+                                eprintln!("Failed to decode BlockHeaders: {:?}", e);
+                            }
+                        }
+                    },
+                    Some(DirectMessageType::BlockBodies) => {
+                        match decode::<BlockBodies>(payload) {
+                            Ok(block_boodies) => {
+                                println!("Decoded BlockBodies: {:?}", &block_boodies);
+                            }
+                            Err(e) => {
+                                eprintln!("Failed to decode BlockBodies: {:?}", e);
                             }
                         }
                     }
@@ -174,7 +202,7 @@ async fn handshake_response(
     message_with_type
 }
 
-async fn get_block_header_response(
+async fn get_block_headers_response(
     get_block_header: &GetBlockHeaders,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) -> Vec<u8> {
@@ -196,6 +224,30 @@ async fn get_block_header_response(
     let mut message_with_type = Vec::with_capacity(1 + encoded_block_headers.len());
     message_with_type.push(DirectMessageType::BlockHeaders.as_byte());
     message_with_type.extend(encoded_block_headers);
+
+    message_with_type
+}
+
+async fn get_block_bodies_response(
+    get_block_boodies: &GetBlockBodies,
+    blockchain: &Arc<Mutex<Blockchain>>,
+) -> Vec<u8> {
+    let blockchain = blockchain.lock().await;
+
+    let block_indexes = get_block_boodies.block_indexes.clone();
+    let blocks = blockchain
+        .get_blocks_by_indexes(block_indexes)
+        .expect("Failed to get blocks");
+
+    let block_bodies: Vec<BlockBody> =
+        blocks.iter().map(|block| block.to_block_body()).collect();
+
+    let block_bodies = BlockBodies { block_bodies };
+    let encoded_block_boodies = encode(&block_bodies);
+
+    let mut message_with_type = Vec::with_capacity(1 + encoded_block_boodies.len());
+    message_with_type.push(DirectMessageType::BlockBodies.as_byte());
+    message_with_type.extend(encoded_block_boodies);
 
     message_with_type
 }

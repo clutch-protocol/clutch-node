@@ -1,15 +1,14 @@
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use serde::{Deserialize,Serialize};
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FunctionCall {
     pub function_call_type: FunctionCallType,
     pub arguments: String,
 }
 
-
-#[derive(Debug,Serialize,Deserialize)]
-pub enum FunctionCallType{
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum FunctionCallType {
     Transfer,
     RideRequest,
     RideOffer,

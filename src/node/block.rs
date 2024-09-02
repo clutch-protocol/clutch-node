@@ -6,6 +6,7 @@ use crate::node::signature_keys;
 use crate::node::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
 
+use super::block_bodies::BlockBody;
 use super::block_headers::BlockHeader;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -195,6 +196,32 @@ impl Block {
         Ok(blocks)
     }
 
+    pub fn get_blocks_by_indexes(db: &Database, indexes: Vec<usize>) -> Result<Vec<Block>, String> {
+        let mut blocks = Vec::new();
+
+        for index in indexes {
+            let key = format!("block_{}", index);
+            match db.get("block", key.as_bytes()) {
+                Ok(Some(value)) => match serde_json::from_slice::<Block>(&value) {
+                    Ok(block) => {
+                        blocks.push(block);
+                    }
+                    Err(e) => {
+                        return Err(format!("Failed to deserialize block {}: {}", key, e));
+                    }
+                },
+                Ok(None) => {
+                    return Err(format!("Block {} not found in database", index));
+                }
+                Err(e) => {
+                    return Err(format!("Failed to retrieve block {}: {}", key, e));
+                }
+            }
+        }
+
+        Ok(blocks)
+    }
+
     pub fn state_block(&self) -> Option<(Vec<Vec<u8>>, Vec<Vec<u8>>)> {
         let mut keys: Vec<Vec<u8>> = Vec::new();
         let mut values: Vec<Vec<u8>> = Vec::new();
@@ -330,6 +357,12 @@ impl Block {
             signature_s: self.signature_s.clone(),
             signature_v: self.signature_v,
             hash: self.hash.clone(),
+        }
+    }
+
+    pub fn to_block_body(&self) -> BlockBody {
+        BlockBody {
+            transactions: self.transactions.clone(),
         }
     }
 }

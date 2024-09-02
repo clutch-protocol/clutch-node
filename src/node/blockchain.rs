@@ -91,6 +91,10 @@ impl Blockchain {
         Block::get_blocks_with_limit_and_skip(&self.db, start_index, skip, limit)
     }
 
+    pub fn get_blocks_by_indexes(&self, indexes: Vec<usize>) -> Result<Vec<Block>, String> {
+        Block::get_blocks_by_indexes(&self.db, indexes)
+    }
+
     #[allow(dead_code)]
     pub fn current_author(&self) -> &String {
         self.consensus.current_author()

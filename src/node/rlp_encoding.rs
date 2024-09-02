@@ -403,7 +403,28 @@ mod tests {
         let decoded = decode::<BlockHeaders>(&encoded);
         match decoded {
             Ok(tx) => println!("Decoded: {:?}", tx),
-            Err(e) => println!("Failed to decode transaction: {:?}", e),
+            Err(e) => println!("Failed to decode BlockHeaders: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_encode_decode_block_bodies() {       
+
+        let block_body_1: BlockBody = BlockBody {
+            transactions : vec![]
+        };
+
+        let block_boodies = BlockBodies {
+            block_bodies : vec![block_body_1]
+        };
+
+        let encoded = encode(&block_boodies);
+        println!("Encoded: {:?}", encoded);
+
+        let decoded = decode::<BlockBodies>(&encoded);
+        match decoded {
+            Ok(tx) => println!("Decoded: {:?}", tx),
+            Err(e) => println!("Failed to decode BlockBodies: {:?}", e),
         }
     }
 }
