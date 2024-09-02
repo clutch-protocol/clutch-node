@@ -89,7 +89,7 @@ pub async fn handle_request_response(
                             eprintln!("Failed to decode handshake: {:?}", e);
                         }
                     },
-                    Some(DirectMessageType::GetBlockHeaders) => {
+                    Some(DirectMessageType::BlockHeaders) => {
                         match decode::<BlockHeaders>(payload) {
                             Ok(block_headers) => {
                                 println!("Decoded get_block_headers: {:?}", &block_headers);
@@ -194,7 +194,7 @@ async fn get_block_header_response(
     let encoded_block_headers = encode(&block_headers);
 
     let mut message_with_type = Vec::with_capacity(1 + encoded_block_headers.len());
-    message_with_type.push(DirectMessageType::GetBlockHeaders.as_byte());
+    message_with_type.push(DirectMessageType::BlockHeaders.as_byte());
     message_with_type.extend(encoded_block_headers);
 
     message_with_type

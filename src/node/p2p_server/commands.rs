@@ -54,6 +54,7 @@ impl GossipMessageType {
 pub enum DirectMessageType {
     Handshake,
     GetBlockHeaders,
+    BlockHeaders,
 }
 
 impl DirectMessageType {
@@ -61,6 +62,7 @@ impl DirectMessageType {
         match self {
             DirectMessageType::Handshake => 0x01,
             DirectMessageType::GetBlockHeaders => 0x02,
+            DirectMessageType::BlockHeaders => 0x03,
         }
     }
 
@@ -68,6 +70,7 @@ impl DirectMessageType {
         match byte {
             0x01 => Some(DirectMessageType::Handshake),
             0x02 => Some(DirectMessageType::GetBlockHeaders),
+            0x03 => Some(DirectMessageType::BlockHeaders),
             _ => None,
         }
     }
