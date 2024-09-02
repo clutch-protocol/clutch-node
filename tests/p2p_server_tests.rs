@@ -318,7 +318,7 @@ async fn test_p2p_server_get_block_headers_direct_message() {
     println!("peer_id server 2: {:?}", peer_id_server2);
 
     let get_block_headers = GetBlockHeaders {
-        start_block_hash: "2282c46637becfbe1f0f11d6d7d878ba1fa6c41fe5cad3bbdede42f6e5ac36e3".to_string(),
+        start_block_index: 0,
         skip: 0,
         limit: 100,
     };

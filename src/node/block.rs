@@ -164,32 +164,35 @@ impl Block {
 
     pub fn get_blocks_with_limit_and_skip(
         db: &Database,
+        start_index: usize,
         skip: usize,
         limit: usize,
     ) -> Result<Vec<Block>, String> {
-        match db.get_keys_values_by_cf_name("block") {
-            Ok(entries) => {
-                let mut blocks = Vec::new();
+        let mut blocks = Vec::new();
+        let end_index = start_index + skip + limit;
 
-                // Skip the specified number of blocks
-                let skipped_entries = entries.into_iter().skip(skip);
-
-                // Limit the number of blocks retrieved
-                for (_key, value) in skipped_entries.take(limit) {
-                    match serde_json::from_slice::<Block>(&value) {
-                        Ok(block) => {
-                            blocks.push(block);
-                        }
-                        Err(e) => {
-                            return Err(format!("Failed to deserialize block: {}", e));
-                        }
+        for index in start_index + skip..end_index {
+            let key = format!("block_{}", index);
+            match db.get("block", key.as_bytes()) {
+                Ok(Some(value)) => match serde_json::from_slice::<Block>(&value) {
+                    Ok(block) => {
+                        blocks.push(block);
                     }
+                    Err(e) => {
+                        return Err(format!("Failed to deserialize block {}: {}", key, e));
+                    }
+                },
+                Ok(None) => {
+                    // Stop if we reach a point where no more blocks are found
+                    break;
                 }
-
-                Ok(blocks)
+                Err(e) => {
+                    return Err(format!("Failed to retrieve block {}: {}", key, e));
+                }
             }
-            Err(e) => Err(format!("Failed to retrieve blocks: {}", e)),
         }
+
+        Ok(blocks)
     }
 
     pub fn state_block(&self) -> Option<(Vec<Vec<u8>>, Vec<Vec<u8>>)> {

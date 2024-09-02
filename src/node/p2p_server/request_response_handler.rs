@@ -180,10 +180,11 @@ async fn get_block_header_response(
 ) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
 
+    let start_index = get_block_header.start_block_index;
     let skip = get_block_header.skip;
     let limit = get_block_header.limit;
     let blocks = blockchain
-        .get_blocks_with_limit_and_skip(skip, limit)
+        .get_blocks_with_limit_and_skip(start_index, skip, limit)
         .expect("Failed to get blocks");
 
     let block_headers: Vec<BlockHeader> =

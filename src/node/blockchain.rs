@@ -84,10 +84,11 @@ impl Blockchain {
 
     pub fn get_blocks_with_limit_and_skip(
         &self,
+        start_index: usize,
         skip: usize,
         limit: usize,
     ) -> Result<Vec<Block>, String> {
-        Block::get_blocks_with_limit_and_skip(&self.db, skip, limit)
+        Block::get_blocks_with_limit_and_skip(&self.db, start_index, skip, limit)
     }
 
     #[allow(dead_code)]

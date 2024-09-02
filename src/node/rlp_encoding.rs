@@ -140,7 +140,7 @@ impl Decodable for Handshake {
 impl Encodable for GetBlockHeaders {
     fn rlp_append(&self, stream: &mut RlpStream) {
         stream.begin_list(3);
-        stream.append(&self.start_block_hash);
+        stream.append(&self.start_block_index);
         stream.append(&self.skip);
         stream.append(&self.limit);
     }
@@ -149,7 +149,7 @@ impl Encodable for GetBlockHeaders {
 impl Decodable for GetBlockHeaders {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         Ok(GetBlockHeaders {
-            start_block_hash: rlp.val_at(0)?,
+            start_block_index: rlp.val_at(0)?,
             skip: rlp.val_at(1)?,
             limit: rlp.val_at(2)?,
         })
@@ -303,8 +303,7 @@ mod tests {
     #[test]
     fn test_encode_decode_get_block_headers() {
         let get_block_headers = GetBlockHeaders {
-            start_block_hash: "2282c46637becfbe1f0f11d6d7d878ba1fa6c41fe5cad3bbdede42f6e5ac36e3"
-                .to_string(),
+            start_block_index:0,            
             skip: 0,
             limit: 100,
         };
