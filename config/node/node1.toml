@@ -11,4 +11,4 @@ authorities = [
     "0xc4f3f661a43e099aedb8e396d9de1a831a1b4adc",
 ]
 bootstrap_nodes = []
-sync = true
+block_authoring_enabled = true

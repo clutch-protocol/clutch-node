@@ -13,6 +13,7 @@ pub struct AppConfig {
     pub authorities: Vec<String>,
     pub listen_addrs: Vec<String>,
     pub bootstrap_nodes: Vec<String>,
+    pub block_authoring_enabled: bool,
 }
 
 impl AppConfig {

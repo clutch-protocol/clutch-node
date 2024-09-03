@@ -12,3 +12,4 @@ authorities = [
 ]
 
 bootstrap_nodes = []
+block_authoring_enabled = true

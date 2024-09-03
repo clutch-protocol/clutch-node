@@ -32,7 +32,9 @@ impl NodeServices {
             websocket_shutdown_tx,
         );
 
-        Self::start_authoring_job(Arc::clone(&blockchain_arc), 1, command_tx_p2p.clone());
+        if config.block_authoring_enabled {
+            Self::start_authoring_job(Arc::clone(&blockchain_arc), 1, command_tx_p2p.clone());
+        }
 
         Self::wait_for_shutdown_signal(
             libp2p_shutdown_rx,
@@ -129,7 +131,7 @@ impl NodeServices {
                         .await;
                     }
                     Err(e) => {
-                         eprintln!("Error authoring new block: {}", e);
+                        eprintln!("Error authoring new block: {}", e);
                     }
                 }
             }
