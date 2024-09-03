@@ -121,7 +121,9 @@ async fn handle_response_message(
         Some(DirectMessageType::BlockHeaders) => {
             handle_block_headers_response(payload, &peer_id, swarm, blockchain).await
         }
-        Some(DirectMessageType::BlockBodies) => handle_block_bodies_response(payload),
+        Some(DirectMessageType::BlockBodies) => {
+            handle_block_bodies_response(payload, &peer_id, swarm, blockchain).await
+        }
         _ => {
             eprintln!(
                 "Unknown DirectMessageType in response from peer {:?}: {:?}",
@@ -257,14 +259,12 @@ async fn handle_block_headers_response(
     match decode::<BlockHeaders>(payload) {
         Ok(block_headers) => {
             println!("Decoded BlockHeaders: {:?}", block_headers);
-           
-           let block_indexes = block_headers.to_block_indexes();           
-            let get_block_bodies = GetBlockBodies {
-                block_indexes
-            };
+
+            let block_indexes = block_headers.to_block_indexes();
+            let get_block_bodies = GetBlockBodies { block_indexes };
 
             let encoded_bodies =
-            encode_message(DirectMessageType::GetBlockBodies, &get_block_bodies);
+                encode_message(DirectMessageType::GetBlockBodies, &get_block_bodies);
             send_request(peer_id, encoded_bodies, swarm);
         }
         Err(e) => {
@@ -273,10 +273,17 @@ async fn handle_block_headers_response(
     }
 }
 
-fn handle_block_bodies_response(payload: &[u8]) {
+async fn handle_block_bodies_response(
+    payload: &[u8],
+    peer_id: &PeerId,
+    swarm: &mut Swarm<P2PBehaviour>,
+    blockchain: &Arc<Mutex<Blockchain>>,
+) {
     match decode::<BlockBodies>(payload) {
         Ok(block_bodies) => {
             println!("Decoded BlockBodies: {:?}", block_bodies);
+            let blockchain = blockchain.lock().await;
+            
         }
         Err(e) => {
             eprintln!("Failed to decode BlockBodies: {:?}", e);
