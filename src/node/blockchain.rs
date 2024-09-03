@@ -1,5 +1,6 @@
 use super::config::AppConfig;
 use super::consensus::Consensus;
+use super::handshake::Handshake;
 use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;
 use crate::node::block::Block;
@@ -98,6 +99,22 @@ impl Blockchain {
     #[allow(dead_code)]
     pub fn current_author(&self) -> &String {
         self.consensus.current_author()
+    }
+
+    pub fn handshake(&self) -> Result<Handshake, String> {
+        let latest_block = self
+            .get_latest_block()
+            .ok_or_else(|| "Failed to get latest block".to_string())?;
+
+        let genesis_block = self
+            .get_genesis_block()
+            .ok_or_else(|| "Failed to get genesis block".to_string())?;
+
+        Ok(Handshake {
+            genesis_block_hash: genesis_block.hash,
+            latest_block_hash: latest_block.hash,
+            latest_block_index: latest_block.index,
+        })
     }
 
     pub fn add_transaction_to_pool(&self, transaction: &Transaction) -> Result<(), String> {

@@ -1,5 +1,6 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
+use crate::node::p2p_server::commands::DirectMessageType;
 use crate::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;
 use crate::node::websocket::WebSocket;
@@ -34,6 +35,10 @@ impl NodeServices {
 
         if config.block_authoring_enabled {
             Self::start_authoring_job(Arc::clone(&blockchain_arc), 1, command_tx_p2p.clone());
+        }
+
+        if config.sync_enabled {
+            Self::start_sync(Arc::clone(&blockchain_arc), command_tx_p2p.clone());
         }
 
         Self::wait_for_shutdown_signal(
@@ -130,10 +135,47 @@ impl NodeServices {
                         )
                         .await;
                     }
-                    Err(e) => {
-                        eprintln!("Error authoring new block: {}", e);
+                    Err(_e) => {
+                        // eprintln!("Error authoring new block: {}", e);
                     }
                 }
+            }
+        });
+    }
+
+    pub fn start_sync(
+        blockchain: Arc<Mutex<Blockchain>>,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
+    ) {
+        tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(3)).await;
+
+            let blockchain = blockchain.lock().await;
+            let connected_peers = P2PServer::get_connected_peers_command(command_tx_p2p.clone())
+                .await
+                .unwrap();
+
+            println!(
+                "connected peers: {:?}",
+                connected_peers
+            );
+
+            if let Some(peer_id) = connected_peers.iter().next() {
+                println!("Selected peer for synchronization: {:?}", peer_id);
+
+                let handshake = blockchain.handshake().unwrap();
+                let encoded_handshake = encode(&handshake);
+
+                P2PServer::send_direct_message_command(
+                    command_tx_p2p.clone(),
+                    peer_id.clone(),
+                    DirectMessageType::Handshake,
+                    &encoded_handshake,
+                )
+                .await
+                .expect_err("Failed to send handshake message");
+            } else {
+                eprintln!("Failed to select a peer from the connected peers set.");
             }
         });
     }

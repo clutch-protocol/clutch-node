@@ -139,7 +139,7 @@ async fn test_p2p_server_connected_peers() {
     let peer_id_server2 = P2PServer::get_local_peer_id_command(command_tx2.clone()).await;
     let peer_id_server3 = P2PServer::get_local_peer_id_command(command_tx3.clone()).await;
 
-    // // Check connected peers
+    // Check connected peers
     let connected_peers_server1 = P2PServer::get_connected_peers_command(command_tx1.clone())
         .await
         .unwrap();
@@ -255,12 +255,7 @@ async fn test_p2p_server_handshake_direct_message() {
     println!("peer_id server 1: {:?}", peer_id_server1);
     println!("peer_id server 2: {:?}", peer_id_server2);
 
-    let handshake = Handshake {
-        genesis_block_hash: "0xgenesis".to_string(),
-        latest_block_hash: "0xlatest".to_string(),
-        latest_block_index: 0,
-    };
-
+    let handshake =  blockchain.lock().await.handshake().unwrap();
     let encoded_handshake = encode(&handshake);
 
     // Send a direct message from server2 to server1

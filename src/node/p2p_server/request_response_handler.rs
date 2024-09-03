@@ -70,7 +70,7 @@ async fn handle_request_message(
     blockchain: &Arc<Mutex<Blockchain>>,
 ) {
     println!(
-        "Received direct message from peer:{:?} with id {:?}",
+        "Send direct message from peer:{:?} with id {:?}",
         peer, request_id,
     );
 
@@ -79,8 +79,12 @@ async fn handle_request_message(
 
     let response_message = match message_type {
         Some(DirectMessageType::Handshake) => handle_handshake_request(payload, blockchain).await,
-        Some(DirectMessageType::GetBlockHeaders) =>  handle_get_block_headers_request(payload, blockchain).await,
-        Some(DirectMessageType::GetBlockBodies) => handle_get_block_bodies_request(payload, blockchain).await,                    
+        Some(DirectMessageType::GetBlockHeaders) => {
+            handle_get_block_headers_request(payload, blockchain).await
+        }
+        Some(DirectMessageType::GetBlockBodies) => {
+            handle_get_block_bodies_request(payload, blockchain).await
+        }
         _ => {
             eprintln!(
                 "Received unknown DirectMessageType from peer {:?}: {:?}",
@@ -99,7 +103,7 @@ async fn handle_response_message(
     response: DirectMessageResponse,
 ) {
     println!(
-        "Received response from {:?} with request_id {:?}",
+        "Received direct message response from {:?} with request_id {:?}",
         peer, request_id,
     );
 
@@ -221,21 +225,12 @@ fn handle_block_bodies_response(payload: &[u8]) {
     }
 }
 
-async fn handshake_response(_handshake: &Handshake, blockchain: &Arc<Mutex<Blockchain>>) -> Vec<u8> {
+async fn handshake_response(
+    _handshake: &Handshake,
+    blockchain: &Arc<Mutex<Blockchain>>,
+) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
-    let latest_block = blockchain
-        .get_latest_block()
-        .expect("Failed to get latest block");
-    let genesis_block = blockchain
-        .get_genesis_block()
-        .expect("Failed to get genesis block");
-
-    let response_handshake = Handshake {
-        genesis_block_hash: genesis_block.hash,
-        latest_block_hash: latest_block.hash,
-        latest_block_index: latest_block.index,
-    };
-
+    let response_handshake = blockchain.handshake().expect("error get handshake response");
     encode_message(DirectMessageType::Handshake, &response_handshake)
 }
 
@@ -274,7 +269,10 @@ async fn get_block_bodies_response(
     encode_message(DirectMessageType::BlockBodies, &response_block_bodies)
 }
 
-fn encode_message<T: serde::Serialize + Encodable>(message_type: DirectMessageType, message: &T) -> Vec<u8> {
+fn encode_message<T: serde::Serialize + Encodable>(
+    message_type: DirectMessageType,
+    message: &T,
+) -> Vec<u8> {
     let encoded_message = encode(message);
     let mut message_with_type = Vec::with_capacity(1 + encoded_message.len());
     message_with_type.push(message_type.as_byte());

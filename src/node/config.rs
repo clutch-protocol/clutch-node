@@ -2,7 +2,7 @@ use config::{Config, ConfigError, Environment, File};
 use dotenv::dotenv;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize,Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
     pub libp2p_topic_name: String,
     pub blockchain_name: String,
@@ -14,6 +14,7 @@ pub struct AppConfig {
     pub listen_addrs: Vec<String>,
     pub bootstrap_nodes: Vec<String>,
     pub block_authoring_enabled: bool,
+    pub sync_enabled: bool,
 }
 
 impl AppConfig {
