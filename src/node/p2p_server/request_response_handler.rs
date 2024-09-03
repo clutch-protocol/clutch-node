@@ -230,7 +230,9 @@ async fn handshake_response(
     blockchain: &Arc<Mutex<Blockchain>>,
 ) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
-    let response_handshake = blockchain.handshake().expect("error get handshake response");
+    let response_handshake = blockchain
+        .handshake()
+        .expect("error get handshake response");
     encode_message(DirectMessageType::Handshake, &response_handshake)
 }
 
