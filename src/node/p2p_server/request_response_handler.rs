@@ -94,7 +94,7 @@ async fn handle_request_message(
         }
     };
 
-    send_message(response_message, swarm, channel);
+    send_response(response_message, swarm, channel);
 }
 
 async fn handle_response_message(
@@ -123,7 +123,7 @@ async fn handle_response_message(
     }
 }
 
-fn send_message(
+fn send_response(
     response_message: Vec<u8>,
     swarm: &mut Swarm<P2PBehaviour>,
     channel: libp2p::request_response::ResponseChannel<DirectMessageResponse>,
