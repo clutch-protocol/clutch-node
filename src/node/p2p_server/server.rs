@@ -249,7 +249,7 @@ impl P2PServer {
                                 let _ = response_tx.send(peers);
                             },
                             P2PServerCommand::SendDirectMessage { peer_id, message, response_tx } => {
-                                let result = self.send_direct_message(peer_id, message);
+                                let result = self.send_direct_message(&peer_id, message);
                                 let _ = response_tx.send(result);
                             },
                             P2PServerCommand::GetLocalPeerId { response_tx } => {
@@ -279,7 +279,7 @@ impl P2PServer {
 
     fn send_direct_message(
         &mut self,
-        peer_id: PeerId,
+        peer_id: &PeerId,
         message: DirectMessageRequest,
     ) -> libp2p::request_response::OutboundRequestId {
         self.behaviour

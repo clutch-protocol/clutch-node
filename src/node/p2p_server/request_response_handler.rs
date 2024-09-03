@@ -8,9 +8,11 @@ use crate::node::get_block_header::GetBlockHeaders;
 use crate::node::handshake::Handshake;
 use crate::node::p2p_server::commands::DirectMessageType;
 use crate::node::rlp_encoding::{decode, encode};
+use libp2p::request_response::OutboundRequestId;
 use libp2p::{
     request_response::{Event as RequestResponseEvent, Message as RequestResponseMessage},
     swarm::Swarm,
+    PeerId,
 };
 use rlp::Encodable;
 use std::sync::Arc;
@@ -121,6 +123,21 @@ async fn handle_response_message(
             );
         }
     }
+}
+
+fn send_request(
+    peer_id: &PeerId,
+    request_message: Vec<u8>,
+    swarm: &mut Swarm<P2PBehaviour>,
+) -> OutboundRequestId {
+    let request: DirectMessageRequest = DirectMessageRequest {
+        message: request_message,
+    };
+
+    swarm
+        .behaviour_mut()
+        .request_response
+        .send_request(&peer_id, request)
 }
 
 fn send_response(
