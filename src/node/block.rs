@@ -6,7 +6,6 @@ use crate::node::signature_keys;
 use crate::node::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
 
-use super::block_bodies::BlockBody;
 use super::block_headers::BlockHeader;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -358,11 +357,5 @@ impl Block {
             signature_v: self.signature_v,
             hash: self.hash.clone(),
         }
-    }
-
-    pub fn to_block_body(&self) -> BlockBody {
-        BlockBody {
-            transactions: self.transactions.clone(),
-        }
-    }
+    }  
 }

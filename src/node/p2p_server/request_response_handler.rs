@@ -1,6 +1,7 @@
 use super::behaviour::{DirectMessageRequest, DirectMessageResponse};
 use super::P2PBehaviour;
-use crate::node::block_bodies::{BlockBodies, BlockBody};
+use crate::node::block::Block;
+use crate::node::block_bodies::BlockBodies;
 use crate::node::block_headers::{BlockHeader, BlockHeaders};
 use crate::node::blockchain::Blockchain;
 use crate::node::get_block_bodies::GetBlockBodies;
@@ -275,15 +276,26 @@ async fn handle_block_headers_response(
 
 async fn handle_block_bodies_response(
     payload: &[u8],
-    peer_id: &PeerId,
-    swarm: &mut Swarm<P2PBehaviour>,
+    _peer_id: &PeerId,
+    _swarm: &mut Swarm<P2PBehaviour>,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) {
     match decode::<BlockBodies>(payload) {
         Ok(block_bodies) => {
             println!("Decoded BlockBodies: {:?}", block_bodies);
+
             let blockchain = blockchain.lock().await;
-            
+
+            for block in block_bodies.blocks {
+                match blockchain.import_block(&block) {
+                    Ok(_) => {
+                        println!("Successfully imported block with index: {}", block.index);
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to import block with index {}: {:?}", block.index, e);
+                    }
+                }
+            }
         }
         Err(e) => {
             eprintln!("Failed to decode BlockBodies: {:?}", e);
@@ -331,9 +343,7 @@ async fn get_block_bodies_response(
         .get_blocks_by_indexes(get_block_bodies.block_indexes.clone())
         .expect("Failed to get blocks");
 
-    let block_bodies: Vec<BlockBody> = blocks.iter().map(|block| block.to_block_body()).collect();
-
-    let response_block_bodies = BlockBodies { block_bodies };
+    let response_block_bodies = BlockBodies { blocks };
     encode_message(DirectMessageType::BlockBodies, &response_block_bodies)
 }
 

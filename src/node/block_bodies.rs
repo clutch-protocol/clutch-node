@@ -1,13 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use super::transaction::Transaction;
+use super::block::Block;
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BlockBodies {
-    pub block_bodies: Vec<BlockBody>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct BlockBody {
-    pub transactions: Vec<Transaction>,
+    pub blocks: Vec<Block>,
 }

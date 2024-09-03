@@ -7,7 +7,7 @@ use crate::node::transaction::Transaction;
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
-use super::block_bodies::{BlockBodies, BlockBody};
+use super::block_bodies::BlockBodies;
 use super::block_headers::{BlockHeader, BlockHeaders};
 use super::get_block_bodies::GetBlockBodies;
 use super::get_block_header::GetBlockHeaders;
@@ -216,32 +216,17 @@ impl Decodable for GetBlockBodies {
     }
 }
 
-impl Encodable for BlockBody {
-    fn rlp_append(&self, stream: &mut RlpStream) {
-        stream.begin_list(1);
-        stream.append_list(&self.transactions);
-    }
-}
-
-impl Decodable for BlockBody {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
-        Ok(BlockBody {
-            transactions: rlp.list_at(0)?,
-        })
-    }
-}
-
 impl Encodable for BlockBodies {
     fn rlp_append(&self, stream: &mut RlpStream) {
         stream.begin_list(1);
-        stream.append_list(&self.block_bodies);
+        stream.append_list(&self.blocks);
     }
 }
 
 impl Decodable for BlockBodies {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         Ok(BlockBodies {
-            block_bodies: rlp.list_at(0)?,
+            blocks: rlp.list_at(0)?,
         })
     }
 }
@@ -259,6 +244,7 @@ pub fn decode<T: Decodable>(bytes: &[u8]) -> Result<T, DecoderError> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
@@ -408,14 +394,23 @@ mod tests {
     }
 
     #[test]
-    fn test_encode_decode_block_bodies() {       
-
-        let block_body_1: BlockBody = BlockBody {
-            transactions : vec![]
+    fn test_encode_decode_block_bodies() {
+        let block = Block {
+            index: 1,
+            previous_hash: "0000000000000000000000000000000000000000000000000000000000000000"
+                .to_string(),
+            author: "0x1234cfb63db134698e1879ea24904df074726cc0".to_string(),
+            signature_r: "4b0cb46ae73d852bb75653ed1f1710676b0b736cd33aefc0c96e6e11417a4c34"
+                .to_string(),
+            signature_s: "496086bdc703286c0727c59e07b727cadfc2fe7b9c061149e4a86e726ed23910"
+                .to_string(),
+            signature_v: 27,
+            hash: "2086095648e3160d0dfa5d40bdf4693d8a00d77ed3fb3b607156465b3e0de2dc".to_string(),
+            transactions: vec![],
         };
 
         let block_boodies = BlockBodies {
-            block_bodies : vec![block_body_1]
+            blocks: vec![block],
         };
 
         let encoded = encode(&block_boodies);
