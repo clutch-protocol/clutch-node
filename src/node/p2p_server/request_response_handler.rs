@@ -12,6 +12,7 @@ use libp2p::{
     request_response::{Event as RequestResponseEvent, Message as RequestResponseMessage},
     swarm::Swarm,
 };
+use rlp::Encodable;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -27,111 +28,12 @@ pub async fn handle_request_response(
                 request,
                 channel,
             } => {
-                println!(
-                    "Received direct message from peer:{:?} with id {:?}",
-                    peer, request_id,
-                );
-
-                let message_type = DirectMessageType::from_byte(request.message[0]);
-                let payload = &request.message[1..];
-
-                match message_type {
-                    Some(DirectMessageType::Handshake) => match decode::<Handshake>(payload) {
-                        Ok(handshake) => {
-                            println!("Received and decoded handshake: {:?}", &handshake);
-                            let response_message = handshake_response(&handshake, blockchain).await;
-                            send_message(response_message, swarm, channel);
-                        }
-                        Err(e) => {
-                            eprintln!("Failed to decode handshake: {:?}", e);
-                        }
-                    },
-                    Some(DirectMessageType::GetBlockHeaders) => {
-                        match decode::<GetBlockHeaders>(payload) {
-                            Ok(get_block_header) => {
-                                println!(
-                                    "Received and decoded getBlockHeader: {:?}",
-                                    &get_block_header
-                                );
-                                let response_message =
-                                    get_block_headers_response(&get_block_header, blockchain).await;
-                                send_message(response_message, swarm, channel);
-                            }
-                            Err(e) => {
-                                eprintln!("Failed to decode getBlockHeader: {:?}", e);
-                            }
-                        }
-                    }
-                    Some(DirectMessageType::GetBlockBodies) => {
-                        match decode::<GetBlockBodies>(payload) {
-                            Ok(get_block_bodies) => {
-                                println!(
-                                    "Received and decoded GetBlockBodies: {:?}",
-                                    &get_block_bodies
-                                );
-                                let response_message =
-                                    get_block_bodies_response(&get_block_bodies, blockchain).await;
-                                send_message(response_message, swarm, channel);
-                            }
-                            Err(e) => {
-                                eprintln!("Failed to decode GetBlockBodies: {:?}", e);
-                            }
-                        }
-                    }
-                    _ => {
-                        eprintln!(
-                            "Received direct message: unknown DirectMessageType: {:?}",
-                            message_type
-                        );
-                    }
-                }
+                handle_request_message(peer, request_id, request, channel, swarm, blockchain).await
             }
             RequestResponseMessage::Response {
                 request_id,
                 response,
-            } => {
-                println!(
-                    "Received response from {:?} with request_id {:?}",
-                    peer, request_id,
-                );
-
-                let message_type = DirectMessageType::from_byte(response.message[0]);
-                let payload = &response.message[1..];
-
-                match message_type {
-                    Some(DirectMessageType::Handshake) => match decode::<Handshake>(payload) {
-                        Ok(handshake) => {
-                            println!("Decoded Handshake: {:?}", &handshake);
-                        }
-                        Err(e) => {
-                            eprintln!("Failed to decode Handshake: {:?}", e);
-                        }
-                    },
-                    Some(DirectMessageType::BlockHeaders) => {
-                        match decode::<BlockHeaders>(payload) {
-                            Ok(block_headers) => {
-                                println!("Decoded BlockHeaders: {:?}", &block_headers);
-                            }
-                            Err(e) => {
-                                eprintln!("Failed to decode BlockHeaders: {:?}", e);
-                            }
-                        }
-                    },
-                    Some(DirectMessageType::BlockBodies) => {
-                        match decode::<BlockBodies>(payload) {
-                            Ok(block_boodies) => {
-                                println!("Decoded BlockBodies: {:?}", &block_boodies);
-                            }
-                            Err(e) => {
-                                eprintln!("Failed to decode BlockBodies: {:?}", e);
-                            }
-                        }
-                    }
-                    _ => {
-                        eprintln!("Unknown DirectMessageType: {:?}", message_type);
-                    }
-                }
-            }
+            } => handle_response_message(peer, request_id, response).await,
         },
         RequestResponseEvent::OutboundFailure {
             peer,
@@ -159,6 +61,64 @@ pub async fn handle_request_response(
     }
 }
 
+async fn handle_request_message(
+    peer: libp2p::PeerId,
+    request_id: libp2p::request_response::InboundRequestId,
+    request: DirectMessageRequest,
+    channel: libp2p::request_response::ResponseChannel<DirectMessageResponse>,
+    swarm: &mut Swarm<P2PBehaviour>,
+    blockchain: &Arc<Mutex<Blockchain>>,
+) {
+    println!(
+        "Received direct message from peer:{:?} with id {:?}",
+        peer, request_id,
+    );
+
+    let message_type = DirectMessageType::from_byte(request.message[0]);
+    let payload = &request.message[1..];
+
+    let response_message = match message_type {
+        Some(DirectMessageType::Handshake) => handle_handshake_request(payload, blockchain).await,
+        Some(DirectMessageType::GetBlockHeaders) =>  handle_get_block_headers_request(payload, blockchain).await,
+        Some(DirectMessageType::GetBlockBodies) => handle_get_block_bodies_request(payload, blockchain).await,                    
+        _ => {
+            eprintln!(
+                "Received unknown DirectMessageType from peer {:?}: {:?}",
+                peer, message_type
+            );
+            return;
+        }
+    };
+
+    send_message(response_message, swarm, channel);
+}
+
+async fn handle_response_message(
+    peer: libp2p::PeerId,
+    request_id: libp2p::request_response::OutboundRequestId,
+    response: DirectMessageResponse,
+) {
+    println!(
+        "Received response from {:?} with request_id {:?}",
+        peer, request_id,
+    );
+
+    let message_type = DirectMessageType::from_byte(response.message[0]);
+    let payload = &response.message[1..];
+
+    match message_type {
+        Some(DirectMessageType::Handshake) => handle_handshake_response(payload),
+        Some(DirectMessageType::BlockHeaders) => handle_block_headers_response(payload),
+        Some(DirectMessageType::BlockBodies) => handle_block_bodies_response(payload),
+        _ => {
+            eprintln!(
+                "Unknown DirectMessageType in response from peer {:?}: {:?}",
+                peer, message_type
+            );
+        }
+    }
+}
+
 fn send_message(
     response_message: Vec<u8>,
     swarm: &mut Swarm<P2PBehaviour>,
@@ -168,17 +128,100 @@ fn send_message(
         message: response_message,
     };
 
-    swarm
+    if let Err(e) = swarm
         .behaviour_mut()
         .request_response
         .send_response(channel, response)
-        .expect("Failed to send response");
+    {
+        eprintln!("Failed to send response: {:?}", e);
+    }
 }
 
-async fn handshake_response(
-    _handshake: &Handshake,
+async fn handle_handshake_request(payload: &[u8], blockchain: &Arc<Mutex<Blockchain>>) -> Vec<u8> {
+    match decode::<Handshake>(payload) {
+        Ok(handshake) => {
+            println!("Received and decoded handshake: {:?}", handshake);
+            handshake_response(&handshake, blockchain).await
+        }
+        Err(e) => {
+            eprintln!("Failed to decode handshake: {:?}", e);
+            Vec::new()
+        }
+    }
+}
+
+async fn handle_get_block_headers_request(
+    payload: &[u8],
     blockchain: &Arc<Mutex<Blockchain>>,
 ) -> Vec<u8> {
+    match decode::<GetBlockHeaders>(payload) {
+        Ok(get_block_header) => {
+            println!(
+                "Received and decoded getBlockHeader: {:?}",
+                get_block_header
+            );
+            get_block_headers_response(&get_block_header, blockchain).await
+        }
+        Err(e) => {
+            eprintln!("Failed to decode getBlockHeader: {:?}", e);
+            Vec::new()
+        }
+    }
+}
+
+async fn handle_get_block_bodies_request(
+    payload: &[u8],
+    blockchain: &Arc<Mutex<Blockchain>>,
+) -> Vec<u8> {
+    match decode::<GetBlockBodies>(payload) {
+        Ok(get_block_bodies) => {
+            println!(
+                "Received and decoded GetBlockBodies: {:?}",
+                get_block_bodies
+            );
+            get_block_bodies_response(&get_block_bodies, blockchain).await
+        }
+        Err(e) => {
+            eprintln!("Failed to decode GetBlockBodies: {:?}", e);
+            Vec::new()
+        }
+    }
+}
+
+fn handle_handshake_response(payload: &[u8]) {
+    match decode::<Handshake>(payload) {
+        Ok(handshake) => {
+            println!("Decoded Handshake: {:?}", handshake);
+        }
+        Err(e) => {
+            eprintln!("Failed to decode Handshake: {:?}", e);
+        }
+    }
+}
+
+fn handle_block_headers_response(payload: &[u8]) {
+    match decode::<BlockHeaders>(payload) {
+        Ok(block_headers) => {
+            println!("Decoded BlockHeaders: {:?}", block_headers);
+        }
+        Err(e) => {
+            eprintln!("Failed to decode BlockHeaders: {:?}", e);
+        }
+    }
+}
+
+fn handle_block_bodies_response(payload: &[u8]) {
+    match decode::<BlockBodies>(payload) {
+        Ok(block_bodies) => {
+            println!("Decoded BlockBodies: {:?}", block_bodies);
+        }
+        Err(e) => {
+            eprintln!("Failed to decode BlockBodies: {:?}", e);
+        }
+    }
+}
+
+async fn handshake_response(_handshake: &Handshake, blockchain: &Arc<Mutex<Blockchain>>) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
     let latest_block = blockchain
         .get_latest_block()
@@ -187,19 +230,13 @@ async fn handshake_response(
         .get_genesis_block()
         .expect("Failed to get genesis block");
 
-    let handshake = Handshake {
+    let response_handshake = Handshake {
         genesis_block_hash: genesis_block.hash,
         latest_block_hash: latest_block.hash,
         latest_block_index: latest_block.index,
     };
 
-    let encoded_handshake = encode(&handshake);
-
-    let mut message_with_type = Vec::with_capacity(1 + encoded_handshake.len());
-    message_with_type.push(DirectMessageType::Handshake.as_byte());
-    message_with_type.extend(encoded_handshake);
-
-    message_with_type
+    encode_message(DirectMessageType::Handshake, &response_handshake)
 }
 
 async fn get_block_headers_response(
@@ -207,47 +244,40 @@ async fn get_block_headers_response(
     blockchain: &Arc<Mutex<Blockchain>>,
 ) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
-
-    let start_index = get_block_header.start_block_index;
-    let skip = get_block_header.skip;
-    let limit = get_block_header.limit;
     let blocks = blockchain
-        .get_blocks_with_limit_and_skip(start_index, skip, limit)
+        .get_blocks_with_limit_and_skip(
+            get_block_header.start_block_index,
+            get_block_header.skip,
+            get_block_header.limit,
+        )
         .expect("Failed to get blocks");
 
     let block_headers: Vec<BlockHeader> =
         blocks.iter().map(|block| block.to_block_header()).collect();
 
-    let block_headers = BlockHeaders { block_headers };
-    let encoded_block_headers = encode(&block_headers);
-
-    let mut message_with_type = Vec::with_capacity(1 + encoded_block_headers.len());
-    message_with_type.push(DirectMessageType::BlockHeaders.as_byte());
-    message_with_type.extend(encoded_block_headers);
-
-    message_with_type
+    let response_block_headers = BlockHeaders { block_headers };
+    encode_message(DirectMessageType::BlockHeaders, &response_block_headers)
 }
 
 async fn get_block_bodies_response(
-    get_block_boodies: &GetBlockBodies,
+    get_block_bodies: &GetBlockBodies,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) -> Vec<u8> {
     let blockchain = blockchain.lock().await;
-
-    let block_indexes = get_block_boodies.block_indexes.clone();
     let blocks = blockchain
-        .get_blocks_by_indexes(block_indexes)
+        .get_blocks_by_indexes(get_block_bodies.block_indexes.clone())
         .expect("Failed to get blocks");
 
-    let block_bodies: Vec<BlockBody> =
-        blocks.iter().map(|block| block.to_block_body()).collect();
+    let block_bodies: Vec<BlockBody> = blocks.iter().map(|block| block.to_block_body()).collect();
 
-    let block_bodies = BlockBodies { block_bodies };
-    let encoded_block_boodies = encode(&block_bodies);
+    let response_block_bodies = BlockBodies { block_bodies };
+    encode_message(DirectMessageType::BlockBodies, &response_block_bodies)
+}
 
-    let mut message_with_type = Vec::with_capacity(1 + encoded_block_boodies.len());
-    message_with_type.push(DirectMessageType::BlockBodies.as_byte());
-    message_with_type.extend(encoded_block_boodies);
-
+fn encode_message<T: serde::Serialize + Encodable>(message_type: DirectMessageType, message: &T) -> Vec<u8> {
+    let encoded_message = encode(message);
+    let mut message_with_type = Vec::with_capacity(1 + encoded_message.len());
+    message_with_type.push(message_type.as_byte());
+    message_with_type.extend(encoded_message);
     message_with_type
 }
