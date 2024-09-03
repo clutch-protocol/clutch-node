@@ -118,7 +118,9 @@ async fn handle_response_message(
         Some(DirectMessageType::Handshake) => {
             handle_handshake_response(payload, &peer_id, swarm, blockchain).await
         }
-        Some(DirectMessageType::BlockHeaders) => handle_block_headers_response(payload),
+        Some(DirectMessageType::BlockHeaders) => {
+            handle_block_headers_response(payload, &peer_id, swarm, blockchain).await
+        }
         Some(DirectMessageType::BlockBodies) => handle_block_bodies_response(payload),
         _ => {
             eprintln!(
@@ -228,7 +230,7 @@ async fn handle_handshake_response(
 
             if current_block_index < received_block_index {
                 println!("this node is needed to syncing!");
-                
+
                 let get_block_headers = GetBlockHeaders {
                     start_block_index: current_block_index,
                     skip: 0,
@@ -246,10 +248,24 @@ async fn handle_handshake_response(
     }
 }
 
-fn handle_block_headers_response(payload: &[u8]) {
+async fn handle_block_headers_response(
+    payload: &[u8],
+    peer_id: &PeerId,
+    swarm: &mut Swarm<P2PBehaviour>,
+    _blockchain: &Arc<Mutex<Blockchain>>,
+) {
     match decode::<BlockHeaders>(payload) {
         Ok(block_headers) => {
             println!("Decoded BlockHeaders: {:?}", block_headers);
+           
+           let block_indexes = block_headers.to_block_indexes();           
+            let get_block_bodies = GetBlockBodies {
+                block_indexes
+            };
+
+            let encoded_bodies =
+            encode_message(DirectMessageType::GetBlockBodies, &get_block_bodies);
+            send_request(peer_id, encoded_bodies, swarm);
         }
         Err(e) => {
             eprintln!("Failed to decode BlockHeaders: {:?}", e);

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BlockHeaders {
     pub block_headers: Vec<BlockHeader>,
@@ -14,4 +15,14 @@ pub struct BlockHeader {
     pub signature_s: String,
     pub signature_v: i32,
     pub hash: String,
+}
+
+impl BlockHeaders {
+    pub fn to_block_indexes(&self) -> Vec<usize>{
+         self
+            .block_headers
+            .iter()
+            .map(|header| header.index)
+            .collect()
+    }
 }
