@@ -1,6 +1,5 @@
 use super::behaviour::{DirectMessageRequest, DirectMessageResponse};
 use super::P2PBehaviour;
-use crate::node::block::Block;
 use crate::node::block_bodies::BlockBodies;
 use crate::node::block_headers::{BlockHeader, BlockHeaders};
 use crate::node::blockchain::Blockchain;
