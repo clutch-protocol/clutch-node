@@ -15,6 +15,7 @@ pub mod function_call;
 pub mod get_block_bodies;
 pub mod get_block_header;
 pub mod handshake;
+pub mod metric;
 pub mod node_services;
 pub mod p2p_server;
 pub mod ride_acceptance;

@@ -15,6 +15,7 @@ pub struct AppConfig {
     pub bootstrap_nodes: Vec<String>,
     pub block_authoring_enabled: bool,
     pub sync_enabled: bool,
+    pub server_metric_enabled : bool,
 }
 
 impl AppConfig {

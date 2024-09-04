@@ -1,5 +1,6 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::config::AppConfig;
+use crate::node::metric::serve_metrics;
 use crate::node::p2p_server::commands::DirectMessageType;
 use crate::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;
@@ -15,6 +16,10 @@ pub struct NodeServices;
 impl NodeServices {
     pub async fn start_services(config: &AppConfig, blockchain: Blockchain) {
         let blockchain_arc = Arc::new(Mutex::new(blockchain));
+
+        if config.server_metric_enabled {
+            serve_metrics();
+        }
 
         let (libp2p_shutdown_tx, libp2p_shutdown_rx) = oneshot::channel();
         let (command_tx_p2p, command_rx_p2p) = mpsc::channel(32);
@@ -155,10 +160,7 @@ impl NodeServices {
                 .await
                 .unwrap();
 
-            println!(
-                "connected peers: {:?}",
-                connected_peers
-            );
+            println!("connected peers: {:?}", connected_peers);
 
             if let Some(peer_id) = connected_peers.iter().next() {
                 println!("Selected peer for synchronization: {:?}", peer_id);

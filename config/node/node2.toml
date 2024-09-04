@@ -13,3 +13,4 @@ authorities = [
 bootstrap_nodes = ["/ip4/192.168.1.161/tcp/4001"]
 block_authoring_enabled = true
 sync_enabled = true
+server_metric_enabled = true
