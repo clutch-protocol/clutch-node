@@ -8,7 +8,7 @@ services:
       - "8081:8081"
       - "4001:4001"
     volumes:
-      - D:/node_config:/usr/src/clutch-node/config
+      - D:/source/clutch-node/config:/usr/src/clutch-node/config
     command: ["node1"]
 
   node2:
@@ -20,7 +20,7 @@ services:
       - "8082:8082"
       - "4002:4002"
     volumes:
-      - D:/node_config:/usr/src/clutch-node/config
+      - D:/source/clutch-node/config:/usr/src/clutch-node/config
     command: ["node2"]
 
   node3:
@@ -32,7 +32,7 @@ services:
       - "8083:8083"
       - "4003:4003"
     volumes:
-      - D:/node_config:/usr/src/clutch-node/config
+      - D:/source/clutch-node/config:/usr/src/clutch-node/config
     command: ["node3"]
 
 networks:
