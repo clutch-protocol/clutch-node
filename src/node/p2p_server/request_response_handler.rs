@@ -235,7 +235,7 @@ async fn handle_handshake_response(
 
                 let get_block_headers = GetBlockHeaders {
                     start_block_index: current_block_index,
-                    skip: 0,
+                    skip: 1,
                     limit: 100,
                 };
 

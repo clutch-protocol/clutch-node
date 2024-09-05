@@ -352,7 +352,7 @@ impl Block {
                     .get_or_create(&metric::BlockLabels {                        
                         block_hash: block.hash.to_string(),
                     })
-                    .set(0);
+                    .set(block.index as i64);
             }
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
         }
