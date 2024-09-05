@@ -75,7 +75,7 @@ impl Blockchain {
         block.validate_block(&self.db)?;
         Transaction::validate_transactions(&self.db, &block.transactions)?;
         Block::add_block_to_chain(&self.db, block);
-
+        super::metric::DEFAULT_COUNTER.inc();
         Ok(())
     }
 
