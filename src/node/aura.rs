@@ -16,13 +16,19 @@ impl Aura {
         }
     }
 
+     // Determine the slot number based on a given timestamp
+     fn slot_at_time(&self, timestamp: u64) -> u64 {
+        timestamp / self.step_duration
+    }
+
     // Determine the current slot number based on the system time
     fn current_slot(&self) -> u64 {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        now / self.step_duration
+                
+        self.slot_at_time(now)
     }
 }
 
