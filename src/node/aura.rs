@@ -1,6 +1,7 @@
 use crate::node::block::Block;
 use crate::node::consensus::Consensus;
-use std::time::{SystemTime, UNIX_EPOCH};
+
+use super::time_utils::get_current_timespan;
 
 #[derive(Debug)]
 pub struct Aura {
@@ -16,19 +17,15 @@ impl Aura {
         }
     }
 
-     // Determine the slot number based on a given timestamp
-     fn slot_at_time(&self, timestamp: u64) -> u64 {
+    // Determine the slot number based on a given timestamp
+    fn slot_at_time(&self, timestamp: u64) -> u64 {
         timestamp / self.step_duration
     }
 
     // Determine the current slot number based on the system time
     fn current_slot(&self) -> u64 {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-                
-        self.slot_at_time(now)
+        let current_timespan = get_current_timespan();
+        self.slot_at_time(current_timespan)
     }
 }
 
