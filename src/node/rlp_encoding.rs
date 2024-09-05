@@ -91,9 +91,10 @@ impl Decodable for Transaction {
 
 impl Encodable for Block {
     fn rlp_append(&self, stream: &mut RlpStream) {
-        stream.begin_list(8);
+        stream.begin_list(9);
 
         stream.append(&self.index);
+        stream.append(&self.timestamp);
         stream.append(&self.previous_hash);
         stream.append(&self.author);
         stream.append(&self.signature_r);
@@ -109,13 +110,14 @@ impl Decodable for Block {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         Ok(Block {
             index: rlp.val_at(0)?,
-            previous_hash: rlp.val_at(1)?,
-            author: rlp.val_at(2)?,
-            signature_r: rlp.val_at(3)?,
-            signature_s: rlp.val_at(4)?,
-            signature_v: rlp.val_at::<u64>(5)? as i32,
-            hash: rlp.val_at(6)?,
-            transactions: rlp.list_at(7)?,
+            timestamp : rlp.val_at(1)?,
+            previous_hash: rlp.val_at(2)?,
+            author: rlp.val_at(3)?,
+            signature_r: rlp.val_at(4)?,
+            signature_s: rlp.val_at(5)?,
+            signature_v: rlp.val_at::<u64>(6)? as i32,
+            hash: rlp.val_at(7)?,
+            transactions: rlp.list_at(8)?,
         })
     }
 }
@@ -245,6 +247,8 @@ pub fn decode<T: Decodable>(bytes: &[u8]) -> Result<T, DecoderError> {
 #[cfg(test)]
 mod tests {
 
+    use crate::node::time_utils::get_current_timespan;
+
     use super::*;
 
     #[test]
@@ -311,6 +315,7 @@ mod tests {
 
         let block = Block {
             index: 1,
+            timestamp : get_current_timespan(),
             previous_hash: "0000000000000000000000000000000000000000000000000000000000000000"
                 .to_string(),
             author: "0x1234cfb63db134698e1879ea24904df074726cc0".to_string(),
@@ -397,6 +402,7 @@ mod tests {
     fn test_encode_decode_block_bodies() {
         let block = Block {
             index: 1,
+            timestamp: get_current_timespan(),
             previous_hash: "0000000000000000000000000000000000000000000000000000000000000000"
                 .to_string(),
             author: "0x1234cfb63db134698e1879ea24904df074726cc0".to_string(),

@@ -7,10 +7,12 @@ use crate::node::transaction_pool::TransactionPool;
 use crate::node::{metric, signature_keys};
 
 use super::block_headers::BlockHeader;
+use super::time_utils::get_current_timespan;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
     pub index: usize,
+    pub timestamp: u64,
     pub previous_hash: String,
     pub author: String,
     pub signature_r: String,
@@ -42,12 +44,13 @@ impl Block {
     pub fn new_genesis_block() -> Block {
         let mut genesis_block = Block {
             author: String::new(),
-            hash: String::new(),
+            index: 0,
+            timestamp: get_current_timespan(),
+            previous_hash: "0".to_string(),
             signature_r: String::new(),
             signature_s: String::new(),
             signature_v: 0,
-            previous_hash: "0".to_string(),
-            index: 0,
+            hash: String::new(),
             transactions: vec![],
         };
 
@@ -58,13 +61,14 @@ impl Block {
 
     pub fn new_block(index: usize, previous_hash: String, transactions: Vec<Transaction>) -> Block {
         let mut block = Block {
+            index,
+            timestamp: get_current_timespan(),
+            previous_hash,
             author: String::new(),
             signature_r: String::new(),
             signature_s: String::new(),
             signature_v: 0,
             hash: String::new(),
-            previous_hash,
-            index,
             transactions,
         };
 
@@ -349,7 +353,7 @@ impl Block {
 
                 metric::LATEST_BLOCK.clear();
                 metric::LATEST_BLOCK
-                    .get_or_create(&metric::BlockLabels {                        
+                    .get_or_create(&metric::BlockLabels {
                         block_hash: block.hash.to_string(),
                     })
                     .set(block.index as i64);
