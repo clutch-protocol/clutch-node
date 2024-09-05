@@ -346,6 +346,13 @@ impl Block {
                 );
 
                 metric::LATEST_BLOCK_INDEX.set(block.index as i64);
+
+                metric::LATEST_BLOCK.clear();
+                metric::LATEST_BLOCK
+                    .get_or_create(&metric::BlockLabels {                        
+                        block_hash: block.hash.to_string(),
+                    })
+                    .set(0);
             }
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
         }

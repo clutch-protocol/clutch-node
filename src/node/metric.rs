@@ -23,8 +23,8 @@ lazy_static::lazy_static! {
             LATEST_BLOCK_INDEX.clone(),
         );
         registry.register(
-            "latest_block_hash",
-            "Current block hash of the clutch node",
+            "latest_block",
+            "Current block of the clutch node",
             LATEST_BLOCK.clone(),
         );
         Arc::new(Mutex::new(registry))
