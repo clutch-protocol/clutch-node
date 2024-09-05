@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::node::database::Database;
-use crate::node::signature_keys;
 use crate::node::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
+use crate::node::{metric, signature_keys};
 
 use super::block_headers::BlockHeader;
 
@@ -344,7 +344,8 @@ impl Block {
                     "add_block_to_chain successfully. block hash: {}. block index: {}.",
                     block.hash, block.index
                 );
-                super::metric::BLOCK_INDEX.set(block.index as i64);
+
+                metric::LATEST_BLOCK_INDEX.set(block.index as i64);
             }
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
         }

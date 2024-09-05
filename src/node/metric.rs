@@ -1,19 +1,31 @@
 use axum::{routing::get, Router};
+use prometheus_client::metrics::family::Family;
 use prometheus_client::{encoding::text::encode as prometheus_encode, metrics::gauge::Gauge};
 use prometheus_client::registry::Registry;
 use std::sync::{Arc, Mutex};
 
 use super::config::AppConfig;
 
+#[derive(Clone, Debug, Hash, PartialEq, Eq, prometheus_client::encoding::EncodeLabelSet)]
+pub struct BlockLabels {
+    pub block_hash: String,
+}
+
 lazy_static::lazy_static! {
-    pub static ref BLOCK_INDEX: Gauge = Gauge::default();
+    pub static ref LATEST_BLOCK_INDEX: Gauge = Gauge::default();
+    pub static ref LATEST_BLOCK: Family<BlockLabels, Gauge> = Family::default();
     
     static ref REGISTRY: Arc<Mutex<Registry>> = {
         let mut registry = Registry::default();
         registry.register(
-            "block_height",
-            "Current block height of the clutch node",
-            BLOCK_INDEX.clone(),
+            "latest_block_index",
+            "Current block index of the clutch node",
+            LATEST_BLOCK_INDEX.clone(),
+        );
+        registry.register(
+            "latest_block_hash",
+            "Current block hash of the clutch node",
+            LATEST_BLOCK.clone(),
         );
         Arc::new(Mutex::new(registry))
     };
