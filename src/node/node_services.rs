@@ -17,8 +17,8 @@ impl NodeServices {
     pub async fn start_services(config: &AppConfig, blockchain: Blockchain) {
         let blockchain_arc = Arc::new(Mutex::new(blockchain));
 
-        if config.server_metric_enabled {
-            serve_metrics();
+        if config.serve_metric_enabled {
+            serve_metrics(config);
         }
 
         let (libp2p_shutdown_tx, libp2p_shutdown_rx) = oneshot::channel();

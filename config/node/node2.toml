@@ -5,12 +5,13 @@ author_secret_key = "9aba0d89bfa358d27cfc119657537b9c92c8e38a35d2333ddd5c62e6d1a
 developer_mode = true
 websocket_addr = "0.0.0.0:8082"
 listen_addrs = ["/ip4/0.0.0.0/tcp/4002"]
+bootstrap_nodes = ["/ip4/192.168.1.161/tcp/4001"]
 authorities = [
     "0x9b6e8afff8329743cac73dbef83ca3cbf9a74c20",
     "0x6fc11ba44483201f6e9c5eba6435805bb94ad080",
     "0xc4f3f661a43e099aedb8e396d9de1a831a1b4adc",
 ]
-bootstrap_nodes = ["/ip4/192.168.1.161/tcp/4001"]
 block_authoring_enabled = true
 sync_enabled = true
-server_metric_enabled = true
+serve_metric_enabled = true
+serve_metric_addr = "0.0.0.0:3002"

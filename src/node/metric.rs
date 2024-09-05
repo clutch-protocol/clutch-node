@@ -7,6 +7,8 @@ use prometheus_client::registry::Registry;
 use prometheus_client::encoding::{EncodeLabelSet, EncodeLabelValue};
 use std::sync::{Arc, Mutex};
 
+use super::config::AppConfig;
+
 // Define custom label types
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 struct Labels {
@@ -20,8 +22,12 @@ enum Method {
     PUT,
 }
 
-pub fn serve_metrics() {
+pub fn serve_metrics(config: &AppConfig) {
+    let addr = config.serve_metric_addr.clone();
+
     tokio::spawn(async move {
+
+
         // Create the Prometheus registry
         let mut registry = Registry::default();
 
@@ -45,7 +51,7 @@ pub fn serve_metrics() {
             .route("/metrics", get(move || metrics_handler(Arc::clone(&registry))));
 
         // Bind to the address and start the server
-        let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
+        let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
         axum::serve(listener, app).await.unwrap();
     });
 }
