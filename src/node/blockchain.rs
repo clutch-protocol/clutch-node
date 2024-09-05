@@ -65,7 +65,9 @@ impl Blockchain {
     fn cleanup_db(&mut self) {
         self.db.close();
         match self.db.delete_database(self.name.as_str()) {
-            Ok(_) => println!("Developer mode: Database cleaned up successfully."),
+            Ok(_) => {
+                println!("Developer mode: Database cleaned up successfully.");               
+            }
             Err(e) => println!("Error cleaning up database: {}", e),
         }
     }
@@ -75,7 +77,7 @@ impl Blockchain {
         block.validate_block(&self.db)?;
         Transaction::validate_transactions(&self.db, &block.transactions)?;
         Block::add_block_to_chain(&self.db, block);
-        
+
         Ok(())
     }
 
