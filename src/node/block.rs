@@ -339,10 +339,13 @@ impl Block {
 
         // Update the database
         match &db.write(operations) {
-            Ok(_) => println!(
-                "add_block_to_chain successfully. block hash: {}. block index: {}.",
-                block.hash, block.index
-            ),
+            Ok(_) => {
+                println!(
+                    "add_block_to_chain successfully. block hash: {}. block index: {}.",
+                    block.hash, block.index
+                );
+                super::metric::BLOCK_INDEX.set(block.index as i64);
+            }
             Err(e) => panic!("Failed add_block_to_chain: {}", e),
         }
     }
@@ -357,5 +360,5 @@ impl Block {
             signature_v: self.signature_v,
             hash: self.hash.clone(),
         }
-    }  
+    }
 }

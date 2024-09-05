@@ -1,20 +1,19 @@
 use axum::{routing::get, Router};
-use prometheus_client::encoding::text::encode as prometheus_encode;
-use prometheus_client::metrics::counter::Counter;
+use prometheus_client::{encoding::text::encode as prometheus_encode, metrics::gauge::Gauge};
 use prometheus_client::registry::Registry;
 use std::sync::{Arc, Mutex};
 
 use super::config::AppConfig;
 
 lazy_static::lazy_static! {
-    pub static ref DEFAULT_COUNTER: Counter = Counter::default();
-
+    pub static ref BLOCK_INDEX: Gauge = Gauge::default();
+    
     static ref REGISTRY: Arc<Mutex<Registry>> = {
         let mut registry = Registry::default();
         registry.register(
-            "http_requests",
-            "Number of HTTP requests received",
-            DEFAULT_COUNTER.clone(),
+            "block_height",
+            "Current block height of the clutch node",
+            BLOCK_INDEX.clone(),
         );
         Arc::new(Mutex::new(registry))
     };
@@ -34,7 +33,6 @@ pub fn serve_metrics(config: &AppConfig) {
 }
 
 async fn track_and_respond() -> &'static str {
-    DEFAULT_COUNTER.inc();
     "Hello, World!"
 }
 
