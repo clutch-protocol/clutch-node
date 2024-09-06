@@ -1,3 +1,5 @@
+use tracing::{error, info};
+
 use super::configuration::AppConfig;
 use super::consensus::Consensus;
 use super::handshake::Handshake;
@@ -66,9 +68,9 @@ impl Blockchain {
         self.db.close();
         match self.db.delete_database(self.name.as_str()) {
             Ok(_) => {
-                println!("Developer mode: Database cleaned up successfully.");               
+                info!("Developer mode: Database cleaned up successfully.");               
             }
-            Err(e) => println!("Error cleaning up database: {}", e),
+            Err(e) => error!("Error cleaning up database: {}", e),
         }
     }
 
@@ -157,12 +159,12 @@ impl Blockchain {
                 Ok(json_str) => {
                     let file_name = format!("{}_blockchain_blocks", &self.name);
                     if let Err(e) = write_to_file(&json_str, &file_name) {
-                        println!("{}", e);
+                        error!("{}", e);
                     }
                 }
-                Err(e) => println!("Failed to serialize blocks: {}", e),
+                Err(e) => error!("Failed to serialize blocks: {}", e),
             },
-            Err(e) => println!("Failed to retrieve blocks: {}", e),
+            Err(e) => error!("Failed to retrieve blocks: {}", e),
         }
 
         match self.get_transactions_from_pool() {
@@ -170,12 +172,12 @@ impl Blockchain {
                 Ok(json_str) => {
                     let file_name = format!("{}_tx_pool", &self.name);
                     if let Err(e) = write_to_file(&json_str, &file_name) {
-                        println!("{}", e);
+                        error!("{}", e);
                     }
                 }
-                Err(e) => println!("Failed to serialize transactions: {}", e),
+                Err(e) => error!("Failed to serialize transactions: {}", e),
             },
-            Err(e) => println!("Failed to retrieve transactions in transaction pool: {}", e),
+            Err(e) => error!("Failed to retrieve transactions in transaction pool: {}", e),
         }
     }
 }
