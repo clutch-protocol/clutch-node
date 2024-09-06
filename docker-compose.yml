@@ -7,8 +7,9 @@ services:
     ports:
       - "8081:8081"
       - "4001:4001"
+      - "3001:3001"
     volumes:
-      - D:/source/clutch-node/config:/usr/src/clutch-node/config
+      - clutch-config:/usr/src/clutch-node/config
     command: ["node1"]
 
   node2:
@@ -19,8 +20,10 @@ services:
     ports:
       - "8082:8082"
       - "4002:4002"
+      - "3002:3002"
+      
     volumes:
-      - D:/source/clutch-node/config:/usr/src/clutch-node/config
+      - clutch-config:/usr/src/clutch-node/config
     command: ["node2"]
 
   node3:
@@ -31,14 +34,56 @@ services:
     ports:
       - "8083:8083"
       - "4003:4003"
+      - "300:3003"
     volumes:
-      - D:/source/clutch-node/config:/usr/src/clutch-node/config
+      - clutch-config:/usr/src/clutch-node/config
     command: ["node3"]
 
+  grafana:
+    image: grafana/grafana
+    container_name: grafana-container
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin  
+      - GF_USERS_ALLOW_SIGN_UP=false 
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus-container
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus  
+      - E:/docker_shared/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml  
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+  
 networks:
   clutch-network1:
-    external: true
   clutch-network2:
-    external: true
   clutch-network3:
-    external: true
+
+volumes:
+  clutch-config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: D:/source/clutch-node/config
+
+  grafana-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: E:/docker_shared/grafana  
+
+  prometheus-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: E:/docker_shared/prometheus 
