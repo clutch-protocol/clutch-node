@@ -1,6 +1,7 @@
 use std::vec;
 
 use clutch_node::node::{blockchain::Blockchain, function_call::FunctionCallType, *};
+use ::tracing::info;
 use transaction::Transaction;
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-transfer-test";
@@ -35,13 +36,13 @@ fn author_block() {
         .get_latest_block()
         .expect("Failed to get the latest block");
 
-    println!(
+    info!(
         "Blockchain name: {:#?}, latest block index: {}",
         blockchain.name, latest_block.index,
     );
 
     let from_account_state = blockchain.get_account_state(&FROM_ADDRESS_KEY.to_string());
-    println!("From account state: {:#?}", from_account_state);
+    info!("From account state: {:#?}", from_account_state);
 
     blockchain.shutdown_blockchain();
 }
