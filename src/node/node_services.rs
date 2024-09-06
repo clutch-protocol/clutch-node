@@ -164,7 +164,7 @@ impl NodeServices {
             info!("connected peers: {:?}", connected_peers);
 
             if let Some(peer_id) = connected_peers.iter().next() {
-                info!("Selected peer for synchronization: {:?}", peer_id);
+                debug!("Selected peer for synchronization: {:?}", peer_id);
 
                 let handshake = blockchain.handshake().unwrap();
                 let encoded_handshake = encode(&handshake);

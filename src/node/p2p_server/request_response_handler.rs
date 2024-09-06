@@ -15,7 +15,7 @@ use libp2p::{
     PeerId,
 };
 use rlp::Encodable;
-use tracing::{error, info, warn};
+use tracing::{debug, error, warn};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -59,7 +59,7 @@ pub async fn handle_request_response(
             );
         }
         RequestResponseEvent::ResponseSent { peer, request_id } => {
-            info!("Response sent to peer {} for request {}", peer, request_id);
+            debug!("Response sent to peer {} for request {}", peer, request_id);
         }
     }
 }
@@ -72,7 +72,7 @@ async fn handle_request_message(
     swarm: &mut Swarm<P2PBehaviour>,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) {
-    info!(
+    debug!(
         "Send direct message from peer:{:?} with id {:?}",
         peer, request_id,
     );
@@ -107,7 +107,7 @@ async fn handle_response_message(
     swarm: &mut Swarm<P2PBehaviour>,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) {
-    info!(
+    debug!(
         "Received direct message response from {:?} with request_id {:?}",
         peer_id, request_id,
     );
@@ -170,7 +170,7 @@ fn send_response(
 async fn handle_handshake_request(payload: &[u8], blockchain: &Arc<Mutex<Blockchain>>) -> Vec<u8> {
     match decode::<Handshake>(payload) {
         Ok(handshake) => {
-            info!("Received and decoded handshake: {:?}", handshake);
+            debug!("Received and decoded handshake: {:?}", handshake);
             handshake_response(&handshake, blockchain).await
         }
         Err(e) => {
@@ -186,7 +186,7 @@ async fn handle_get_block_headers_request(
 ) -> Vec<u8> {
     match decode::<GetBlockHeaders>(payload) {
         Ok(get_block_header) => {
-            info!(
+            debug!(
                 "Received and decoded getBlockHeader: {:?}",
                 get_block_header
             );
@@ -205,7 +205,7 @@ async fn handle_get_block_bodies_request(
 ) -> Vec<u8> {
     match decode::<GetBlockBodies>(payload) {
         Ok(get_block_bodies) => {
-            info!(
+            debug!(
                 "Received and decoded GetBlockBodies: {:?}",
                 get_block_bodies
             );
@@ -226,7 +226,7 @@ async fn handle_handshake_response(
 ) {
     match decode::<Handshake>(payload) {
         Ok(handshake) => {
-            info!("Decoded Handshake: {:?}", handshake);
+            debug!("Decoded Handshake: {:?}", handshake);
             let blockchain = blockchain.lock().await;
             let current_block_index = blockchain.handshake().unwrap().latest_block_index;
             let received_block_index = handshake.latest_block_index;
@@ -259,7 +259,7 @@ async fn handle_block_headers_response(
 ) {
     match decode::<BlockHeaders>(payload) {
         Ok(block_headers) => {
-            info!("Decoded BlockHeaders: {:?}", block_headers);
+            debug!("Decoded BlockHeaders: {:?}", block_headers);
 
             let block_indexes = block_headers.to_block_indexes();
             let get_block_bodies = GetBlockBodies { block_indexes };
@@ -282,14 +282,14 @@ async fn handle_block_bodies_response(
 ) {
     match decode::<BlockBodies>(payload) {
         Ok(block_bodies) => {
-            info!("Decoded BlockBodies: {:?}", block_bodies);
+            debug!("Decoded BlockBodies: {:?}", block_bodies);
 
             let blockchain = blockchain.lock().await;
 
             for block in block_bodies.blocks {
                 match blockchain.import_block(&block) {
                     Ok(_) => {
-                        info!("Successfully imported block with index: {}", block.index);
+                        debug!("Successfully imported block with index: {}", block.index);
                     }
                     Err(e) => {
                         error!("Failed to import block with index {}: {:?}", block.index, e);
