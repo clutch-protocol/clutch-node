@@ -5,7 +5,7 @@ pub mod block_bodies;
 pub mod block_headers;
 pub mod blockchain;
 pub mod complain_arrival;
-pub mod config;
+pub mod configuration;
 pub mod confirm_arrival;
 pub mod consensus;
 pub mod coordinate;

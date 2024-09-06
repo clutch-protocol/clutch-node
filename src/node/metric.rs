@@ -4,7 +4,7 @@ use prometheus_client::{encoding::text::encode as prometheus_encode, metrics::ga
 use prometheus_client::registry::Registry;
 use std::sync::{Arc, Mutex};
 
-use super::config::AppConfig;
+use super::configuration::AppConfig;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, prometheus_client::encoding::EncodeLabelSet)]
 pub struct BlockLabels {

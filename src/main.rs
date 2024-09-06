@@ -1,7 +1,7 @@
 use clap::Parser;
 mod node;
 use node::blockchain::Blockchain;
-use node::config::AppConfig;
+use node::configuration::AppConfig;
 use node::tracing::setup_tracing;
 
 #[derive(Parser, Debug)]

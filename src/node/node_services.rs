@@ -1,5 +1,5 @@
 use crate::node::blockchain::Blockchain;
-use crate::node::config::AppConfig;
+use crate::node::configuration::AppConfig;
 use crate::node::metric::serve_metrics;
 use crate::node::p2p_server::commands::DirectMessageType;
 use crate::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};

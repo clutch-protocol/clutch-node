@@ -1,4 +1,4 @@
-use super::config::AppConfig;
+use super::configuration::AppConfig;
 use super::consensus::Consensus;
 use super::handshake::Handshake;
 use crate::node::account_state::AccountState;
