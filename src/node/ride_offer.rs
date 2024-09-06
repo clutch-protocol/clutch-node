@@ -1,6 +1,7 @@
 use super::ride_request::RideRequest;
 use crate::node::{database::Database, transaction::Transaction};
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Serialize, Deserialize)]
 pub struct RideOffer {
@@ -13,7 +14,7 @@ impl RideOffer {
         let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments)
             .map_err(|_| "Failed to deserialize transaction data.".to_string())?;
         let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
-    
+
         if let Ok(Some(_)) = RideRequest::get_ride_request(&ride_request_tx_hash, db) {
             // Check if there is any ride linked to this ride offer's request.
             if let Ok(Some(_)) = RideRequest::get_ride_acceptance(&ride_request_tx_hash, db) {
@@ -22,7 +23,7 @@ impl RideOffer {
         } else {
             return Err("Ride request does not exist or failed to retrieve.".to_string());
         }
-    
+
         Ok(())
     }
 
@@ -67,7 +68,10 @@ impl RideOffer {
         }
     }
 
-    pub fn get_ride_acceptance(ride_offer_tx_hash: &str, db: &Database) -> Result<Option<String>, String> {
+    pub fn get_ride_acceptance(
+        ride_offer_tx_hash: &str,
+        db: &Database,
+    ) -> Result<Option<String>, String> {
         let key = Self::construct_ride_offer_acceptance_key(ride_offer_tx_hash);
         match db.get("state", &key) {
             Ok(Some(value)) => match String::from_utf8(value) {
@@ -75,7 +79,7 @@ impl RideOffer {
                 Err(_) => return Err("Failed to decode UTF-8 string".to_string()),
             },
             Ok(None) => {
-                // println!(" No data found.{}", &ride_request_tx_hash);
+                error!(" No data found.{}", &ride_offer_tx_hash);
                 Ok(None)
             }
             Err(_) => Err("Database error occurred".to_string()),

@@ -1,6 +1,7 @@
 use config::{Config, ConfigError, Environment, File};
 use dotenv::dotenv;
 use serde::Deserialize;
+use tracing::info;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -35,7 +36,7 @@ impl AppConfig {
 
     pub fn load_configuration(env: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let config = AppConfig::from_env(env)?; 
-        println!("Loaded configuration from env {:?}: {:?}", env, config);
+        info!("Loaded configuration from env {:?}: {:?}", env, config);
         Ok(config)
     }
 }

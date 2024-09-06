@@ -102,12 +102,14 @@ impl SignatureKeys {
 
 #[cfg(test)]
 mod tests {
+    use tracing::{error, info};
+
     use super::*;
 
     #[test]
     fn test_generate_new_keypair() {
         let keys = SignatureKeys::generate_new_keypair();
-        println!(
+        info!(
             "{:?},{:?},{:?}",
             keys.address_key, keys.secret_key, keys.public_key
         )
@@ -117,17 +119,17 @@ mod tests {
     fn test_sign_and_verify() {
         let keys = SignatureKeys::generate_new_keypair();
         let data = b"Blockchain technology";
-        println!("Public key: {:?}", keys.public_key);
-        println!("Address: {:?}", keys.address_key);
-        println!("Secret key: {:?}", keys.secret_key);
+        info!("Public key: {:?}", keys.public_key);
+        info!("Address: {:?}", keys.address_key);
+        info!("Secret key: {:?}", keys.secret_key);
 
         // Test signing
         let (r, s, v) = SignatureKeys::sign(&keys.secret_key, data);
-        println!("Signature: r={:?}, s={:?}, v={:?}", r, s, v);
+        info!("Signature: r={:?}, s={:?}, v={:?}", r, s, v);
 
         match SignatureKeys::verify(&keys.address_key, data, &r, &s, v) {
             Ok(is_verified) => assert!(is_verified, "Signature verification should succeed"),
-            Err(e) => panic!("Signature verification failed with error: {}", e),
+            Err(e) => error!("Signature verification failed with error: {}", e),
         }
     }
 

@@ -247,6 +247,8 @@ pub fn decode<T: Decodable>(bytes: &[u8]) -> Result<T, DecoderError> {
 #[cfg(test)]
 mod tests {
 
+    use tracing::{error, info};
+
     use crate::node::time_utils::get_current_timespan;
 
     use super::*;
@@ -270,12 +272,12 @@ mod tests {
         };
 
         let encoded = encode(&tx);
-        println!("Encoded: {:?}", encoded);
+        info!("Encoded: {:?}", encoded);
 
         let decoded = decode::<Transaction>(&encoded);
         match decoded {
-            Ok(tx) => println!("Decoded: {:?}", tx),
-            Err(e) => println!("Failed to decode transaction: {:?}", e),
+            Ok(tx) => info!("Decoded: {:?}", tx),
+            Err(e) => error!("Failed to decode transaction: {:?}", e),
         }
     }
 
@@ -329,12 +331,12 @@ mod tests {
         };
 
         let encoded = encode(&block);
-        println!("Encoded Block: {:?}", encoded);
+        info!("Encoded Block: {:?}", encoded);
 
         let decoded = decode::<Block>(&encoded);
         match decoded {
-            Ok(block) => println!("Decoded Block: {:?}", block),
-            Err(e) => println!("Failed to decode block: {:?}", e),
+            Ok(block) => info!("Decoded Block: {:?}", block),
+            Err(e) => error!("Failed to decode block: {:?}", e),
         }
     }
 
@@ -347,12 +349,12 @@ mod tests {
         };
 
         let encoded = encode(&get_block_headers);
-        println!("Encoded: {:?}", encoded);
+        info!("Encoded: {:?}", encoded);
 
         let decoded = decode::<GetBlockHeaders>(&encoded);
         match decoded {
-            Ok(tx) => println!("Decoded: {:?}", tx),
-            Err(e) => println!("Failed to decode transaction: {:?}", e),
+            Ok(tx) => info!("Decoded: {:?}", tx),
+            Err(e) => error!("Failed to decode transaction: {:?}", e),
         }
     }
 
@@ -389,12 +391,12 @@ mod tests {
         };
 
         let encoded = encode(&block_headers);
-        println!("Encoded: {:?}", encoded);
+        info!("Encoded: {:?}", encoded);
 
         let decoded = decode::<BlockHeaders>(&encoded);
         match decoded {
-            Ok(tx) => println!("Decoded: {:?}", tx),
-            Err(e) => println!("Failed to decode BlockHeaders: {:?}", e),
+            Ok(tx) => info!("Decoded: {:?}", tx),
+            Err(e) => error!("Failed to decode BlockHeaders: {:?}", e),
         }
     }
 
@@ -420,12 +422,12 @@ mod tests {
         };
 
         let encoded = encode(&block_boodies);
-        println!("Encoded: {:?}", encoded);
+        info!("Encoded: {:?}", encoded);
 
         let decoded = decode::<BlockBodies>(&encoded);
         match decoded {
-            Ok(tx) => println!("Decoded: {:?}", tx),
-            Err(e) => println!("Failed to decode BlockBodies: {:?}", e),
+            Ok(tx) => info!("Decoded: {:?}", tx),
+            Err(e) => error!("Failed to decode BlockBodies: {:?}", e),
         }
     }
 }

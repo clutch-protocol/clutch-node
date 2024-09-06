@@ -7,6 +7,7 @@ use libp2p::{
     gossipsub::{self, MessageId},
     PeerId,
 };
+use tracing::{error, info};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -16,7 +17,7 @@ pub async fn handle_gossipsub_message(
     message: gossipsub::Message,
     blockchain: &Arc<Mutex<Blockchain>>,
 ) {
-    println!(
+    info!(
         "Received gossip message from peer: {} with id:'{}': {} ",
         peer_id,
         id,
@@ -29,24 +30,24 @@ pub async fn handle_gossipsub_message(
     match message_type {
         Some(GossipMessageType::Transaction) => match decode::<Transaction>(payload) {
             Ok(transaction) => {
-                println!("Decoded transaction: {:?}", &transaction);
+                info!("Decoded transaction: {:?}", &transaction);
                 handle_received_transaction(&transaction, blockchain).await;
             }
             Err(e) => {
-                eprintln!("Failed to decode transaction: {:?}", e);
+                error!("Failed to decode transaction: {:?}", e);
             }
         },
         Some(GossipMessageType::Block) => match decode::<Block>(payload) {
             Ok(block) => {
-                println!("Decoded block: {:?}", &block);
+                info!("Decoded block: {:?}", &block);
                 handle_received_block(&block, blockchain).await;
             }
             Err(e) => {
-                eprintln!("Failed to decode block: {:?}", e);
+                error!("Failed to decode block: {:?}", e);
             }
         },
         _ => {
-            eprintln!("Unknown message type: {:?}", message_type);
+            error!("Unknown message type: {:?}", message_type);
         }
     }
 }
@@ -61,8 +62,8 @@ async fn handle_received_transaction(
     };
 
     match result {
-        Ok(_) => println!("Transaction added to mempool from P2P"),
-        Err(e) => println!("Failed to add transaction to pool: {:?}", e),
+        Ok(_) => info!("Transaction added to mempool from P2P"),
+        Err(e) => error!("Failed to add transaction to pool: {:?}", e),
     }
 }
 
@@ -73,7 +74,7 @@ async fn handle_received_block(block: &Block, blockchain: &Arc<Mutex<Blockchain>
     };
 
     match result {
-        Ok(_) => println!("Block added to blockchain from P2P"),
-        Err(e) => println!("Failed to add block to blockchain: {:?}", e),
+        Ok(_) => info!("Block added to blockchain from P2P"),
+        Err(e) => error!("Failed to add block to blockchain: {:?}", e),
     }
 }

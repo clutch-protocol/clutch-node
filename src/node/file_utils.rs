@@ -2,6 +2,8 @@ use std::fs::{self, File};
 use std::io::{self, Write};
 use std::path::Path;
 
+use tracing::info;
+
 pub fn write_to_file(content: &str, file_name: &str) -> io::Result<()> {
     let output_dir = "output";
     if !Path::new(output_dir).exists() {
@@ -15,7 +17,7 @@ pub fn write_to_file(content: &str, file_name: &str) -> io::Result<()> {
 
     file.write_all(content.as_bytes())?;
 
-    println!(
+    info!(
         "Content has been successfully saved to '{}'.",
         path.display()
     );

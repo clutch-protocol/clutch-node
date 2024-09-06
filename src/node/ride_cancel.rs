@@ -4,6 +4,7 @@ use crate::node::{
 
 use super::{database::Database, ride_request::RideRequest, transaction::Transaction};
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Serialize, Deserialize)]
 pub struct RideCancel {
@@ -87,7 +88,7 @@ impl RideCancel {
         let ride_cancel: RideCancel = match serde_json::from_str(&transaction.data.arguments) {
             Ok(ride_pay) => ride_pay,
             Err(_) => {
-                eprintln!("Failed to deserialize transaction arguments.");
+                error!("Failed to deserialize transaction arguments.");
                 return vec![];
             }
         };
@@ -109,7 +110,7 @@ impl RideCancel {
             Ok(Some(fare)) => fare,
             Ok(None) => 0,
             Err(_) => {
-                println!(
+                error!(
                         "Failed to retrieve 'fare_paid' field for ride acceptace with transaction hash '{}'.",
                         &ride_acceptance_tx_hash
                     );

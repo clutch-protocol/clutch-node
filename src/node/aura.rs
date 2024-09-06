@@ -57,6 +57,8 @@ impl Consensus for Aura {
 
 #[cfg(test)]
 mod tests {
+    use tracing::error;
+
     use super::*;
 
     #[test]
@@ -64,7 +66,7 @@ mod tests {
         let aura = Aura::new(vec!["node_1".to_string(), "node_2".to_string()], 60);
         let slot = aura.current_slot() as usize;
         let expected_author = &aura.authorities[slot % aura.authorities.len()];
-        println!(
+        error!(
             "current slot: {:?}, expected_author: {:?}",
             slot, expected_author
         );
