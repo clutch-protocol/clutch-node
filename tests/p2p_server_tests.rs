@@ -89,11 +89,6 @@ async fn test_p2p_server_gossip_message() {
     // Wait for the message to propagate
     tokio::time::sleep(Duration::from_secs(1)).await;
 
-    // Check if the message was received by server2
-    // This part depends on how you want to validate the message reception.
-    // For simplicity, we're printing the message in the handle_gossipsub_message method.
-    // You can add a flag or counter to verify it here.
-
     // Shut down the servers
     drop(command_tx1);
     drop(command_tx2);
