@@ -12,11 +12,11 @@ use libp2p::{
     swarm::{Swarm, SwarmEvent},
     tcp, yamux, Multiaddr, PeerId, StreamProtocol,
 };
-use tracing::info;
+use tracing::{info,error};
 
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
-use std::error::Error;
+use std::error::Error as StdError;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
@@ -44,7 +44,7 @@ impl P2PServer {
         topic_name: &str,
         listen_addrs: &[&str],
         peer_addrs: &[&str],
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Result<Self, Box<dyn StdError>> {
         let mut swarm = Self::build_swarm(listen_addrs)?;
         let topic = Self::setup_gossipsub_topic(&mut swarm, topic_name)?;
 
@@ -78,10 +78,10 @@ impl P2PServer {
 
         match response_rx.await {
             Ok(result) => match result {
-                Ok(message_id) => println!("Message sent with id: {:?}", message_id),
-                Err(e) => eprintln!("Failed to send message: {:?}", e),
+                Ok(message_id) => info!("Message sent with id: {:?}", message_id),
+                Err(e) => error!("Failed to send message: {:?}", e),
             },
-            Err(e) => eprintln!("Failed to receive response: {:?}", e),
+            Err(e) => error!("Failed to receive response: {:?}", e),
         }
     }
 
@@ -91,7 +91,7 @@ impl P2PServer {
         peer_id: PeerId,
         message_type: DirectMessageType,
         message: &Vec<u8>,
-    ) -> Result<OutboundRequestId, Box<dyn Error>> {
+    ) -> Result<OutboundRequestId, Box<dyn StdError>> {
         let (response_tx, response_rx) = oneshot::channel();
 
         let mut message_with_type = vec![message_type.as_byte()];
@@ -131,7 +131,7 @@ impl P2PServer {
     #[allow(dead_code)]
     pub async fn get_connected_peers_command(
         command_tx_p2p: Sender<P2PServerCommand>,
-    ) -> Result<HashSet<PeerId>, Box<dyn Error>> {
+    ) -> Result<HashSet<PeerId>, Box<dyn StdError>> {
         let (response_tx, response_rx) = oneshot::channel();
         command_tx_p2p
             .send(P2PServerCommand::GetConnectedPeers { response_tx })
@@ -145,11 +145,11 @@ impl P2PServer {
         &mut self,
         blockchain: Arc<Mutex<Blockchain>>,
         mut command_rx: tokio::sync::mpsc::Receiver<P2PServerCommand>,
-    ) -> Result<(), Box<dyn Error>> {      
+    ) -> Result<(), Box<dyn StdError>> {      
         self.process_messages(blockchain, &mut command_rx).await
     }
 
-    fn build_swarm(listen_addrs: &[&str]) -> Result<Swarm<P2PBehaviour>, Box<dyn Error>> {
+    fn build_swarm(listen_addrs: &[&str]) -> Result<Swarm<P2PBehaviour>, Box<dyn StdError>> {
         let mut swarm = libp2p::SwarmBuilder::with_new_identity()
             .with_tokio()
             .with_tcp(
@@ -209,7 +209,7 @@ impl P2PServer {
     fn setup_gossipsub_topic(
         swarm: &mut Swarm<P2PBehaviour>,
         topic_name: &str,
-    ) -> Result<IdentTopic, Box<dyn Error>> {
+    ) -> Result<IdentTopic, Box<dyn StdError>> {
         let topic = IdentTopic::new(topic_name);
         swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
         Ok(topic)
@@ -219,7 +219,7 @@ impl P2PServer {
         &mut self,
         blockchain: Arc<Mutex<Blockchain>>,
         command_rx: &mut tokio::sync::mpsc::Receiver<P2PServerCommand>,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), Box<dyn StdError>> {
         loop {
             select! {
                 event = self.behaviour.select_next_some().fuse() => {
@@ -311,14 +311,14 @@ impl P2PServer {
 
     fn handle_mdns_discovered(swarm: &mut Swarm<P2PBehaviour>, list: Vec<(PeerId, Multiaddr)>) {
         for (peer_id, _multiaddr) in list {
-            println!("mDNS discovered a new peer: {peer_id}");
+            info!("mDNS discovered a new peer: {peer_id}");
             swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
         }
     }
 
     fn handle_mdns_expired(swarm: &mut Swarm<P2PBehaviour>, list: Vec<(PeerId, Multiaddr)>) {
         for (peer_id, _multiaddr) in list {
-            println!("mDNS discover peer has expired: {peer_id}");
+            info!("mDNS discover peer has expired: {peer_id}");
             swarm
                 .behaviour_mut()
                 .gossipsub
