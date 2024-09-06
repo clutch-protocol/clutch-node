@@ -16,19 +16,24 @@ pub struct AppConfig {
     pub bootstrap_nodes: Vec<String>,
     pub block_authoring_enabled: bool,
     pub sync_enabled: bool,
-    pub serve_metric_enabled : bool,
+    pub serve_metric_enabled: bool,
     pub serve_metric_addr: String,
 }
 
 impl AppConfig {
-    pub fn from_env(env: &str) -> Result<Self, ConfigError> {
+    fn from_env(env: &str) -> Result<Self, ConfigError> {
         dotenv().ok();
         let file_path = format!("config/node/{}.toml", env);
-
         let builder = Config::builder()
-            .add_source(File::with_name(&file_path))
+            .add_source(File::with_name(&file_path)) 
             .add_source(Environment::with_prefix("APP"));
 
-        builder.build()?.try_deserialize()
+        builder.build()?.try_deserialize::<Self>()
+    }
+
+    pub fn load_configuration(env: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let config = AppConfig::from_env(env)?; 
+        println!("Loaded configuration from env {:?}: {:?}", env, config);
+        Ok(config)
     }
 }

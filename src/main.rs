@@ -1,6 +1,4 @@
 use clap::Parser;
-use tracing::{info, warn};
-
 mod node;
 use node::blockchain::Blockchain;
 use node::config::AppConfig;
@@ -17,20 +15,12 @@ struct Args {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let env = &args.env;
-    let config = load_configuration(env)?;
+    let config = AppConfig::load_configuration(env)?;
     setup_tracing(&config.log_level)?;
 
     let blockchain = initialize_blockchain(&config);
     blockchain.start_network_services(&config).await;
     Ok(())
-}
-
-fn load_configuration(env: &str) -> Result<AppConfig, Box<dyn std::error::Error>> {
-    let config = AppConfig::from_env(env)?;
-    println!("Loaded configuration from env {:?}: {:?}", env, config);
-    info!("test info from mehran");
-    warn!("test warn from mehran");
-    Ok(config)
 }
 
 fn initialize_blockchain(config: &AppConfig) -> Blockchain {
