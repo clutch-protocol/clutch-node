@@ -4,6 +4,7 @@ use clutch_node::node::get_block_header::GetBlockHeaders;
 use clutch_node::node::p2p_server::commands::DirectMessageType;
 use clutch_node::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use clutch_node::node::rlp_encoding::encode;
+use tracing::info;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
@@ -153,17 +154,17 @@ async fn test_p2p_server_connected_peers() {
         .await
         .unwrap();
 
-    println!(
+    info!(
         "peer_id server 1: {:?}, connected peers: {:?}",
         peer_id_server1, connected_peers_server1
     );
 
-    println!(
+    info!(
         "peer_id server 2: {:?}, connected peers: {:?}",
         peer_id_server2, connected_peers_server2
     );
 
-    println!(
+    info!(
         "peer_id server 3: {:?}, connected peers: {:?}",
         peer_id_server3, connected_peers_server3
     );
@@ -211,10 +212,10 @@ async fn test_p2p_server_get_local_peer_id() {
 
     // Send a direct message from server1 to server2
     let peer_id = P2PServer::get_local_peer_id_command(command_tx1.clone()).await;
-    println!("peer_id server 1: {:?}", peer_id);
+    info!("peer_id server 1: {:?}", peer_id);
 
     let peer_id = P2PServer::get_local_peer_id_command(command_tx2.clone()).await;
-    println!("peer_id server 2: {:?}", peer_id);
+    info!("peer_id server 2: {:?}", peer_id);
 
     // Shut down the servers
     drop(command_tx1);
@@ -254,8 +255,8 @@ async fn test_p2p_server_handshake_direct_message() {
     // Get peer IDs
     let peer_id_server1 = P2PServer::get_local_peer_id_command(command_tx1.clone()).await;
     let peer_id_server2 = P2PServer::get_local_peer_id_command(command_tx2.clone()).await;
-    println!("peer_id server 1: {:?}", peer_id_server1);
-    println!("peer_id server 2: {:?}", peer_id_server2);
+    info!("peer_id server 1: {:?}", peer_id_server1);
+    info!("peer_id server 2: {:?}", peer_id_server2);
 
     let handshake =  blockchain.lock().await.handshake().unwrap();
     let encoded_handshake = encode(&handshake);
@@ -270,7 +271,7 @@ async fn test_p2p_server_handshake_direct_message() {
     .await
     .unwrap();
 
-    println!("Request ID: {:?}", request_id);
+    info!("Request ID: {:?}", request_id);
 
     // Wait for the response or the event that handles the message
     tokio::time::sleep(Duration::from_secs(5)).await;
@@ -313,8 +314,8 @@ async fn test_p2p_server_get_block_headers_direct_message() {
     // Get peer IDs
     let peer_id_server1 = P2PServer::get_local_peer_id_command(command_tx1.clone()).await;
     let peer_id_server2 = P2PServer::get_local_peer_id_command(command_tx2.clone()).await;
-    println!("peer_id server 1: {:?}", peer_id_server1);
-    println!("peer_id server 2: {:?}", peer_id_server2);
+    info!("peer_id server 1: {:?}", peer_id_server1);
+    info!("peer_id server 2: {:?}", peer_id_server2);
 
     let get_block_headers = GetBlockHeaders {
         start_block_index: 0,
@@ -334,7 +335,7 @@ async fn test_p2p_server_get_block_headers_direct_message() {
     .await
     .unwrap();
 
-    println!("Request ID: {:?}", request_id);
+    info!("Request ID: {:?}", request_id);
 
     // Wait for the response or the event that handles the message
     tokio::time::sleep(Duration::from_secs(5)).await;
@@ -377,8 +378,8 @@ async fn test_p2p_server_get_block_boodies_direct_message() {
     // Get peer IDs
     let peer_id_server1 = P2PServer::get_local_peer_id_command(command_tx1.clone()).await;
     let peer_id_server2 = P2PServer::get_local_peer_id_command(command_tx2.clone()).await;
-    println!("peer_id server 1: {:?}", peer_id_server1);
-    println!("peer_id server 2: {:?}", peer_id_server2);
+    info!("peer_id server 1: {:?}", peer_id_server1);
+    info!("peer_id server 2: {:?}", peer_id_server2);
 
     let get_block_bodies = GetBlockBodies {
         block_indexes: vec![0],
@@ -396,7 +397,7 @@ async fn test_p2p_server_get_block_boodies_direct_message() {
     .await
     .unwrap();
 
-    println!("Request ID: {:?}", request_id);
+    info!("Request ID: {:?}", request_id);
 
     // Wait for the response or the event that handles the message
     tokio::time::sleep(Duration::from_secs(5)).await;

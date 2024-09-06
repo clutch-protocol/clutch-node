@@ -1,6 +1,7 @@
 use std::vec;
 
 use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
+use ::tracing::{error, info};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
@@ -25,7 +26,7 @@ fn transfer_founds() {
     for block_creator in blocks.iter() {
         let mut block = block_creator();
         if let Err(e) = import_block(&mut blockchain, &mut block) {
-            println!("Error importing block: {}", e);
+            error!("Error importing block: {}", e);
             continue;
         }
     }
@@ -34,13 +35,13 @@ fn transfer_founds() {
         .get_latest_block()
         .expect("Failed to get the latest block");
 
-    println!(
+    info!(
         "Blockchain name: {:#?}, latest block index: {}",
         blockchain.name, latest_block.index,
     );
 
     let from_account_state = blockchain.get_account_state(&FROM_ADDRESS_KEY.to_string());
-    println!("From account state: {:#?}", from_account_state);
+    info!("From account state: {:#?}", from_account_state);
 
     blockchain.shutdown_blockchain();
 }

@@ -1,6 +1,7 @@
 use serial_test::serial;
 
 use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
+use ::tracing::{error, info};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 
@@ -54,7 +55,7 @@ fn import_blocks(blockchain: &mut Blockchain) {
     for block_creator in blocks.iter() {
         let mut block = block_creator();
         if let Err(e) = import_block(blockchain, &mut block) {
-            println!("Error importing block: {}", e);
+            error!("Error importing block: {}", e);
             break;
         }
     }
@@ -66,10 +67,10 @@ fn author_blocks(blockchain: &mut Blockchain) {
 
     match blockchain.author_new_block() {
         Ok(mut block) => match import_block(blockchain, &mut block) {
-            Ok(_) => println!("Successfully imported the new block."),
-            Err(e) => println!("Failed to import the new block: {}", e),
+            Ok(_) => info!("Successfully imported the new block."),
+            Err(e) => error!("Failed to import the new block: {}", e),
         },
-        Err(e) => println!("Failed to author new block: {}", e),
+        Err(e) => error!("Failed to author new block: {}", e),
     }
 }
 
@@ -79,10 +80,10 @@ fn add_transaction_to_pool(
 ) {
     match blockchain.add_transaction_to_pool(&ride_request_transcation) {
         Ok(_) => {
-            println!("Successfully added transaction to transaction_pool");
+            info!("Successfully added transaction to transaction_pool");
         }
         Err(e) => {
-            println!("Failed to add transaction to transaction_pool: {}", e);
+            error!("Failed to add transaction to transaction_pool: {}", e);
         }
     }
 }
