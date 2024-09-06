@@ -12,6 +12,7 @@ use libp2p::{
     swarm::{Swarm, SwarmEvent},
     tcp, yamux, Multiaddr, PeerId, StreamProtocol,
 };
+use tracing::info;
 
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
@@ -302,7 +303,7 @@ impl P2PServer {
                 handle_request_response(event, swarm, blockchain).await;
             }
             SwarmEvent::NewListenAddr { address, .. } => {
-                println!("Local node is listening on {address}");
+                info!("Local node is listening on {address}");
             }
             _ => {}
         }

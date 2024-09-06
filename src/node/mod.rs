@@ -32,3 +32,4 @@ pub mod transaction;
 pub mod transaction_pool;
 pub mod transfer;
 pub mod websocket;
+pub mod seq;

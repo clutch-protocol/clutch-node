@@ -18,6 +18,8 @@ pub struct AppConfig {
     pub sync_enabled: bool,
     pub serve_metric_enabled: bool,
     pub serve_metric_addr: String,
+    pub seq_url: String,
+    pub seq_api_key: String,
 }
 
 impl AppConfig {

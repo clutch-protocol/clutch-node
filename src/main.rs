@@ -16,7 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let env = &args.env;
     let config = AppConfig::load_configuration(env)?;
-    setup_tracing(&config.log_level)?;
+    setup_tracing(&config.log_level, &config.seq_url, &config.seq_api_key)?;
 
     let blockchain = initialize_blockchain(&config);
     blockchain.start_network_services(&config).await;
