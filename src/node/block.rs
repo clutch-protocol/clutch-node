@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use tracing::{error, info, warn};
 
 use crate::node::database::Database;
 use crate::node::transaction::Transaction;
@@ -255,10 +256,10 @@ impl Block {
     pub fn genesis_import_block(db: &Database) {
         match Self::get_genesis_block(db) {
             Some(_) => {
-                println!("Genesis block already exists.");
+                warn!("Genesis block already exists.");
             }
             None => {
-                println!("Genesis block does not exist, creating new one...");
+                info!("Genesis block does not exist, creating new one...");
                 let genesis_block = Self::new_genesis_block();
                 Self::add_block_to_chain(db, &genesis_block);
             }
@@ -294,7 +295,7 @@ impl Block {
                 values_storage.push(value);
             }
         } else {
-            println!("Failed to serialize block for storage.");
+            error!("Failed to serialize block for storage.");
             return;
         }
 
@@ -306,7 +307,7 @@ impl Block {
                 values_storage.push(value);
             }
         } else {
-            println!("Failed to serialize block for storage.");
+            error!("Failed to serialize block for storage.");
             return;
         }
 
@@ -344,7 +345,7 @@ impl Block {
         // Update the database
         match &db.write(operations) {
             Ok(_) => {
-                println!(
+                info!(
                     "add_block_to_chain successfully. block hash: {}. block index: {}.",
                     block.hash, block.index
                 );
