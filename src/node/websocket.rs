@@ -4,6 +4,7 @@ use crate::node::block::Block;
 use crate::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;
 use futures::{stream::StreamExt, SinkExt};
+use tracing::{error, info};
 use std::error::Error;
 use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
@@ -20,7 +21,7 @@ impl WebSocket {
         command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
     ) -> Result<(), Box<dyn Error>> {
         let listener = TcpListener::bind(addr).await?;
-        println!("WebSocket server started on {}", addr);
+        info!("WebSocket server started on {}", addr);
 
         while let Ok((stream, _)) = listener.accept().await {
             let blockchain = Arc::clone(&blockchain);
@@ -41,19 +42,19 @@ impl WebSocket {
 
                 while let Some(Ok(message)) = ws_receiver.next().await {
                     if let Message::Text(text) = message {
-                        println!("Received from websocket: {}", text);
+                        info!("Received from websocket: {}", text);
                         let response = Self::handle_json_rpc_request(&text, &blockchain, command_tx_p2p.clone()).await;
 
                         if let Some(response) = response {
                             if let Err(e) = ws_sender.send(Message::Text(response)).await {
-                                eprintln!("Error sending message: {}", e);
+                                error!("Error sending message: {}", e);
                                 return;
                             }
                         }
                     }
                 }
             }
-            Err(e) => eprintln!("Error during the websocket handshake: {}", e),
+            Err(e) => error!("Error during the websocket handshake: {}", e),
         }
     }
 
@@ -83,11 +84,11 @@ impl WebSocket {
 
                 let  blockchain = blockchain.lock().await;
                 if let Err(e) = blockchain.add_transaction_to_pool(&transaction) {
-                    eprintln!("Failed to add transaction: {}", e);
+                    error!("Failed to add transaction: {}", e);
                     return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to add transaction: {}", e)}, "id": id}).to_string());
                 }
 
-                println!("Transaction added to pool from wss.");                    
+                info!("Transaction added to pool from wss.");                    
                 
                 // gossip transcation                                        
                 let encoded_tx = encode(&transaction);
@@ -109,14 +110,14 @@ impl WebSocket {
     
                 let blockchain = blockchain.lock().await;
                 if let Err(e) = blockchain.import_block(&block) {
-                    eprintln!("Failed to add block: {}", e);
+                    error!("Failed to add block: {}", e);
                     return Some(
                         serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to import block: {}", e)}, "id": id})
                             .to_string(),
                     );
                 }
     
-                println!("Block imported to blockchain from WSS.");
+                info!("Block imported to blockchain from WSS.");
     
                 // Gossip block
                 let encoded_block = encode(&block);
@@ -132,7 +133,7 @@ impl WebSocket {
                 let new_block = match blockchain.author_new_block() {
                     Ok(block) => block,
                     Err(e) => {
-                        eprintln!("Failed to author new block: {}", e);
+                        error!("Failed to author new block: {}", e);
                         return Some(
                             serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to author new block: {}", e)}, "id": id})
                                 .to_string(),
@@ -140,7 +141,7 @@ impl WebSocket {
                     }
                 };
     
-                println!("New block authored and added to the blockchain from WSS.");
+                info!("New block authored and added to the blockchain from WSS.");
     
                 // Gossip new block
                 let encoded_block = encode(&new_block);
