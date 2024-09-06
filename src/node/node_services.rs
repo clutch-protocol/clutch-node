@@ -10,6 +10,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::signal;
 use tokio::sync::{mpsc, oneshot, Mutex};
+use tracing::{debug, error, info};
 
 pub struct NodeServices;
 
@@ -61,13 +62,13 @@ impl NodeServices {
     ) {
         tokio::select! {
             _ = signal::ctrl_c() => {
-                println!("Received Ctrl+C, shutting down.");
+                info!("Received Ctrl+C, shutting down.");
             }
             _ = libp2p_shutdown_rx => {
-                println!("Libp2p service completed, shutting down.");
+                info!("Libp2p service completed, shutting down.");
             }
             _ = websocket_shutdown_rx => {
-                println!("WebSocket service completed, shutting down.");
+                info!("WebSocket service completed, shutting down.");
             }
         }
 
@@ -89,7 +90,7 @@ impl NodeServices {
             match P2PServer::new(&config.libp2p_topic_name, &listen_addrs, &bootstrap_nodes) {
                 Ok(server) => server,
                 Err(e) => {
-                    eprintln!("Failed to create P2PServer: {}", e);
+                    error!("Failed to create P2PServer: {}", e);
                     return;
                 }
             };
@@ -97,7 +98,7 @@ impl NodeServices {
         tokio::spawn(async move {
             {
                 if let Err(e) = p2p_server.run(Arc::clone(&blockchain), command_rx).await {
-                    eprintln!("Error running libp2p: {}", e);
+                    error!("Error running libp2p: {}", e);
                 }
             }
             let _ = libp2p_shutdown_tx.send(());
@@ -114,7 +115,7 @@ impl NodeServices {
 
         tokio::spawn(async move {
             if let Err(e) = WebSocket::run(&websocket_addr, blockchain, command_tx_p2p).await {
-                eprintln!("Error starting WebSocket server: {}", e);
+                error!("Error starting WebSocket server: {}", e);
             }
             let _ = websocket_shutdown_tx.send(());
         });
@@ -140,8 +141,8 @@ impl NodeServices {
                         )
                         .await;
                     }
-                    Err(_e) => {
-                        // eprintln!("Error authoring new block: {}", e);
+                    Err(e) => {
+                        debug!("Error authoring new block: {:?}", e);
                     }
                 }
             }
@@ -160,10 +161,10 @@ impl NodeServices {
                 .await
                 .unwrap();
 
-            println!("connected peers: {:?}", connected_peers);
+            info!("connected peers: {:?}", connected_peers);
 
             if let Some(peer_id) = connected_peers.iter().next() {
-                println!("Selected peer for synchronization: {:?}", peer_id);
+                info!("Selected peer for synchronization: {:?}", peer_id);
 
                 let handshake = blockchain.handshake().unwrap();
                 let encoded_handshake = encode(&handshake);
@@ -177,7 +178,7 @@ impl NodeServices {
                 .await
                 .expect_err("Failed to send handshake message");
             } else {
-                eprintln!("Failed to select a peer from the connected peers set.");
+                error!("Failed to select a peer from the connected peers set.");
             }
         });
     }
