@@ -1,11 +1,10 @@
 use clap::Parser;
-use std::error::Error;
 use tracing::{info, warn};
-use tracing_subscriber::EnvFilter;
 
 mod node;
 use node::blockchain::Blockchain;
 use node::config::AppConfig;
+use node::tracing::setup_tracing;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -42,15 +41,4 @@ fn initialize_blockchain(config: &AppConfig) -> Blockchain {
         config.developer_mode.clone(),
         config.authorities.clone(),
     )
-}
-
-fn setup_tracing(log_level: &str) -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::new(log_level))
-        .try_init()
-        .or_else(|_| {
-            println!("Global default trace dispatcher has already been set");
-            Ok::<(), Box<dyn Error>>(())
-        })?;
-    Ok(())
 }
