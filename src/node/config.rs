@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
+    pub log_level: String,
     pub libp2p_topic_name: String,
     pub blockchain_name: String,
     pub author_public_key: String,

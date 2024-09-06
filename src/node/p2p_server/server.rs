@@ -24,7 +24,6 @@ use tokio::{
     io, select,
     sync::{oneshot, Mutex},
 };
-use tracing_subscriber::EnvFilter;
 
 use super::{
     behaviour::{DirectMessageRequest, DirectMessageResponse, P2PBehaviourEvent},
@@ -145,20 +144,8 @@ impl P2PServer {
         &mut self,
         blockchain: Arc<Mutex<Blockchain>>,
         mut command_rx: tokio::sync::mpsc::Receiver<P2PServerCommand>,
-    ) -> Result<(), Box<dyn Error>> {
-        Self::setup_tracing()?;
+    ) -> Result<(), Box<dyn Error>> {      
         self.process_messages(blockchain, &mut command_rx).await
-    }
-
-    fn setup_tracing() -> Result<(), Box<dyn Error>> {
-        tracing_subscriber::fmt()
-            .with_env_filter(EnvFilter::from_default_env())
-            .try_init()
-            .or_else(|_| {
-                println!("Global default trace dispatcher has already been set");
-                Ok::<(), Box<dyn Error>>(())
-            })?;
-        Ok(())
     }
 
     fn build_swarm(listen_addrs: &[&str]) -> Result<Swarm<P2PBehaviour>, Box<dyn Error>> {
