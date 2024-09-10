@@ -16,5 +16,5 @@ sync_enabled = true
 serve_metric_enabled = true
 serve_metric_addr = "0.0.0.0:3001"
 log_level = "info"
-seq_url = "http://seq:5341"
+seq_url = "http://127.0.0.1:5341"
 seq_api_key = "6W0dmdBFogjU0YqBQDdp"
