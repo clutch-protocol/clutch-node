@@ -13,8 +13,7 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = Args::parse();
-    let env = &args.env;
+    let env = &Args::parse().env;
     let config = AppConfig::load_configuration(env)?;
     setup_tracing(&config.log_level, &config.seq_url, &config.seq_api_key)?;
 
