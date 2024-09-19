@@ -4,7 +4,7 @@ use crate::node::block::Block;
 use crate::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;
 use futures::{stream::StreamExt, SinkExt};
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use std::error::Error;
 use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
@@ -65,7 +65,11 @@ impl WebSocket {
     ) -> Option<String> {
         let request: serde_json::Value = match serde_json::from_str(request) {
             Ok(val) => val,
-            Err(_) => return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}).to_string()),
+            Err(_) => {
+                let json_msg = serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}).to_string();
+                warn!(json_msg);
+                return Some(json_msg);
+        }
         };
 
         let method = request.get("method")?.as_str()?;
