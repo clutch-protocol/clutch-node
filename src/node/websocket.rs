@@ -25,7 +25,12 @@ impl WebSocket {
 
         while let Ok((stream, _)) = listener.accept().await {
             let blockchain = Arc::clone(&blockchain);
-            tokio::spawn(Self::handle_connection(stream, blockchain, command_tx_p2p.clone()));
+            let command_tx_p2p = command_tx_p2p.clone();
+            tokio::spawn(async move {
+                if let Err(e) = Self::handle_connection(stream, blockchain, command_tx_p2p).await {
+                    error!("Error handling connection: {}", e);
+                }
+            });
         }
 
         Ok(())
@@ -35,128 +40,170 @@ impl WebSocket {
         stream: TcpStream,
         blockchain: Arc<Mutex<Blockchain>>,
         command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
-    ) {
-        match accept_async(stream).await {
-            Ok(ws_stream) => {
-                let (mut ws_sender, mut ws_receiver) = ws_stream.split();
+    ) -> Result<(), Box<dyn Error>> {
+        let ws_stream = accept_async(stream).await?;
+        let (mut ws_sender, mut ws_receiver) = ws_stream.split();
 
-                while let Some(Ok(message)) = ws_receiver.next().await {
-                    if let Message::Text(text) = message {
-                        info!("Received from websocket: {}", text);
-                        let response = Self::handle_json_rpc_request(&text, &blockchain, command_tx_p2p.clone()).await;
-
-                        if let Some(response) = response {
-                            if let Err(e) = ws_sender.send(Message::Text(response)).await {
-                                error!("Error sending message: {}", e);
-                                return;
-                            }
+        while let Some(message) = ws_receiver.next().await {
+            match message {
+                Ok(Message::Text(text)) => {
+                    info!("Received from websocket: {}", text);
+                    if let Some(response) = Self::handle_json_rpc_request(&text, &blockchain, command_tx_p2p.clone()).await {
+                        if let Err(e) = ws_sender.send(Message::Text(response)).await {
+                            error!("Error sending message: {}", e);
+                            return Err(Box::new(e));
                         }
                     }
                 }
+                Ok(_) => { /* Handle other message types if necessary */ }
+                Err(e) => {
+                    error!("Error receiving message: {}", e);
+                    return Err(Box::new(e));
+                }
             }
-            Err(e) => error!("Error during the websocket handshake: {}", e),
         }
+
+        Ok(())
     }
 
     async fn handle_json_rpc_request(
-        request: &str,
+        request_str: &str,
         blockchain: &Arc<Mutex<Blockchain>>,
         command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
     ) -> Option<String> {
-        let request: serde_json::Value = match serde_json::from_str(request) {
+        let request_value: serde_json::Value = match serde_json::from_str(request_str) {
             Ok(val) => val,
-            Err(_) => {
-                let json_msg = serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}).to_string();
-                warn!(json_msg);
-                return Some(json_msg);
-        }
+            Err(e) => {
+                warn!("Failed to parse JSON-RPC request: {}. Error: {}", request_str, e);
+                return Some(json_rpc_error_response(-32700, "Parse error", serde_json::Value::Null));
+            }
         };
 
-        let method = request.get("method")?.as_str()?;
-        let params = request.get("params")?;
-        let id = request
-            .get("id")
-            .cloned()
-            .unwrap_or(serde_json::json!(null));
+        let method = match request_value.get("method").and_then(|v| v.as_str()) {
+            Some(m) => m,
+            None => {
+                warn!("Missing 'method' field in request: {}", request_str);
+                let id = request_value.get("id").cloned().unwrap_or(serde_json::Value::Null);
+                return Some(json_rpc_error_response(-32600, "Invalid Request", id));
+            }
+        };
+
+        let params = request_value.get("params").cloned().unwrap_or(serde_json::Value::Null);
+        let id = request_value.get("id").cloned().unwrap_or(serde_json::Value::Null);
 
         match method {
             "add_transaction" => {
-                let transaction: Transaction = match serde_json::from_value(params.clone()) {
-                    Ok(tx) => tx,
-                    Err(_) => return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": id}).to_string()),
-                };
-
-                let  blockchain = blockchain.lock().await;
-                if let Err(e) = blockchain.add_transaction_to_pool(&transaction) {
-                    error!("Failed to add transaction: {}", e);
-                    return Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to add transaction: {}", e)}, "id": id}).to_string());
-                }
-
-                info!("Transaction added to pool from wss.");                    
-                
-                // gossip transcation                                        
-                let encoded_tx = encode(&transaction);
-                P2PServer::gossip_message_command(command_tx_p2p,GossipMessageType::Transaction, &encoded_tx).await;
-
-                return Some(serde_json::json!({"jsonrpc": "2.0", "result": "Transaction imported", "id": id}).to_string());
-                
+                Self::handle_add_transaction(params, id, blockchain, command_tx_p2p).await
             }
             "import_block" => {
-                let block: Block = match serde_json::from_value(params.clone()) {
-                    Ok(b) => b,
-                    Err(_) => {
-                        return Some(
-                            serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": id})
-                                .to_string(),
-                        )
-                    }
-                };
-    
-                let blockchain = blockchain.lock().await;
-                if let Err(e) = blockchain.import_block(&block) {
-                    error!("Failed to add block: {}", e);
-                    return Some(
-                        serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to import block: {}", e)}, "id": id})
-                            .to_string(),
-                    );
-                }
-    
-                info!("Block imported to blockchain from WSS.");
-    
-                // Gossip block
-                let encoded_block = encode(&block);
-                P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Block, &encoded_block).await;
-    
-                return Some(
-                    serde_json::json!({"jsonrpc": "2.0", "result": "Block imported", "id": id})
-                        .to_string(),
-                );
-            },
-            "author_new_block" => {          
-                let blockchain = blockchain.lock().await;
-                let new_block = match blockchain.author_new_block() {
-                    Ok(block) => block,
-                    Err(e) => {
-                        error!("Failed to author new block: {}", e);
-                        return Some(
-                            serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32000, "message": format!("Failed to author new block: {}", e)}, "id": id})
-                                .to_string(),
-                        );
-                    }
-                };
-    
-                info!("New block authored and added to the blockchain from WSS.");
-    
-                // Gossip new block
-                let encoded_block = encode(&new_block);
-                P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Block, &encoded_block).await;
-    
-                return Some(
-                    serde_json::json!({"jsonrpc": "2.0", "result": "New block authored", "id": id})
-                        .to_string(),
-                );
+                Self::handle_import_block(params, id, blockchain, command_tx_p2p).await
             }
-            _ => Some(serde_json::json!({"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": id}).to_string()),
+            "author_new_block" => {
+                Self::handle_author_new_block(id, blockchain, command_tx_p2p).await
+            }
+            _ => {
+                warn!("Unknown method '{}' in request: {}", method, request_str);
+                Some(json_rpc_error_response(-32601, "Method not found", id))
+            }
         }
     }
+
+    async fn handle_add_transaction(
+        params: serde_json::Value,
+        id: serde_json::Value,
+        blockchain: &Arc<Mutex<Blockchain>>,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
+    ) -> Option<String> {
+        let transaction: Transaction = match serde_json::from_value(params) {
+            Ok(tx) => tx,
+            Err(e) => {
+                warn!("Invalid params for 'add_transaction': {}", e);
+                return Some(json_rpc_error_response(-32602, "Invalid params", id));
+            }
+        };
+
+        let blockchain = blockchain.lock().await;
+        if let Err(e) = blockchain.add_transaction_to_pool(&transaction) {
+            error!("Failed to add transaction: {}", e);
+            return Some(json_rpc_error_response(-32000, &format!("Failed to add transaction: {}", e), id));
+        }
+
+        info!("Transaction added to pool from WebSocket.");
+
+        // Gossip transaction
+        let encoded_tx = encode(&transaction);
+        P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Transaction, &encoded_tx).await;
+
+        Some(json_rpc_success_response(serde_json::json!("Transaction imported"), id))
+    }
+
+    async fn handle_import_block(
+        params: serde_json::Value,
+        id: serde_json::Value,
+        blockchain: &Arc<Mutex<Blockchain>>,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
+    ) -> Option<String> {
+        let block: Block = match serde_json::from_value(params) {
+            Ok(b) => b,
+            Err(e) => {
+                warn!("Invalid params for 'import_block': {}", e);
+                return Some(json_rpc_error_response(-32602, "Invalid params", id));
+            }
+        };
+
+        let blockchain = blockchain.lock().await;
+        if let Err(e) = blockchain.import_block(&block) {
+            error!("Failed to import block: {}", e);
+            return Some(json_rpc_error_response(-32000, &format!("Failed to import block: {}", e), id));
+        }
+
+        info!("Block imported to blockchain from WebSocket.");
+
+        // Gossip block
+        let encoded_block = encode(&block);
+        P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Block, &encoded_block).await;
+
+        Some(json_rpc_success_response(serde_json::json!("Block imported"), id))
+    }
+
+    async fn handle_author_new_block(
+        id: serde_json::Value,
+        blockchain: &Arc<Mutex<Blockchain>>,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
+    ) -> Option<String> {
+        let blockchain = blockchain.lock().await;
+        let new_block = match blockchain.author_new_block() {
+            Ok(block) => block,
+            Err(e) => {
+                error!("Failed to author new block: {}", e);
+                return Some(json_rpc_error_response(-32000, &format!("Failed to author new block: {}", e), id));
+            }
+        };
+
+        info!("New block authored and added to the blockchain from WebSocket.");
+
+        // Gossip new block
+        let encoded_block = encode(&new_block);
+        P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Block, &encoded_block).await;
+
+        Some(json_rpc_success_response(serde_json::json!("New block authored"), id))
+    }
+}
+
+fn json_rpc_error_response(code: i32, message: &str, id: serde_json::Value) -> String {
+    serde_json::json!({
+        "jsonrpc": "2.0",
+        "error": { "code": code, "message": message },
+        "id": id
+    })
+    .to_string()
+}
+
+fn json_rpc_success_response(result: serde_json::Value, id: serde_json::Value) -> String {
+    serde_json::json!({
+        "jsonrpc": "2.0",
+        "result": result,
+        "id": id
+    })
+    .to_string()
 }
