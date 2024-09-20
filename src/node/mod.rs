@@ -21,7 +21,5 @@ pub mod seq;
 pub mod signature_keys;
 pub mod time_utils;
 pub mod tracing;
-pub mod transaction_pool;
 pub mod transactions;
-pub mod transfer;
 pub mod websocket;

@@ -3,7 +3,7 @@ use std::vec;
 use blocks::block::Block;
 use clutch_node::node::{blockchain::Blockchain, function_call::FunctionCallType, *};
 use ::tracing::{error, info};
-use transactions::transaction::Transaction;
+use transactions::{transaction::Transaction, transfer::Transfer};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
@@ -58,7 +58,7 @@ fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), St
 }
 
 fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
-    let transfer = transfer::Transfer {
+    let transfer = Transfer {
         to: TO_ADDRESS_KEY.to_string(),
         value: transfer_value,
     };

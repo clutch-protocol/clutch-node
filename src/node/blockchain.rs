@@ -4,13 +4,13 @@ use super::blocks::block::Block;
 use super::configuration::AppConfig;
 use super::consensus::Consensus;
 use super::handshake::Handshake;
+use super::transactions::transaction_pool::TransactionPool;
 use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;
 use crate::node::database::Database;
 use crate::node::file_utils::write_to_file;
 use crate::node::node_services::NodeServices;
 use crate::node::transactions::transaction::Transaction;
-use crate::node::transaction_pool::TransactionPool;
 
 pub struct Blockchain {
     pub name: String,

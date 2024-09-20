@@ -5,7 +5,7 @@ use tracing::{error, info, warn};
 use crate::node::database::Database;
 use crate::node::time_utils::get_current_timespan;
 use crate::node::transactions::transaction::Transaction;
-use crate::node::transaction_pool::TransactionPool;
+use crate::node::transactions::transaction_pool::TransactionPool;
 use crate::node::{metric, signature_keys};
 
 use super::block_headers::BlockHeader;
