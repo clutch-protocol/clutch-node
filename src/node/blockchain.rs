@@ -3,7 +3,7 @@ use tracing::{error, info};
 use super::blocks::block::Block;
 use super::configuration::AppConfig;
 use super::consensus::Consensus;
-use super::handshake::Handshake;
+use super::p2p_server::handshake::Handshake;
 use super::transactions::transaction_pool::TransactionPool;
 use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;

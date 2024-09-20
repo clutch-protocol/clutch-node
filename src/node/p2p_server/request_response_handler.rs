@@ -1,12 +1,12 @@
 use super::behaviour::{DirectMessageRequest, DirectMessageResponse};
+use super::handshake::Handshake;
 use super::P2PBehaviour;
 use crate::node::blockchain::Blockchain;
 use crate::node::blocks::block_bodies::BlockBodies;
 use crate::node::blocks::block_headers::{BlockHeader, BlockHeaders};
-use crate::node::get_block_bodies::GetBlockBodies;
-use crate::node::get_block_header::GetBlockHeaders;
-use crate::node::handshake::Handshake;
 use crate::node::p2p_server::commands::DirectMessageType;
+use crate::node::p2p_server::get_block_bodies::GetBlockBodies;
+use crate::node::p2p_server::get_block_header::GetBlockHeaders;
 use crate::node::rlp_encoding::{decode, encode};
 use libp2p::request_response::OutboundRequestId;
 use libp2p::{

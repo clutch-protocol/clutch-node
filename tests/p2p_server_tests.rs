@@ -1,7 +1,7 @@
 use clutch_node::node::blockchain::Blockchain;
-use clutch_node::node::get_block_bodies::GetBlockBodies;
-use clutch_node::node::get_block_header::GetBlockHeaders;
 use clutch_node::node::p2p_server::commands::DirectMessageType;
+use clutch_node::node::p2p_server::get_block_bodies::GetBlockBodies;
+use clutch_node::node::p2p_server::get_block_header::GetBlockHeaders;
 use clutch_node::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use clutch_node::node::rlp_encoding::encode;
 use tracing::info;

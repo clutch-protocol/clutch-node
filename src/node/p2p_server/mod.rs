@@ -1,9 +1,11 @@
 pub mod behaviour;
 pub mod commands;
+pub mod get_block_bodies;
+pub mod get_block_header;
 pub mod gossipsub_handler;
+pub mod handshake;
 pub mod request_response_handler;
 pub mod server;
-
 pub use behaviour::P2PBehaviour;
 pub use commands::{GossipMessageType, P2PServerCommand};
 pub use server::P2PServer;
