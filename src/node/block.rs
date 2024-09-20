@@ -3,7 +3,7 @@ use sha2::{Digest, Sha256};
 use tracing::{error, info, warn};
 
 use crate::node::database::Database;
-use crate::node::transaction::Transaction;
+use crate::node::transactions::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
 use crate::node::{metric, signature_keys};
 

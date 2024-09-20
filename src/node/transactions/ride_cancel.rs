@@ -1,10 +1,10 @@
-use crate::node::{
-    account_state::AccountState, ride_acceptance::RideAcceptance, ride_offer::RideOffer,
-};
 
-use super::{database::Database, ride_request::RideRequest, transaction::Transaction};
 use serde::{Deserialize, Serialize};
 use tracing::error;
+
+use crate::node::{account_state::AccountState, database::Database};
+
+use super::{ride_acceptance::RideAcceptance, ride_offer::RideOffer, ride_request::RideRequest, transaction::Transaction};
 
 #[derive(Serialize, Deserialize)]
 pub struct RideCancel {

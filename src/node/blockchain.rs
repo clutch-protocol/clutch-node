@@ -9,7 +9,7 @@ use crate::node::block::Block;
 use crate::node::database::Database;
 use crate::node::file_utils::write_to_file;
 use crate::node::node_services::NodeServices;
-use crate::node::transaction::Transaction;
+use crate::node::transactions::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
 
 pub struct Blockchain {

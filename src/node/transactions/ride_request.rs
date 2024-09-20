@@ -1,6 +1,6 @@
 use crate::node::coordinate::Coordinates;
 use crate::node::database::Database;
-use crate::node::transaction::Transaction;
+use crate::node::transactions::transaction::Transaction;
 use crate::node::account_state::AccountState;
 
 use serde::{Deserialize, Serialize};

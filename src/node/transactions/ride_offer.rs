@@ -1,5 +1,5 @@
 use super::ride_request::RideRequest;
-use crate::node::{database::Database, transaction::Transaction};
+use crate::node::{database::Database, transactions::transaction::Transaction};
 use serde::{Deserialize, Serialize};
 use tracing::error;
 

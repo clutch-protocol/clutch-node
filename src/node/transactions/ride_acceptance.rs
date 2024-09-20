@@ -1,7 +1,8 @@
-use crate::node::{account_state::AccountState, ride_request::RideRequest};
+use crate::node::{account_state::AccountState, database::Database, transactions::ride_request::RideRequest};
 use serde::{Deserialize, Serialize};
 
-use super::{database::Database, ride_offer::RideOffer, transaction::Transaction};
+use super::{ride_offer::RideOffer, transaction::Transaction};
+
 
 #[derive(Serialize, Deserialize)]
 pub struct RideAcceptance {

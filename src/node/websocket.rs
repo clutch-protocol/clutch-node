@@ -1,5 +1,5 @@
 use crate::node::blockchain::Blockchain;
-use crate::node::transaction::Transaction;
+use crate::node::transactions::transaction::Transaction;
 use crate::node::block::Block;
 use crate::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;

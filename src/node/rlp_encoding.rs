@@ -3,7 +3,7 @@ extern crate rlp;
 use crate::node::block::Block;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
 use crate::node::handshake::Handshake;
-use crate::node::transaction::Transaction;
+use crate::node::transactions::transaction::Transaction;
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 

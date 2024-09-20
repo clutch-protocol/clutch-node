@@ -1,6 +1,6 @@
 use crate::node::blockchain::Blockchain;
 use crate::node::rlp_encoding::decode;
-use crate::node::transaction::Transaction;
+use crate::node::transactions::transaction::Transaction;
 use crate::node::{block::Block, p2p_server::GossipMessageType};
 
 use libp2p::{
