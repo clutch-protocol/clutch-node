@@ -16,7 +16,6 @@ pub mod handshake;
 pub mod metric;
 pub mod node_services;
 pub mod p2p_server;
-pub mod ride_payment;
 pub mod rlp_encoding;
 pub mod seq;
 pub mod signature_keys;
