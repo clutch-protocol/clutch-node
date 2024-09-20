@@ -1,16 +1,17 @@
 extern crate rlp;
 
-use crate::node::block::Block;
 use crate::node::function_call::{FunctionCall, FunctionCallType};
 use crate::node::handshake::Handshake;
 use crate::node::transactions::transaction::Transaction;
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
-use super::block_bodies::BlockBodies;
-use super::block_headers::{BlockHeader, BlockHeaders};
+use super::blocks::block::Block;
+use super::blocks::block_bodies::BlockBodies;
+use super::blocks::block_headers::{BlockHeader, BlockHeaders};
 use super::get_block_bodies::GetBlockBodies;
 use super::get_block_header::GetBlockHeaders;
+
 
 impl Encodable for FunctionCallType {
     fn rlp_append(&self, stream: &mut RlpStream) {

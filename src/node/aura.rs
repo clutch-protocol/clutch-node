@@ -1,7 +1,6 @@
-use crate::node::block::Block;
 use crate::node::consensus::Consensus;
 
-use super::time_utils::get_current_timespan;
+use super::{blocks::block::Block, time_utils::get_current_timespan};
 
 #[derive(Debug)]
 pub struct Aura {

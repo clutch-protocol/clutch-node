@@ -1,7 +1,7 @@
-use crate::node::blockchain::Blockchain;
+use crate::node::{blockchain::Blockchain, blocks::block::Block};
 use crate::node::rlp_encoding::decode;
 use crate::node::transactions::transaction::Transaction;
-use crate::node::{block::Block, p2p_server::GossipMessageType};
+use crate::node::p2p_server::GossipMessageType;
 
 use libp2p::{
     gossipsub::{self, MessageId},

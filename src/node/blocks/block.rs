@@ -3,12 +3,12 @@ use sha2::{Digest, Sha256};
 use tracing::{error, info, warn};
 
 use crate::node::database::Database;
+use crate::node::time_utils::get_current_timespan;
 use crate::node::transactions::transaction::Transaction;
 use crate::node::transaction_pool::TransactionPool;
 use crate::node::{metric, signature_keys};
 
 use super::block_headers::BlockHeader;
-use super::time_utils::get_current_timespan;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Block {

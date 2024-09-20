@@ -1,8 +1,8 @@
 use super::behaviour::{DirectMessageRequest, DirectMessageResponse};
 use super::P2PBehaviour;
-use crate::node::block_bodies::BlockBodies;
-use crate::node::block_headers::{BlockHeader, BlockHeaders};
 use crate::node::blockchain::Blockchain;
+use crate::node::blocks::block_bodies::BlockBodies;
+use crate::node::blocks::block_headers::{BlockHeader, BlockHeaders};
 use crate::node::get_block_bodies::GetBlockBodies;
 use crate::node::get_block_header::GetBlockHeaders;
 use crate::node::handshake::Handshake;

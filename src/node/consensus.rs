@@ -1,4 +1,5 @@
-use crate::node::block::Block;
+use super::blocks::block::Block;
+
 
 pub trait Consensus {
     fn current_author(&self) -> &String;

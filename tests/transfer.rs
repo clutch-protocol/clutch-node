@@ -1,6 +1,7 @@
 use std::vec;
 
-use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
+use blocks::block::Block;
+use clutch_node::node::{blockchain::Blockchain, function_call::FunctionCallType, *};
 use ::tracing::{error, info};
 use transactions::transaction::Transaction;
 

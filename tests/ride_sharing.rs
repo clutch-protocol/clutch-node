@@ -1,6 +1,7 @@
+use blocks::block::Block;
 use serial_test::serial;
 
-use clutch_node::node::{block::Block, blockchain::Blockchain, function_call::FunctionCallType, *};
+use clutch_node::node::{blockchain::Blockchain, function_call::FunctionCallType, *};
 use ::tracing::{error, info};
 use transactions::{ride_acceptance::RideAcceptance, ride_cancel::RideCancel, ride_offer::RideOffer, ride_pay::RidePay, ride_request::RideRequest, transaction::Transaction};
 

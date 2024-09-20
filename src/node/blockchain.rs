@@ -1,11 +1,11 @@
 use tracing::{error, info};
 
+use super::blocks::block::Block;
 use super::configuration::AppConfig;
 use super::consensus::Consensus;
 use super::handshake::Handshake;
 use crate::node::account_state::AccountState;
 use crate::node::aura::Aura;
-use crate::node::block::Block;
 use crate::node::database::Database;
 use crate::node::file_utils::write_to_file;
 use crate::node::node_services::NodeServices;

@@ -1,8 +1,6 @@
 pub mod account_state;
 pub mod aura;
-pub mod block;
-pub mod block_bodies;
-pub mod block_headers;
+pub mod blocks;
 pub mod blockchain;
 pub mod complain_arrival;
 pub mod configuration;
