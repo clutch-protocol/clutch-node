@@ -1,6 +1,5 @@
 extern crate rlp;
 
-use crate::node::function_call::{FunctionCall, FunctionCallType};
 use crate::node::transactions::transaction::Transaction;
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -11,6 +10,7 @@ use super::blocks::block_headers::{BlockHeader, BlockHeaders};
 use super::p2p_server::get_block_bodies::GetBlockBodies;
 use super::p2p_server::get_block_header::GetBlockHeaders;
 use super::p2p_server::handshake::Handshake;
+use super::transactions::function_call::{FunctionCall, FunctionCallType};
 
 
 impl Encodable for FunctionCallType {

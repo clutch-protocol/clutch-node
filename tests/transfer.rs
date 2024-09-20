@@ -1,9 +1,7 @@
 use std::vec;
 
-use blocks::block::Block;
-use clutch_node::node::{blockchain::Blockchain, function_call::FunctionCallType, *};
+use clutch_node::node::{blockchain::Blockchain, blocks::block::Block, transactions::{function_call::FunctionCallType, transaction::Transaction, transfer::Transfer}};
 use ::tracing::{error, info};
-use transactions::{transaction::Transaction, transfer::Transfer};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";

@@ -6,3 +6,4 @@ pub mod ride_request;
 pub mod transaction;
 pub mod transaction_pool;
 pub mod transfer;
+pub mod function_call;

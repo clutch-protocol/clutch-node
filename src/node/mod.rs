@@ -9,7 +9,6 @@ pub mod consensus;
 pub mod coordinate;
 pub mod database;
 pub mod file_utils;
-pub mod function_call;
 pub mod metric;
 pub mod node_services;
 pub mod p2p_server;
