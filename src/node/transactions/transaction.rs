@@ -1,18 +1,20 @@
-
 use crate::node::{
-    account_state::AccountState, database::Database, signature_keys::{self, SignatureKeys}, transactions::{ride_acceptance::RideAcceptance, ride_cancel::RideCancel, ride_offer::RideOffer, ride_pay::RidePay, ride_request::RideRequest}
+    account_state::AccountState,
+    database::Database,
+    signature_keys::{self, SignatureKeys},
 };
 
+use rlp::{Encodable, RlpStream};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+use sha2::Digest;
+use sha3::Sha3_256;
 use std::vec;
 
-use super::{function_call::{FunctionCall, FunctionCallType}, transfer::Transfer};
-
+use super::{function_call::FunctionCall, transfer::Transfer};
 
 const FROM_GENESIS: &str = "0xGENESIS";
 
-#[derive(Debug, Serialize, Deserialize,Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Transaction {
     pub from: String,
     pub data: FunctionCall,
@@ -24,18 +26,7 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn new_transaction<T: Serialize>(
-        from: String,
-        nonce: u64,
-        function_call_type: FunctionCallType,
-        payload: T,
-    ) -> Transaction {
-        let arguments = serde_json::to_string(&payload).unwrap();
-        let function_call = FunctionCall {
-            function_call_type,
-            arguments,
-        };
-
+    pub fn new_transaction(from: String, nonce: u64, function_call: FunctionCall) -> Transaction {
         let mut transaction = Transaction {
             hash: String::new(),
             signature_r: String::new(),
@@ -53,60 +44,60 @@ impl Transaction {
         let tx1 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
-            FunctionCallType::Transfer,
-            Transfer {
+            FunctionCall::Transfer(Transfer {
                 to: "0xdeb4cfb63db134698e1879ea24904df074726cc0".to_string(),
                 value: 30,
-            },
+            }),
         );
         let tx2 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
-            FunctionCallType::Transfer,
-            Transfer {
+            FunctionCall::Transfer(Transfer {
                 to: "0xa300e57228487edb1f5c0e737cbfc72d126b5bc2".to_string(),
                 value: 90,
-            },
+            }),
         );
         let tx3 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
-            FunctionCallType::Transfer,
-            Transfer {
+            FunctionCall::Transfer(Transfer {
                 to: "0xac20ff4e42ff243046faaf032068762dd2c018dc".to_string(),
                 value: 80,
-            },
+            }),
         );
         let tx4 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
-            FunctionCallType::Transfer,
-            Transfer {
+            FunctionCall::Transfer(Transfer {
                 to: "0xa91101310bee451ca0e219aba08d8d4dd929f16c".to_string(),
                 value: 20,
-            },
+            }),
         );
         let tx5 = Self::new_transaction(
             FROM_GENESIS.to_string(),
             0,
-            FunctionCallType::Transfer,
-            Transfer {
+            FunctionCall::Transfer(Transfer {
                 to: "0x37adf81cb1f18762042e5da03a55f1e54ba66870".to_string(),
                 value: 45,
-            },
+            }),
         );
 
         vec![tx1, tx2, tx3, tx4, tx5]
     }
 
     fn calculate_hash(&self) -> String {
-        let mut hasher = Sha256::new();
-        hasher.update(format!(
-            "{}{}{}{}",
-            self.from, self.data.function_call_type, self.data.arguments, self.nonce,
-        ));
+        // Serialize the transaction using RLP
+        let mut stream = RlpStream::new();
+        self.rlp_append(&mut stream);
+        let rlp_bytes = stream.out();
+
+        // Initialize the SHA3-256 hasher
+        let mut hasher = Sha3_256::new();
+        hasher.update(&rlp_bytes);
         let result = hasher.finalize();
-        format!("{:x}", result)
+
+        // Convert the hash result to a hexadecimal string with "0x" prefix
+        format!("0x{}", hex::encode(result))
     }
 
     #[allow(dead_code)]
@@ -172,33 +163,49 @@ impl Transaction {
     }
 
     fn verify_state(&self, db: &Database) -> Result<(), String> {
-        return match self.data.function_call_type {
-            FunctionCallType::Transfer => Transfer::verify_state(&self, db),
-            FunctionCallType::RideRequest => RideRequest::verify_state(&self, db),
-            FunctionCallType::RideOffer => RideOffer::verify_state(&self, db),
-            FunctionCallType::RideAcceptance => RideAcceptance::verify_state(&self, db),
-            FunctionCallType::RidePay => RidePay::verify_state(&self, db),
-            FunctionCallType::RideCancel => RideCancel::verify_state(&self, db),
-            _ => Err("Unknown function call type.".to_string()),
-        };
+        match &self.data {
+            FunctionCall::Transfer(transfer) => transfer.verify_state(&self.from, db),
+            FunctionCall::RideRequest(ride_request) => ride_request.verify_state(&self.from, db),
+            FunctionCall::RideOffer(ride_offer) => ride_offer.verify_state(db),
+            FunctionCall::RideAcceptance(ride_acceptance) => {
+                ride_acceptance.verify_state(&self.from, db)
+            }
+            FunctionCall::RidePay(ride_pay) => ride_pay.verify_state(&self.from, db),
+            FunctionCall::RideCancel(ride_cancel) => ride_cancel.verify_state(&self.from, db),
+            FunctionCall::ConfirmArrival(confirm_arrival) => confirm_arrival.verify_state(db),
+            FunctionCall::ComplainArrival(complain_arrival) => complain_arrival.verify_state(db),
+        }
     }
 
     pub fn state_transaction(&self, db: &Database) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
-        let states = match self.data.function_call_type {
-            FunctionCallType::Transfer => Transfer::state_transaction(&self, &db),
-            FunctionCallType::RideRequest => RideRequest::state_transaction(&self, db),
-            FunctionCallType::RideOffer => RideOffer::state_transaction(&self, db),
-            FunctionCallType::RideAcceptance => RideAcceptance::state_transaction(&self, db),
-            FunctionCallType::RidePay => RidePay::state_transaction(&self, db),
-            FunctionCallType::RideCancel => RideCancel::state_transaction(&self, db),
-            _ => vec![None],
+        let mut states = match &self.data {
+            FunctionCall::Transfer(transfer) => transfer.state_transaction(&self.from, db),
+            FunctionCall::RideRequest(ride_request) => {
+                ride_request.state_transaction(&self.from, &self.hash, db)
+            }
+            FunctionCall::RideOffer(ride_offer) => {
+                ride_offer.state_transaction(&self.from, &self.hash, db)
+            }
+            FunctionCall::RideAcceptance(ride_acceptance) => {
+                ride_acceptance.state_transaction(&self.from, &self.hash, db)
+            }
+            FunctionCall::RidePay(ride_pay) => ride_pay.state_transaction(&self.from, db),
+            FunctionCall::RideCancel(ride_cancel) => ride_cancel.state_transaction(&self.hash, db),
+            FunctionCall::ConfirmArrival(confirm_arrival) => confirm_arrival.state_transaction(db),
+            FunctionCall::ComplainArrival(complain_arrival) => {
+                complain_arrival.state_transaction(db)
+            }
         };
 
-        let (nonce_key, nonce_serialized) =
-            AccountState::increase_account_nonce_key(&self.from, db).unwrap();
+        match AccountState::increase_account_nonce_key(&self.from, db) {
+            Ok((nonce_key, nonce_serialized)) => {
+                states.push(Some((nonce_key, nonce_serialized)));
+            }
+            Err(_e) => {
+                states.push(None);
+            }
+        }
 
-        let mut results = states;
-        results.push(Some((nonce_key, nonce_serialized)));
-        results
+        states
     }
 }

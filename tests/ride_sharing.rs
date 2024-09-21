@@ -1,4 +1,13 @@
-use clutch_node::node::{blockchain::Blockchain, blocks::block::Block, coordinate, transactions::{function_call::FunctionCallType, ride_acceptance::RideAcceptance, ride_cancel::RideCancel, ride_offer::RideOffer, ride_pay::RidePay, ride_request::RideRequest, transaction::Transaction}};
+use clutch_node::node::{
+    blockchain::Blockchain,
+    blocks::block::Block,
+    coordinate,
+    transactions::{
+        function_call::FunctionCall, ride_acceptance::RideAcceptance, ride_cancel::RideCancel,
+        ride_offer::RideOffer, ride_pay::RidePay, ride_request::RideRequest,
+        transaction::Transaction,
+    },
+};
 use serial_test::serial;
 
 use ::tracing::{error, info};
@@ -74,10 +83,7 @@ fn author_blocks(blockchain: &mut Blockchain) {
     }
 }
 
-fn add_transaction_to_pool(
-    blockchain: &Blockchain,
-    ride_request_transcation: Transaction,
-) {
+fn add_transaction_to_pool(blockchain: &Blockchain, ride_request_transcation: Transaction) {
     match blockchain.add_transaction_to_pool(&ride_request_transcation) {
         Ok(_) => {
             info!("Successfully added transaction to transaction_pool");
@@ -161,8 +167,7 @@ fn ride_request_transcation(fare: u64, nonce: u64) -> Transaction {
     let mut ride_request_transcation = Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
-        FunctionCallType::RideRequest,
-        ride_request,
+        FunctionCall::RideRequest(ride_request),
     );
 
     ride_request_transcation.sign(PASSENGER_SECRET_KEY);
@@ -183,8 +188,7 @@ fn ride_offer_transaction(fare: u64, nonce: u64) -> Transaction {
     let mut ride_offer_transaction = Transaction::new_transaction(
         DRIVER_ADDRESS_KEY.to_string(),
         nonce,
-        FunctionCallType::RideOffer,
-        ride_offer,
+        FunctionCall::RideOffer(ride_offer),
     );
     ride_offer_transaction.sign(DRIVER_SECRET_KEY);
     ride_offer_transaction
@@ -195,7 +199,7 @@ fn ride_acceptance_block(index: usize, nonce: u64) -> Block {
     Block::new_block(index, String::new(), vec![ride_acceptance_transaction])
 }
 
-fn ride_acceptance_transaction(nonce: u64) ->Transaction {
+fn ride_acceptance_transaction(nonce: u64) -> Transaction {
     let ride_acceptance = RideAcceptance {
         ride_offer_transaction_hash: RIDE_OFFER_TX_HASH.to_string(),
     };
@@ -203,8 +207,7 @@ fn ride_acceptance_transaction(nonce: u64) ->Transaction {
     let mut ride_acceptance_transaction = Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
-        FunctionCallType::RideAcceptance,
-        ride_acceptance,
+        FunctionCall::RideAcceptance(ride_acceptance),
     );
     ride_acceptance_transaction.sign(PASSENGER_SECRET_KEY);
     ride_acceptance_transaction
@@ -224,8 +227,7 @@ fn ride_pay_transaction(fare: u64, nonce: u64) -> Transaction {
     let mut ride_pay_transaction = Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
-        FunctionCallType::RidePay,
-        ride_pay,
+        FunctionCall::RidePay(ride_pay),
     );
     ride_pay_transaction.sign(PASSENGER_SECRET_KEY);
     ride_pay_transaction
@@ -237,15 +239,14 @@ fn ride_cancel_block(index: usize, nonce: u64) -> Block {
 }
 
 fn ride_cancel_transaction(nonce: u64) -> Transaction {
-    let ride_pay = RideCancel {
+    let ride_cancel = RideCancel {
         ride_acceptance_transaction_hash: RIDE_ACCEPTANCE_TX_HASH.to_string(),
     };
 
     let mut ride_cancel_transaction = Transaction::new_transaction(
         PASSENGER_ADDRESS_KEY.to_string(),
         nonce,
-        FunctionCallType::RideCancel,
-        ride_pay,
+        FunctionCall::RideCancel(ride_cancel),
     );
 
     ride_cancel_transaction.sign(PASSENGER_SECRET_KEY);

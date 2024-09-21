@@ -7,57 +7,109 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use super::blocks::block::Block;
 use super::blocks::block_bodies::BlockBodies;
 use super::blocks::block_headers::{BlockHeader, BlockHeaders};
+use super::complain_arrival::ComplainArrival;
+use super::confirm_arrival::ConfirmArrival;
 use super::p2p_server::get_block_bodies::GetBlockBodies;
 use super::p2p_server::get_block_header::GetBlockHeaders;
 use super::p2p_server::handshake::Handshake;
-use super::transactions::function_call::{FunctionCall, FunctionCallType};
+use super::transactions::function_call::FunctionCall;
+use super::transactions::ride_acceptance::RideAcceptance;
+use super::transactions::ride_cancel::RideCancel;
+use super::transactions::ride_offer::RideOffer;
+use super::transactions::ride_pay::RidePay;
+use super::transactions::ride_request::RideRequest;
+use super::transactions::transfer::Transfer;
 
-
-impl Encodable for FunctionCallType {
+impl Encodable for FunctionCall {
     fn rlp_append(&self, stream: &mut RlpStream) {
-        let value = match *self {
-            FunctionCallType::Transfer => 0u8,
-            FunctionCallType::RideRequest => 1u8,
-            FunctionCallType::RideOffer => 2u8,
-            FunctionCallType::RideAcceptance => 3u8,
-            FunctionCallType::RidePay => 4u8,
-            FunctionCallType::RideCancel => 5u8,
-            FunctionCallType::ConfirmArrival => 6u8,
-            FunctionCallType::ComplainArrival => 7u8,
-        };
-        stream.append(&value);
-    }
-}
-
-impl Decodable for FunctionCallType {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
-        match rlp.as_val::<u8>()? {
-            0 => Ok(FunctionCallType::Transfer),
-            1 => Ok(FunctionCallType::RideRequest),
-            2 => Ok(FunctionCallType::RideOffer),
-            3 => Ok(FunctionCallType::RideAcceptance),
-            4 => Ok(FunctionCallType::RidePay),
-            5 => Ok(FunctionCallType::RideCancel),
-            6 => Ok(FunctionCallType::ConfirmArrival),
-            7 => Ok(FunctionCallType::ComplainArrival),
-            _ => Err(DecoderError::Custom("Unknown FunctionCallType")),
+        match self {
+            FunctionCall::Transfer(args) => {
+                stream.begin_list(2);
+                stream.append(&0u8); // Tag for Transfer
+                stream.append(args);
+            }
+            FunctionCall::RideRequest(args) => {
+                stream.begin_list(2);
+                stream.append(&1u8); // Tag for RideRequest
+                stream.append(args);
+            }
+            FunctionCall::RideOffer(args) => {
+                stream.begin_list(2);
+                stream.append(&2u8); // Tag for RideOffer
+                stream.append(args);
+            }
+            FunctionCall::RideAcceptance(args) => {
+                stream.begin_list(2);
+                stream.append(&3u8); // Tag for RideAcceptance
+                stream.append(args);
+            }
+            FunctionCall::RidePay(args) => {
+                stream.begin_list(2);
+                stream.append(&4u8); // Tag for RidePay
+                stream.append(args);
+            }
+            FunctionCall::RideCancel(args) => {
+                stream.begin_list(2);
+                stream.append(&5u8); // Tag for RideCancel
+                stream.append(args);
+            }
+            FunctionCall::ConfirmArrival(args) => {
+                stream.begin_list(2);
+                stream.append(&6u8); // Tag for ConfirmArrival
+                stream.append(args);
+            }
+            FunctionCall::ComplainArrival(args) => {
+                stream.begin_list(2);
+                stream.append(&7u8); // Tag for ComplainArrival
+                stream.append(args);
+            }
         }
     }
 }
 
-impl Encodable for FunctionCall {
-    fn rlp_append(&self, stream: &mut RlpStream) {
-        stream.begin_list(2);
-        stream.append(&self.arguments);
-        stream.append(&self.function_call_type);
-    }
-}
 impl Decodable for FunctionCall {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
-        Ok(FunctionCall {
-            arguments: rlp.val_at(0)?,
-            function_call_type: rlp.val_at(1)?,
-        })
+        // Expecting a list of two items: tag and arguments
+        if !rlp.is_list() || rlp.item_count()? != 2 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+
+        let tag: u8 = rlp.val_at(0)?;
+        match tag {
+            0 => {
+                let args: Transfer = rlp.val_at(1)?;
+                Ok(FunctionCall::Transfer(args))
+            }
+            1 => {
+                let args: RideRequest = rlp.val_at(1)?;
+                Ok(FunctionCall::RideRequest(args))
+            }
+            2 => {
+                let args: RideOffer = rlp.val_at(1)?;
+                Ok(FunctionCall::RideOffer(args))
+            }
+            3 => {
+                let args: RideAcceptance = rlp.val_at(1)?;
+                Ok(FunctionCall::RideAcceptance(args))
+            }
+            4 => {
+                let args: RidePay = rlp.val_at(1)?;
+                Ok(FunctionCall::RidePay(args))
+            }
+            5 => {
+                let args: RideCancel = rlp.val_at(1)?;
+                Ok(FunctionCall::RideCancel(args))
+            }
+            6 => {
+                let args: ConfirmArrival = rlp.val_at(1)?;
+                Ok(FunctionCall::ConfirmArrival(args))
+            }
+            7 => {
+                let args: ComplainArrival = rlp.val_at(1)?;
+                Ok(FunctionCall::ComplainArrival(args))
+            }
+            _ => Err(DecoderError::Custom("Unknown FunctionCall variant")),
+        }
     }
 }
 
@@ -111,7 +163,7 @@ impl Decodable for Block {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         Ok(Block {
             index: rlp.val_at(0)?,
-            timestamp : rlp.val_at(1)?,
+            timestamp: rlp.val_at(1)?,
             previous_hash: rlp.val_at(2)?,
             author: rlp.val_at(3)?,
             signature_r: rlp.val_at(4)?,
@@ -256,13 +308,14 @@ mod tests {
 
     #[test]
     fn test_encode_decode_transaction() {
+        let function_call = FunctionCall::Transfer(Transfer {
+            to: "0x8f19077627cde4848b090c53c83b12956837d5e9".to_string(),
+            value: 10,
+        });
+
         let tx = Transaction {
             from: "0xdeb4cfb63db134698e1879ea24904df074726cc0".to_string(),
-            data: FunctionCall {
-                function_call_type: FunctionCallType::Transfer,
-                arguments: "{\"to\":\"0x8f19077627cde4848b090c53c83b12956837d5e9\",\"value\":10}"
-                    .to_string(),
-            },
+            data: function_call,
             nonce: 1,
             signature_r: "3b0cb46ae73d852bb75653ed1f1710676b0b736cd33aefc0c96e6e11417a4c32"
                 .to_string(),
@@ -286,11 +339,10 @@ mod tests {
     fn test_encode_decode_block() {
         let tx1 = Transaction {
             from: "0xdeb4cfb63db134698e1879ea24904df074726cc0".to_string(),
-            data: FunctionCall {
-                function_call_type: FunctionCallType::Transfer,
-                arguments: "{\"to\":\"0x8f19077627cde4848b090c53c83b12956837d5e9\",\"value\":10}"
-                    .to_string(),
-            },
+            data: FunctionCall::Transfer(Transfer {
+                to: "0x8f19077627cde4848b090c53c83b12956837d5e9".to_string(),
+                value: 10,
+            }),
             nonce: 1,
             signature_r: "3b0cb46ae73d852bb75653ed1f1710676b0b736cd33aefc0c96e6e11417a4c32"
                 .to_string(),
@@ -301,12 +353,11 @@ mod tests {
         };
 
         let tx2 = Transaction {
-            from: "0xabc4cfb63db134698e1879ea24904df074726cc0".to_string(),
-            data: FunctionCall {
-                function_call_type: FunctionCallType::RideRequest,
-                arguments: "{\"to\":\"0x1f19077627cde4848b090c53c83b12956837d5e9\",\"value\":5}"
-                    .to_string(),
-            },
+            from: "0xabc4cfb63db134698e1879ea24904df074726cc0".to_string(),          
+            data: FunctionCall::Transfer(Transfer {
+                to: "0x1f19077627cde4848b090c53c83b12956837d5e9".to_string(),
+                value: 5,
+            }),
             nonce: 2,
             signature_r: "2b0cb46ae73d852bb75653ed1f1710676b0b736cd33aefc0c96e6e11417a4c33"
                 .to_string(),
@@ -318,7 +369,7 @@ mod tests {
 
         let block = Block {
             index: 1,
-            timestamp : get_current_timespan(),
+            timestamp: get_current_timespan(),
             previous_hash: "0000000000000000000000000000000000000000000000000000000000000000"
                 .to_string(),
             author: "0x1234cfb63db134698e1879ea24904df074726cc0".to_string(),

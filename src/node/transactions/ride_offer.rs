@@ -1,22 +1,20 @@
 use super::ride_request::RideRequest;
-use crate::node::{database::Database, transactions::transaction::Transaction};
+use crate::node::database::Database;
+use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RideOffer {
     pub ride_request_transaction_hash: String,
     pub fare: u64,
 }
 
 impl RideOffer {
-    pub fn verify_state(transaction: &Transaction, db: &Database) -> Result<(), String> {
-        let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments)
-            .map_err(|_| "Failed to deserialize transaction data.".to_string())?;
-        let ride_request_tx_hash = ride_offer.ride_request_transaction_hash;
+    pub fn verify_state(&self, db: &Database) -> Result<(), String> {
+        let ride_request_tx_hash = &self.ride_request_transaction_hash;
 
         if let Ok(Some(_)) = RideRequest::get_ride_request(&ride_request_tx_hash, db) {
-            // Check if there is any ride linked to this ride offer's request.
             if let Ok(Some(_)) = RideRequest::get_ride_acceptance(&ride_request_tx_hash, db) {
                 return Err("A ride for the requested ride offer already exists.".to_string());
             }
@@ -28,17 +26,15 @@ impl RideOffer {
     }
 
     pub fn state_transaction(
-        transaction: &Transaction,
+        &self,
+        from: &String,
+        tx_hash: &String,
         _db: &Database,
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
-        let ride_offer: RideOffer = serde_json::from_str(&transaction.data.arguments).unwrap();
-        let ride_offer_tx_hash = &transaction.hash;
-        let from = &transaction.from;
+        let ride_offer_key = Self::construct_ride_offer_key(tx_hash);
+        let ride_offer_value = serde_json::to_string(&self).unwrap().into_bytes();
 
-        let ride_offer_key = Self::construct_ride_offer_key(ride_offer_tx_hash);
-        let ride_offer_value = serde_json::to_string(&ride_offer).unwrap().into_bytes();
-
-        let ride_offer_from_key = Self::construct_ride_offer_from_key(&ride_offer_tx_hash);
+        let ride_offer_from_key = Self::construct_ride_offer_from_key(&tx_hash);
         let ride_offer_from_value = from.clone().into_bytes();
 
         vec![
@@ -108,5 +104,32 @@ impl RideOffer {
 
     pub fn construct_ride_offer_acceptance_key(ride_offer_tx_hash: &str) -> Vec<u8> {
         format!("ride_offer_{}:ride_acceptance", ride_offer_tx_hash).into_bytes()
+    }
+}
+
+impl Encodable for RideOffer {
+    fn rlp_append(&self, stream: &mut RlpStream) {
+        // Begin an RLP list with two elements: ride_request_transaction_hash and fare
+        stream.begin_list(2);
+        // Append the ride_request_transaction_hash field
+        stream.append(&self.ride_request_transaction_hash);
+        // Append the fare field
+        stream.append(&self.fare);
+    }
+}
+
+impl Decodable for RideOffer {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        // Ensure the RLP data is a list of exactly two items
+        if !rlp.is_list() || rlp.item_count()? != 2 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+
+        Ok(RideOffer {
+            // Extract the ride_request_transaction_hash field from the first element
+            ride_request_transaction_hash: rlp.val_at(0)?,
+            // Extract the fare field from the second element
+            fare: rlp.val_at(1)?,
+        })
     }
 }

@@ -1,7 +1,11 @@
 use std::vec;
 
-use clutch_node::node::{blockchain::Blockchain, blocks::block::Block, transactions::{function_call::FunctionCallType, transaction::Transaction, transfer::Transfer}};
 use ::tracing::{error, info};
+use clutch_node::node::{
+    blockchain::Blockchain,
+    blocks::block::Block,
+    transactions::{function_call::FunctionCall, transaction::Transaction, transfer::Transfer},
+};
 
 const BLOCKCHAIN_NAME: &str = "clutch-node-test";
 const FROM_ADDRESS_KEY: &str = "0xdeb4cfb63db134698e1879ea24904df074726cc0";
@@ -56,16 +60,13 @@ fn import_block(blockchain: &mut Blockchain, block: &mut Block) -> Result<(), St
 }
 
 fn transfer_block(index: usize, nonce: u64, transfer_value: u64) -> Block {
-    let transfer = Transfer {
-        to: TO_ADDRESS_KEY.to_string(),
-        value: transfer_value,
-    };
-
     let mut transfer_transaction = Transaction::new_transaction(
         FROM_ADDRESS_KEY.to_string(),
         nonce,
-        FunctionCallType::Transfer,
-        transfer,
+        FunctionCall::Transfer(Transfer {
+            to: TO_ADDRESS_KEY.to_string(),
+            value: transfer_value,
+        }),
     );
     transfer_transaction.sign(FROM_SECRET_KEY);
 

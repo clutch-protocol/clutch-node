@@ -1,27 +1,25 @@
-
+use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
 use crate::node::{account_state::AccountState, database::Database};
 
-use super::{ride_acceptance::RideAcceptance, ride_offer::RideOffer, ride_request::RideRequest, transaction::Transaction};
+use super::{ride_acceptance::RideAcceptance, ride_offer::RideOffer, ride_request::RideRequest};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RideCancel {
     pub ride_acceptance_transaction_hash: String,
 }
 
 impl RideCancel {
-    pub fn verify_state(transaction: &Transaction, db: &Database) -> Result<(), String> {
-        let ride_cancel = serde_json::from_str::<RideCancel>(&transaction.data.arguments)
-            .map_err(|_| "Failed to deserialize transaction data.".to_string())?;
-    
-        let ride_acceptance_tx_hash = &ride_cancel.ride_acceptance_transaction_hash;
+    pub fn verify_state(&self, from: &String, db: &Database) -> Result<(), String> {
+        let ride_acceptance_tx_hash = &self.ride_acceptance_transaction_hash;
         let ride_acceptance = RideAcceptance::get_ride_acceptance(ride_acceptance_tx_hash, db)
             .map_err(|_| "Ride acceptance does not exist or failed to retrieve.".to_string())?
             .ok_or_else(|| "Ride acceptance does not exist.".to_string())?;
-    
-        let ride_cancel_exists = match RideAcceptance::get_ride_cancel(ride_acceptance_tx_hash, db) {
+
+        let ride_cancel_exists = match RideAcceptance::get_ride_cancel(ride_acceptance_tx_hash, db)
+        {
             Ok(Some(_)) => true,
             Ok(None) => false,
             Err(_) => {
@@ -31,80 +29,80 @@ impl RideCancel {
                 ));
             }
         };
-    
+
         if ride_cancel_exists {
-            return Err("A ride cancel for the requested ride acceptance already exists.".to_string());
+            return Err(
+                "A ride cancel for the requested ride acceptance already exists.".to_string(),
+            );
         }
-    
-        let ride_offer = RideOffer::get_ride_offer(&ride_acceptance.ride_offer_transaction_hash, db)
-            .map_err(|_| format!(
-                "Failed to retrieve ride offer '{}'.",
-                &ride_acceptance.ride_offer_transaction_hash
-            ))?
-            .ok_or_else(|| "Ride offer does not exist.".to_string())?;
-    
+
+        let ride_offer =
+            RideOffer::get_ride_offer(&ride_acceptance.ride_offer_transaction_hash, db)
+                .map_err(|_| {
+                    format!(
+                        "Failed to retrieve ride offer '{}'.",
+                        &ride_acceptance.ride_offer_transaction_hash
+                    )
+                })?
+                .ok_or_else(|| "Ride offer does not exist.".to_string())?;
+
         let passenger = RideRequest::get_from(&ride_offer.ride_request_transaction_hash, db)
-            .map_err(|_| format!(
-                "Failed to retrieve 'from' field for ride request with transaction hash '{}'.",
-                &ride_offer.ride_request_transaction_hash
-            ))?
+            .map_err(|_| {
+                format!(
+                    "Failed to retrieve 'from' field for ride request with transaction hash '{}'.",
+                    &ride_offer.ride_request_transaction_hash
+                )
+            })?
             .ok_or_else(|| "Ride request does not exist.".to_string())?;
-    
+
         let driver = RideOffer::get_from(&ride_acceptance.ride_offer_transaction_hash, db)
-            .map_err(|_| format!(
-                "Failed to retrieve 'from' field for ride offer with transaction hash '{}'.",
-                &ride_acceptance.ride_offer_transaction_hash
-            ))?
+            .map_err(|_| {
+                format!(
+                    "Failed to retrieve 'from' field for ride offer with transaction hash '{}'.",
+                    &ride_acceptance.ride_offer_transaction_hash
+                )
+            })?
             .ok_or_else(|| "Ride offer does not exist.".to_string())?;
-    
+
         let fare_paid = RideAcceptance::get_fare_paid(ride_acceptance_tx_hash, db)
             .map_err(|_| format!(
                 "Failed to retrieve 'fare_paid' field for ride acceptance with transaction hash '{}'.",
                 ride_acceptance_tx_hash
             ))?
             .unwrap_or(0);
-    
+
         if (fare_paid as u64) == ride_offer.fare {
             return Err(format!(
                 "The full fare for ride acceptance '{}' has been paid. No further payments are needed, and the ride cannot be cancelled.",
                 ride_acceptance_tx_hash
             ));
         }
-    
-        if passenger.to_string() != transaction.from && driver.to_string() != transaction.from {
+
+        if passenger.to_string() != from.to_string() && driver.to_string() != from.to_string() {
             return Err(format!(
                 "Transaction 'from' field does not match the expected values. Expected either passenger: '{}' or driver: '{}', but found: '{}'.",
-                passenger, driver, transaction.from
+                passenger, driver, from
             ));
         }
-    
+
         Ok(())
-    }    
+    }
 
     pub fn state_transaction(
-        transaction: &Transaction,
+        &self,
+        tx_hash: &String,
         db: &Database,
     ) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
-        let ride_cancel: RideCancel = match serde_json::from_str(&transaction.data.arguments) {
-            Ok(ride_pay) => ride_pay,
-            Err(_) => {
-                error!("Failed to deserialize transaction arguments.");
-                return vec![];
-            }
-        };
-
-        let ride_cancel_key = Self::construct_ride_cancel_key(&transaction.hash);
-        let ride_cancel_value = serde_json::to_string(&ride_cancel)
+        let ride_cancel_key = Self::construct_ride_cancel_key(&tx_hash);
+        let ride_cancel_value = serde_json::to_string(&self)
             .expect("Failed to serialize RidePay.")
             .into_bytes();
 
-        let ride_acceptance_tx_hash = &ride_cancel.ride_acceptance_transaction_hash;
+        let ride_acceptance_tx_hash = &self.ride_acceptance_transaction_hash;
 
         let ride_acceptance_cancel_key =
             RideAcceptance::construct_ride_acceptance_cancel_key(&ride_acceptance_tx_hash);
-        let ride_acceptance_cancel_value = serde_json::to_string(&transaction.hash)
-            .unwrap()
-            .into_bytes();
+        let ride_acceptance_cancel_value = serde_json::to_string(&tx_hash).unwrap().into_bytes();
 
         let fare_paid = match RideAcceptance::get_fare_paid(&ride_acceptance_tx_hash, db) {
             Ok(Some(fare)) => fare,
@@ -145,5 +143,24 @@ impl RideCancel {
 
     pub fn construct_ride_cancel_key(tx_hash: &str) -> Vec<u8> {
         format!("ride_pay_{}", tx_hash).into_bytes()
+    }
+}
+
+impl Encodable for RideCancel {
+    fn rlp_append(&self, stream: &mut RlpStream) {
+        stream.begin_list(1);
+        stream.append(&self.ride_acceptance_transaction_hash);
+    }
+}
+
+impl Decodable for RideCancel {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 1 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+
+        Ok(RideCancel {
+            ride_acceptance_transaction_hash: rlp.val_at(0)?,
+        })
     }
 }
