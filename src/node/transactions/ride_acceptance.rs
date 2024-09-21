@@ -4,7 +4,7 @@ use crate::node::{
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use serde::{Deserialize, Serialize};
 
-use super::{ride_offer::RideOffer, transaction::Transaction};
+use super::ride_offer::RideOffer;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RideAcceptance {
