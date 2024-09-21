@@ -1,14 +1,15 @@
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize,Serialize};
 
-use super::database::Database;
+use crate::node::database::Database;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ComplainArrival {
-    pub ride_acceptance_transaction_hash: String,
+
+#[derive(Clone, Debug,Serialize,Deserialize)]
+pub struct ConfirmArrival{
+    pub ride_acceptance_transaction_hash:String,
 }
 
-impl ComplainArrival {
+impl ConfirmArrival {
     pub fn verify_state(&self, _db: &Database) -> Result<(), String> {
         Ok(())
     }
@@ -21,20 +22,21 @@ impl ComplainArrival {
     }
 }
 
-impl Encodable for ComplainArrival {
+
+impl Encodable for ConfirmArrival {
     fn rlp_append(&self, stream: &mut RlpStream) {
         stream.begin_list(1);
         stream.append(&self.ride_acceptance_transaction_hash);
     }
 }
 
-impl Decodable for ComplainArrival {
+impl Decodable for ConfirmArrival {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         if !rlp.is_list() || rlp.item_count()? != 1 {
             return Err(DecoderError::RlpIncorrectListLen);
         }
 
-        Ok(ComplainArrival {
+        Ok(ConfirmArrival {
             ride_acceptance_transaction_hash: rlp.val_at(0)?,
         })
     }

@@ -1,9 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use crate::node::{complain_arrival::ComplainArrival, confirm_arrival::ConfirmArrival};
-
-use super::{ride_acceptance::RideAcceptance, ride_cancel::RideCancel, ride_offer::RideOffer, ride_pay::RidePay, ride_request::RideRequest, transfer::Transfer};
+use super::{complain_arrival::ComplainArrival, confirm_arrival::ConfirmArrival, ride_acceptance::RideAcceptance, ride_cancel::RideCancel, ride_offer::RideOffer, ride_pay::RidePay, ride_request::RideRequest, transfer::Transfer};
 
 
 
