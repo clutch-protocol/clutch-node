@@ -92,8 +92,8 @@ impl WebSocket {
         let id = request_value.get("id").cloned().unwrap_or(serde_json::Value::Null);
 
         match method {
-            "add_transaction" => {
-                Self::handle_add_transaction(params, id, blockchain, command_tx_p2p).await
+            "send_transaction" => {
+                Self::handle_send_transaction(params, id, blockchain, command_tx_p2p).await
             }
             "import_block" => {
                 Self::handle_import_block(params, id, blockchain, command_tx_p2p).await
@@ -108,7 +108,7 @@ impl WebSocket {
         }
     }
 
-    async fn handle_add_transaction(
+    async fn handle_send_transaction(
         params: serde_json::Value,
         id: serde_json::Value,
         blockchain: &Arc<Mutex<Blockchain>>,
@@ -117,7 +117,7 @@ impl WebSocket {
         let transaction: Transaction = match serde_json::from_value(params) {
             Ok(tx) => tx,
             Err(e) => {
-                warn!("Invalid params for 'add_transaction': {}", e);
+                warn!("Invalid params for 'send_transaction': {}", e);
                 return Some(json_rpc_error_response(-32602, "Invalid params", id));
             }
         };
