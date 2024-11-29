@@ -1,17 +1,17 @@
 # Clutch-Node
 
-Welcome to Clutch-Node, the innovative blockchain-based ridesharing platform. Our project is committed to improving urban mobility by leveraging the power of blockchain technology to create a decentralized, efficient, and secure system for ridesharing.
-
-## Introduction
-
-Clutch-Node is designed to revolutionize the way we think about ridesharing. By integrating blockchain technology, we aim to provide a more transparent, fair, and user-friendly experience compared to traditional ridesharing services.
+Clutch-Node is a blockchain-based ridesharing platform that aims to improve urban mobility by leveraging blockchain technology to create a decentralized, efficient, and secure system for ridesharing.
 
 ## Features
+- **Decentralized System**: Eliminates intermediaries, allowing users to connect directly.
+- **Secure Transactions**: Utilizes blockchain technology to ensure the security and privacy of all transactions.
+- **User Empowerment**: Provides users with more control over their ridesharing experiences.
+- **Eco-friendly Options**: Encourages the use of electric and hybrid vehicles to reduce carbon footprint.
 
-- Decentralized System: Eliminates the need for intermediaries, allowing users to connect directly.
-- Secure Transactions: Utilizes blockchain technology to ensure the security and privacy of all transactions.
-- User Empowerment: Provides users with more control over their ridesharing experiences.
-- Eco-friendly Options: Encourages the use of electric and hybrid vehicles to reduce carbon footprint.
+
+### Prerequisites
+- Docker
+- Docker Compose
 
 ## Running the Project Locally
 
