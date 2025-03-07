@@ -101,7 +101,7 @@ impl WebSocket {
             "author_new_block" => {
                 Self::handle_author_new_block(id, blockchain, command_tx_p2p).await
             }
-            "get_transaction_count" => {
+            "get_next_nonce" => {
                 Self::handle_get_next_nonce(params, id, blockchain).await
             }
             _ => {
@@ -199,27 +199,32 @@ impl WebSocket {
         id: serde_json::Value,
         blockchain: &Arc<Mutex<Blockchain>>,
     ) -> Option<String> {
-        // Extract address from params
-        let address = match params.get(0).and_then(|v| v.as_str()) {
-            Some(addr) => addr.to_string(),
-            None => {
-                let error_msg = "Invalid params: expected [address]";
+
+        #[derive(serde::Deserialize)]
+        struct GetNonceParams {
+            address: String,
+        }
+        // Parse params as an object
+        let params: GetNonceParams = match serde_json::from_value(params) {
+            Ok(p) => p,
+            Err(e) => {
+                let error_msg = format!("Invalid params: expected object with 'address' field: {}", e);
                 warn!("{}", error_msg);
-                return Some(json_rpc_error_response(-32602, error_msg, id));
+                return Some(json_rpc_error_response(-32602, &error_msg, id));
             }
         };
 
         // Get the blockchain lock
         let blockchain = blockchain.lock().await;
         
-        match blockchain.get_current_nonce(&address) {
+        match blockchain.get_current_nonce(&params.address) {
             Ok(nonce) => {
                 // Return the nonce value (next valid nonce to use)
                 let next_nonce = nonce + 1;
                 Some(json_rpc_success_response(serde_json::json!(next_nonce), id))
             }
             Err(e) => {
-                let error_msg = format!("Failed to get next nonce for address {}: {}", address, e);
+                let error_msg = format!("Failed to get next nonce for address {}: {}", params.address, e);
                 error!("{}", error_msg);
                 Some(json_rpc_error_response(-32000, &error_msg, id))
             }
