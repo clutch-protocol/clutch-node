@@ -10,7 +10,7 @@ services:
       - "3001:3001"
     volumes:
       - clutch-config:/usr/src/clutch-node/config
-    command: ["node1"]
+    command: ["--env", "node1"]
 
   node2:
     image: clutch-node
@@ -23,7 +23,7 @@ services:
       - "3002:3002"
     volumes:
       - clutch-config:/usr/src/clutch-node/config
-    command: ["node2"]
+    command: ["--env", "node2"]
 
   node3:
     image: clutch-node
@@ -36,7 +36,7 @@ services:
       - "3003:3003"
     volumes:
       - clutch-config:/usr/src/clutch-node/config
-    command: ["node3"]
+    command: ["--env", "node3"]
 
   grafana:
     image: grafana/grafana

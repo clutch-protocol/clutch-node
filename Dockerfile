@@ -1,5 +1,5 @@
 # Start with the official Rust image as the builder stage
-FROM rust:1.80.0 AS builder
+FROM rust:1.76.0 AS builder
 
 # Install dependencies required for building librocksdb-sys
 RUN apt-get update && apt-get install -y clang
@@ -34,9 +34,12 @@ RUN apt-get update && apt-get install -y libclang-dev libc6 libstdc++6 && apt-ge
 # Set the working directory inside the container
 WORKDIR /usr/src/clutch-node
 
+# Create a config directory
+RUN mkdir -p config
+
 # Copy the compiled binary from the builder stage
 COPY --from=builder /usr/src/clutch-node/target/release/clutch-node .
 
 # Set the command to run the release binary
-ENTRYPOINT ["./clutch-node", "--env"]
-CMD ["default"]
+ENTRYPOINT ["./clutch-node"]
+CMD ["--env", "default"]
