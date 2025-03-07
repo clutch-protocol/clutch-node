@@ -219,9 +219,8 @@ impl WebSocket {
         
         match blockchain.get_current_nonce(&params.address) {
             Ok(nonce) => {
-                // Return the nonce value (next valid nonce to use)
                 let next_nonce = nonce + 1;
-                Some(json_rpc_success_response(serde_json::json!(next_nonce), id))
+                Some(json_rpc_success_response(serde_json::json!({ "nonce": next_nonce }), id))
             }
             Err(e) => {
                 let error_msg = format!("Failed to get next nonce for address {}: {}", params.address, e);
