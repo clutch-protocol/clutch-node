@@ -57,6 +57,10 @@ impl Blockchain {
         AccountState::get_current_state(public_key, &self.db)
     }
 
+    pub fn get_current_nonce(&self, public_key: &String) -> Result<u64, String> {
+        AccountState::get_current_nonce(public_key, &self.db)
+    }
+
     pub fn shutdown_blockchain(&mut self) {
         if self.developer_mode {
             self.blockchain_write_to_file();

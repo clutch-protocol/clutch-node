@@ -101,6 +101,9 @@ impl WebSocket {
             "author_new_block" => {
                 Self::handle_author_new_block(id, blockchain, command_tx_p2p).await
             }
+            "get_transaction_count" => {
+                Self::handle_get_transaction_count(params, id, blockchain).await
+            }
             _ => {
                 warn!("Unknown method '{}' in request: {}", method, request_str);
                 Some(json_rpc_error_response(-32601, "Method not found", id))
@@ -189,6 +192,39 @@ impl WebSocket {
         P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Block, &encoded_block).await;
 
         Some(json_rpc_success_response(serde_json::json!("New block authored"), id))
+    }
+
+    async fn handle_get_transaction_count(
+        params: serde_json::Value,
+        id: serde_json::Value,
+        blockchain: &Arc<Mutex<Blockchain>>,
+    ) -> Option<String> {
+        // Extract address from params
+        let address = match params.get(0).and_then(|v| v.as_str()) {
+            Some(addr) => addr.to_string(),
+            None => {
+                let error_msg = "Invalid params: expected [address]";
+                warn!("{}", error_msg);
+                return Some(json_rpc_error_response(-32602, error_msg, id));
+            }
+        };
+
+        // Get the blockchain lock
+        let blockchain = blockchain.lock().await;
+        
+        match blockchain.get_current_nonce(&address) {
+            Ok(nonce) => {
+                // Return the nonce value (next valid nonce to use)
+                let next_nonce = nonce + 1;
+                info!("Transaction count for {} is {}", address, next_nonce);
+                Some(json_rpc_success_response(serde_json::json!(next_nonce), id))
+            }
+            Err(e) => {
+                let error_msg = format!("Failed to get transaction count for address {}: {}", address, e);
+                error!("{}", error_msg);
+                Some(json_rpc_error_response(-32000, &error_msg, id))
+            }
+        }
     }
 }
 
