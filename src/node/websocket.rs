@@ -117,15 +117,17 @@ impl WebSocket {
         let transaction: Transaction = match serde_json::from_value(params) {
             Ok(tx) => tx,
             Err(e) => {
-                warn!("Invalid params for 'send_transaction': {}", e);
-                return Some(json_rpc_error_response(-32602, "Invalid params", id));
+                let error_msg = format!("Invalid params for 'send_transaction': {}", e);
+                warn!("{}", error_msg);
+                return Some(json_rpc_error_response(-32602, &error_msg, id));
             }
         };
 
         let blockchain = blockchain.lock().await;
         if let Err(e) = blockchain.add_transaction_to_pool(&transaction) {
-            error!("Failed to add transaction: {}", e);
-            return Some(json_rpc_error_response(-32000, &format!("Failed to add transaction: {}", e), id));
+            let error_msg = format!("Failed to add transaction: {}", e);
+            error!("{}", error_msg);
+            return Some(json_rpc_error_response(-32000, &error_msg, id));
         }
 
         info!("Transaction added to pool from WebSocket.");
