@@ -85,7 +85,7 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: D:/source/clutch-node/config
+      device: D:/source/clutch/clutch-node/config
 
   grafana-data:
     driver: local
