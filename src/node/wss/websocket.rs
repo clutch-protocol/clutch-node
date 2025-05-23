@@ -11,6 +11,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::protocol::Message;
+use hex;
 
 pub struct WebSocket;
 
@@ -95,6 +96,9 @@ impl WebSocket {
             "send_transaction" => {
                 Self::handle_send_transaction(params, id, blockchain, command_tx_p2p).await
             }
+            "send_raw_transaction" => {
+                Self::handle_send_raw_transaction(params, id, blockchain, command_tx_p2p).await
+            }
             "import_block" => {
                 Self::handle_import_block(params, id, blockchain, command_tx_p2p).await
             }
@@ -139,6 +143,51 @@ impl WebSocket {
         let encoded_tx = encode(&transaction);
         P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Transaction, &encoded_tx).await;
 
+        Some(json_rpc_success_response(serde_json::json!("Transaction imported"), id))
+    }
+
+    async fn handle_send_raw_transaction(
+        params: serde_json::Value,
+        id: serde_json::Value,
+        blockchain: &Arc<Mutex<Blockchain>>,
+        command_tx_p2p: tokio::sync::mpsc::Sender<P2PServerCommand>,
+    ) -> Option<String> {
+        // Expect params to be a hex string (RLP encoded)
+        let hex_str = match params.as_str() {
+            Some(s) => s,
+            None => {
+                let error_msg = "Invalid params: expected hex string for raw transaction";
+                warn!("{}", error_msg);
+                return Some(json_rpc_error_response(-32602, error_msg, id));
+            }
+        };
+        let tx_bytes = match hex::decode(hex_str.trim_start_matches("0x")) {
+            Ok(bytes) => bytes,
+            Err(e) => {
+                let error_msg = format!("Failed to decode hex: {}", e);
+                warn!("{}", error_msg);
+                return Some(json_rpc_error_response(-32602, &error_msg, id));
+            }
+        };
+        // Decode RLP to Transaction
+        let transaction: Transaction = match crate::node::rlp_encoding::decode(&tx_bytes) {
+            Ok(tx) => tx,
+            Err(e) => {
+                let error_msg = format!("Failed to decode RLP transaction: {}", e);
+                warn!("{}", error_msg);
+                return Some(json_rpc_error_response(-32602, &error_msg, id));
+            }
+        };
+        let blockchain = blockchain.lock().await;
+        if let Err(e) = blockchain.add_transaction_to_pool(&transaction) {
+            let error_msg = format!("Failed to add transaction: {}", e);
+            error!("{}", error_msg);
+            return Some(json_rpc_error_response(-32000, &error_msg, id));
+        }
+        info!("Transaction added to pool from WebSocket.");
+        // Gossip transaction
+        let encoded_tx = encode(&transaction);
+        P2PServer::gossip_message_command(command_tx_p2p, GossipMessageType::Transaction, &encoded_tx).await;
         Some(json_rpc_success_response(serde_json::json!("Transaction imported"), id))
     }
 

@@ -252,3 +252,4 @@ fn ride_cancel_transaction(nonce: u64) -> Transaction {
     ride_cancel_transaction.sign(PASSENGER_SECRET_KEY);
     ride_cancel_transaction
 }
+
