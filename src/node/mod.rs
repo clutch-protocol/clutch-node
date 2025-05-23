@@ -16,4 +16,4 @@ pub mod signature_keys;
 pub mod time_utils;
 pub mod tracing;
 pub mod transactions;
-pub mod websocket;
+pub mod wss;

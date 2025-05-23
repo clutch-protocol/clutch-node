@@ -4,7 +4,7 @@ use crate::node::metric::serve_metrics;
 use crate::node::p2p_server::commands::DirectMessageType;
 use crate::node::p2p_server::{GossipMessageType, P2PServer, P2PServerCommand};
 use crate::node::rlp_encoding::encode;
-use crate::node::websocket::WebSocket;
+use crate::node::wss::websocket::WebSocket;
 
 use std::sync::Arc;
 use std::time::Duration;
