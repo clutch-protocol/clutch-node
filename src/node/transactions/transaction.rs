@@ -4,7 +4,7 @@ use crate::node::{
     signature_keys::{self, SignatureKeys},
 };
 
-use rlp::{Encodable, RlpStream};
+use rlp::RlpStream;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use sha3::Sha3_256;
@@ -86,9 +86,12 @@ impl Transaction {
     }
 
     fn calculate_hash(&self) -> String {
-        // Serialize the transaction using RLP
+        // Serialize only the unsigned transaction (from, nonce, data) using RLP
         let mut stream = RlpStream::new();
-        self.rlp_append(&mut stream);
+        stream.begin_list(3);
+        stream.append(&self.from);
+        stream.append(&self.nonce);
+        stream.append(&self.data);
         let rlp_bytes = stream.out();
 
         // Initialize the SHA3-256 hasher
