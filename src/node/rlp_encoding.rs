@@ -3,6 +3,7 @@ extern crate rlp;
 use crate::node::transactions::transaction::Transaction;
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use hex;
 
 use super::blocks::block::Block;
 use super::blocks::block_bodies::BlockBodies;
@@ -134,8 +135,22 @@ impl Decodable for Transaction {
             return Err(DecoderError::RlpIncorrectListLen);
         }
         
+        // Handle 'from' field which may be encoded as binary data by JavaScript RLP library
+        let from = {
+            let from_item = rlp.at(0)?;
+            if let Ok(string_val) = from_item.as_val::<String>() {
+                // Direct string decoding (from Rust-generated RLP)
+                string_val
+            } else if let Ok(bytes_val) = from_item.as_val::<Vec<u8>>() {
+                // Binary data decoding (from JavaScript RLP library)
+                hex::encode(&bytes_val)
+            } else {
+                return Err(DecoderError::Custom("Unable to decode 'from' field as string or bytes"));
+            }
+        };
+        
         Ok(Transaction {
-            from: rlp.val_at(0)?,
+            from,
             nonce: rlp.val_at(1)?,
             signature_r: rlp.val_at(2)?,
             signature_s: rlp.val_at(3)?,
