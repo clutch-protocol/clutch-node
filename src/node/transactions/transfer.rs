@@ -56,6 +56,10 @@ impl Encodable for Transfer {
 
 impl Decodable for Transfer {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 2 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(Transfer {
             to: rlp.val_at(0)?,
             value: rlp.val_at(1)?,

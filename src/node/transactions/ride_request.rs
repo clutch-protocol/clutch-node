@@ -119,6 +119,10 @@ impl Encodable for RideRequest {
 
 impl Decodable for RideRequest {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 3 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(RideRequest {
             pickup_location: rlp.val_at(0)?,
             dropoff_location: rlp.val_at(1)?,

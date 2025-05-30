@@ -21,6 +21,10 @@ impl Encodable for Coordinates {
 
 impl Decodable for Coordinates {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 2 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         // Decode latitude and longitude as u64
         let latitude_bits: u64 = rlp.val_at(0)?;
         let longitude_bits: u64 = rlp.val_at(1)?;

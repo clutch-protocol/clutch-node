@@ -130,6 +130,10 @@ impl Encodable for Transaction {
 
 impl Decodable for Transaction {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 7 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(Transaction {
             from: rlp.val_at(0)?,
             nonce: rlp.val_at(1)?,
@@ -161,6 +165,10 @@ impl Encodable for Block {
 
 impl Decodable for Block {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 9 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(Block {
             index: rlp.val_at(0)?,
             timestamp: rlp.val_at(1)?,
@@ -177,7 +185,7 @@ impl Decodable for Block {
 
 impl Encodable for Handshake {
     fn rlp_append(&self, stream: &mut RlpStream) {
-        stream.begin_list(2);
+        stream.begin_list(3);
         stream.append(&self.genesis_block_hash);
         stream.append(&self.latest_block_hash);
         stream.append(&self.latest_block_index);
@@ -186,6 +194,10 @@ impl Encodable for Handshake {
 
 impl Decodable for Handshake {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 3 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(Handshake {
             genesis_block_hash: rlp.val_at(0)?,
             latest_block_hash: rlp.val_at(1)?,
@@ -205,6 +217,10 @@ impl Encodable for GetBlockHeaders {
 
 impl Decodable for GetBlockHeaders {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 3 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(GetBlockHeaders {
             start_block_index: rlp.val_at(0)?,
             skip: rlp.val_at(1)?,
@@ -229,6 +245,10 @@ impl Encodable for BlockHeader {
 
 impl Decodable for BlockHeader {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 7 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(BlockHeader {
             index: rlp.val_at(0)?,
             previous_hash: rlp.val_at(1)?,
@@ -250,6 +270,10 @@ impl Encodable for BlockHeaders {
 
 impl Decodable for BlockHeaders {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 1 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(BlockHeaders {
             block_headers: rlp.list_at(0)?,
         })
@@ -265,6 +289,10 @@ impl Encodable for GetBlockBodies {
 
 impl Decodable for GetBlockBodies {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 1 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(GetBlockBodies {
             block_indexes: rlp.list_at(0)?,
         })
@@ -280,6 +308,10 @@ impl Encodable for BlockBodies {
 
 impl Decodable for BlockBodies {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        if !rlp.is_list() || rlp.item_count()? != 1 {
+            return Err(DecoderError::RlpIncorrectListLen);
+        }
+        
         Ok(BlockBodies {
             blocks: rlp.list_at(0)?,
         })
