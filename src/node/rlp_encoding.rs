@@ -133,12 +133,12 @@ impl Decodable for Transaction {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         if !rlp.is_list() || rlp.item_count()? != 7 {
             return Err(DecoderError::RlpIncorrectListLen);
-        }
+        }            
         
         // Handle 'from' field which may be encoded as binary data by JavaScript RLP library
         let from = {
             let from_item = rlp.at(0)?;
-            if let Ok(string_val) = from_item.as_val::<String>() {
+            let from_value = if let Ok(string_val) = from_item.as_val::<String>() {
                 // Direct string decoding (from Rust-generated RLP)
                 string_val
             } else if let Ok(bytes_val) = from_item.as_val::<Vec<u8>>() {
@@ -146,6 +146,13 @@ impl Decodable for Transaction {
                 hex::encode(&bytes_val)
             } else {
                 return Err(DecoderError::Custom("Unable to decode 'from' field as string or bytes"));
+            };
+            
+            // Ensure 'from' field has 0x prefix
+            if from_value.starts_with("0x") {
+                from_value
+            } else {
+                format!("0x{}", from_value)
             }
         };
         
