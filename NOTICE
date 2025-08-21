@@ -1,0 +1,14 @@
+Clutch-Node
+Copyright 2024 Mehran Mazhar and Clutch Protocol Contributors
+
+This product includes software developed by the Clutch Protocol project
+(https://github.com/MehranMazhar/clutch).
+
+This software contains code derived from various open source projects:
+
+- Rust standard library and ecosystem crates
+- Substrate/Polkadot framework concepts
+- Ethereum blockchain design principles
+
+For the complete list of dependencies and their licenses, please see the Cargo.toml
+and Cargo.lock files, and run `cargo license` or check each crate's documentation.

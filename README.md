@@ -1,5 +1,12 @@
 # Clutch-Node
 
+![Alpha](https://img.shields.io/badge/status-alpha-orange.svg)
+![Experimental](https://img.shields.io/badge/stage-experimental-red.svg)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
+![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)
+
+> ⚠️ **ALPHA SOFTWARE** - This project is in active development and is considered experimental. Use at your own risk. APIs may change without notice.
+
 Clutch-Node is a blockchain-based ridesharing platform that aims to improve urban mobility by leveraging blockchain technology to create a decentralized, efficient, and secure system for ridesharing.
 
 ## Features
@@ -38,7 +45,7 @@ SET LIBCLANG_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\To
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
 ## License
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the Apache License 2.0. See `LICENSE` for more information.
 
 ## Contact
 If you have any questions or comments, please feel free to contact us at mehran.mazhar@gmail.com.

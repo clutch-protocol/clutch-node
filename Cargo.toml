@@ -2,6 +2,14 @@
 name = "clutch_node"
 version = "0.0.1"
 edition = "2021"
+authors = ["Mehran Mazhar <mehran.mazhar@gmail.com>"]
+license = "Apache-2.0"
+description = "A decentralized blockchain-based ride-sharing platform"
+homepage = "https://github.com/MehranMazhar/clutch-node"
+repository = "https://github.com/MehranMazhar/clutch-node"
+keywords = ["blockchain", "ride-sharing", "decentralized", "p2p"]
+categories = ["network-programming", "blockchain"]
+readme = "README.md"
 
 # Specify the binary target
 [[bin]]
