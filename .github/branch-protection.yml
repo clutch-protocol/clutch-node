@@ -1,0 +1,116 @@
+# Branch Protection Configuration for Clutch Node
+# Requires PRs for protected branches but allows Mehran Mazhar to bypass
+
+branches:
+  - name: main
+    protection:
+      # Require PRs for most contributors
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        require_last_push_approval: false
+      
+      # Required status checks
+      required_status_checks:
+        strict: true
+        contexts:
+          - "build"
+          - "test"
+          - "lint"
+      
+      # Allow force pushes only for maintainers
+      allow_force_pushes: false
+      
+      # Allow deletions only for maintainers
+      allow_deletions: false
+      
+      # Enforce restrictions for non-admin users
+      enforce_admins: false
+      
+      # Restrict pushes to maintainers only
+      restrictions:
+        users:
+          - "MehranMazhar"
+        teams: []
+      
+      # Allow Mehran Mazhar to bypass restrictions
+      bypass_pull_request_allowances:
+        users:
+          - "MehranMazhar"
+        teams: []
+
+  - name: develop
+    protection:
+      # Require PRs for develop branch
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        require_last_push_approval: false
+      
+      # Required status checks
+      required_status_checks:
+        strict: true
+        contexts:
+          - "build"
+          - "test"
+      
+      # Allow force pushes only for maintainers
+      allow_force_pushes: false
+      
+      # Allow deletions only for maintainers
+      allow_deletions: false
+      
+      # Enforce restrictions for non-admin users
+      enforce_admins: false
+      
+      # Restrict pushes to maintainers only
+      restrictions:
+        users:
+          - "MehranMazhar"
+        teams: []
+      
+      # Allow Mehran Mazhar to bypass restrictions
+      bypass_pull_request_allowances:
+        users:
+          - "MehranMazhar"
+        teams: []
+
+  - name: release/*
+    protection:
+      # Require PRs for release branches
+      required_pull_request_reviews:
+        required_approving_review_count: 2
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: true
+        require_last_push_approval: false
+      
+      # Required status checks
+      required_status_checks:
+        strict: true
+        contexts:
+          - "build"
+          - "test"
+          - "lint"
+          - "security-scan"
+      
+      # No force pushes on release branches
+      allow_force_pushes: false
+      
+      # No deletions on release branches
+      allow_deletions: false
+      
+      # Enforce restrictions for all users
+      enforce_admins: true
+      
+      # Restrict pushes to maintainers only
+      restrictions:
+        users:
+          - "MehranMazhar"
+        teams: []
+      
+      # No bypass for release branches
+      bypass_pull_request_allowances:
+        users: []
+        teams: []

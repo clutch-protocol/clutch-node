@@ -1,183 +1,123 @@
 # Contributing to Clutch Node
 
-Thank you for your interest in contributing to Clutch Node! This document provides guidelines and information for contributors.
+## 🔒 **Branch Protection & PR Requirements**
 
-## 🌟 Vision
+Clutch Node uses **branch protection rules** to maintain code quality while enabling rapid development. Contributors must use Pull Requests, but maintainers can bypass restrictions.
 
-Clutch Protocol aims to revolutionize ride-sharing through decentralization, reducing fees from 15-25% to 5-8%, enabling instant payouts, and empowering users via community governance.
+## 📋 **Branch Protection Rules**
 
-## 🚀 Getting Started
+### **Main Branch (`main`)**
+- ✅ **Requires PR** before merging
+- ✅ **1 approving review** required
+- ✅ **Status checks** must pass (build, test, lint)
+- ✅ **Branches must be up to date** before merging
+- ❌ **No force pushes** allowed
+- ❌ **No deletions** allowed
 
-### Prerequisites
-- Rust 1.70+
-- Docker & Docker Compose
-- Git
+### **Develop Branch (`develop`)**
+- ✅ **Requires PR** before merging
+- ✅ **1 approving review** required
+- ✅ **Status checks** must pass (build, test)
+- ❌ **No force pushes** allowed
+- ❌ **No deletions** allowed
 
-### Development Setup
-1. Fork the repository
-2. Clone your fork:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/clutch-node.git
-   cd clutch-node
-   ```
-3. Set up development environment:
-   ```bash
-   cargo build
-   cargo test
-   ```
+### **Release Branches (`release/*`)**
+- ✅ **Requires PR** before merging
+- ✅ **2 approving reviews** required
+- ✅ **Code owner review** required
+- ✅ **All status checks** must pass
+- ❌ **No force pushes** allowed
+- ❌ **No deletions** allowed
 
-## 📋 How to Contribute
+## 🔓 **Maintainer Bypass (Mehran Mazhar)**
 
-### 1. Issues
-- Check existing issues before creating new ones
-- Use issue templates when available
-- Provide clear descriptions and reproduction steps
-- Label issues appropriately
+As the project maintainer, **Mehran Mazhar** can:
+- ✅ **Push directly** to protected branches
+- ✅ **Bypass PR requirements** for rapid development
+- ✅ **Dismiss stale reviews**
+- ✅ **Force push** when necessary (use responsibly)
 
-### 2. Pull Requests
-- Create feature branches: `git checkout -b feature/your-feature-name`
-- Follow the PR template
-- Ensure all tests pass
-- Keep commits atomic and well-documented
-- Reference related issues in PR description
+## 🚀 **Contributor Workflow**
 
-### 3. Code Standards
-
-#### Rust Guidelines
-- Follow Rust naming conventions
-- Use `cargo fmt` for formatting
-- Use `cargo clippy` for linting
-- Add tests for new functionality
-- Document public APIs with `///` comments
-
-#### Security Focus
-- Client-side signing only
-- No private key exposure
-- Validate all inputs
-- Follow blockchain security best practices
-
-### 4. Commit Messages
-Follow conventional commits format:
-```
-type(scope): description
-
-Examples:
-feat(consensus): implement Aura consensus mechanism
-fix(api): resolve transaction validation bug
-docs(readme): update installation instructions
-```
-
-## 🧪 Testing
-
-### Running Tests
+### **1. Create Feature Branch**
 ```bash
-# Unit tests
-cargo test
-
-# Integration tests
-cargo test --test integration
-
-# All tests with coverage
-cargo test --all-features
+git checkout -b feature/your-feature-name
 ```
 
-### Test Guidelines
-- Write tests for all new features
-- Maintain test coverage above 80%
-- Test both success and error cases
-- Use descriptive test names
+### **2. Make Changes & Commit**
+```bash
+# Make your changes
+git add .
+git commit -m "Feature: Your feature description"
+```
 
-## 📚 Documentation
+### **3. Push & Create PR**
+```bash
+git push origin feature/your-feature-name
+# Create Pull Request on GitHub
+```
 
-- Update README.md for user-facing changes
-- Add inline documentation for complex code
-- Update API documentation
-- Include examples in documentation
+### **4. Wait for Reviews & Checks**
+- **Status checks** must pass (build, test, lint)
+- **At least 1 approval** required
+- **Branch must be up to date** with main
 
-## 🔒 Security
+### **5. Merge When Ready**
+Once approved and checks pass, your PR can be merged!
 
-### Reporting Security Issues
-- **DO NOT** create public issues for security vulnerabilities
-- Email: mehran.mazhar@gmail.com
-- Include detailed reproduction steps
-- Allow time for investigation before disclosure
+## 🔧 **Required Status Checks**
 
-### Security Guidelines
-- Never commit private keys or secrets
-- Use secure coding practices
-- Follow cryptographic best practices
-- Validate all external inputs
+| Check | Description | Required For |
+|-------|-------------|--------------|
+| **build** | Rust compilation | All branches |
+| **test** | Unit & integration tests | All branches |
+| **lint** | Code formatting & linting | Main & release |
+| **security-scan** | Security vulnerability scan | Release branches |
 
-## 🏗️ Architecture Principles
+## ⚡ **Maintainer Quick Development**
 
-### Decentralization First
-- No single points of failure
-- Minimize centralized dependencies
-- Enable peer-to-peer interactions
+For rapid MVP development, Mehran Mazhar can:
 
-### Scalability
-- Design for high throughput
-- Consider network effects
-- Plan for horizontal scaling
+```bash
+# Direct push to main (bypasses protection)
+git push origin main
 
-### Transparency
-- All transactions on-chain
-- Open source everything
-- Clear audit trails
+# Direct push to develop (bypasses protection)
+git push origin develop
 
-## 📅 Development Process
+# Force push when necessary (use responsibly)
+git push origin main --force
+```
 
-### Roadmap Alignment
-Current focus areas (MVP by September 12, 2025):
-- Consensus mechanism (Aura)
-- Transaction validation
-- Node networking
-- Fee distribution (90% drivers, 5% nodes, 5% developers)
+## 🎯 **Why This Setup?**
 
-### Review Process
-1. Automated CI/CD checks
-2. Code review by maintainers
-3. Security review for sensitive changes
-4. Community feedback for major features
+For Clutch Protocol's **12-week MVP timeline**:
+- **Code quality** through PR reviews
+- **Rapid iteration** for maintainers
+- **Community contribution** with proper workflow
+- **Security** through status checks
 
-## 🤝 Community
+## ⚠️ **Important Notes**
 
-### Communication
-- GitHub Discussions for general questions
-- Issues for bugs and feature requests
-- Email for security concerns
+- **Contributors cannot force push** to protected branches
+- **All PRs require approval** (except maintainer's)
+- **Status checks must pass** before merging
+- **Use maintainer bypass responsibly**
 
-### Code of Conduct
-We follow a strict code of conduct:
-- Be respectful and inclusive
-- Focus on constructive feedback
-- Zero tolerance for harassment
-- Prioritize project goals over personal preferences
+## 🚀 **Getting Started**
 
-## 🎯 Getting Help
+1. **Fork** the clutch-node repository
+2. **Clone** your fork locally
+3. **Create feature branch** for your changes
+4. **Submit PR** and wait for review
+5. **Join** the decentralized blockchain future!
 
-### Resources
-- [README.md](./README.md) - Project overview
-- [Documentation](./docs/) - Detailed guides
-- [Examples](./examples/) - Code samples
+## 📞 **Need Help?**
 
-### Contact
-- **Maintainer:** Mehran Mazhar
-- **Email:** mehran.mazhar@gmail.com
-- **GitHub:** [@MehranMazhar](https://github.com/MehranMazhar)
-
-## 🏆 Recognition
-
-Contributors will be:
-- Listed in CONTRIBUTORS.md
-- Mentioned in release notes
-- Invited to community calls
-- Eligible for future governance tokens
-
-## 📄 License
-
-By contributing, you agree that your contributions will be licensed under the same license as the project (Apache 2.0).
+- Create an issue for questions
+- Join GitHub Discussions
+- Check the main README for project details
 
 ---
 
-**Remember:** We're building the future of decentralized transportation. Every contribution matters! 🚗⛓️
+**Remember**: This setup balances code quality with development speed. Contributors use PRs, maintainers can bypass for rapid iteration!
