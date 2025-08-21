@@ -63,3 +63,4 @@ Add any other context, mockups, or examples about the feature request here.
 - [ ] This feature aligns with Clutch Protocol's vision
 - [ ] I have considered the decentralization impact
 - [ ] I have thought about security implications
+

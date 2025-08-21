@@ -216,3 +216,4 @@ Ready to contribute to the future of decentralized transportation?
 *This file is automatically updated as the project grows*
 
 **Together, we're building the future of decentralized ride-sharing!** 🚗⛓️
+

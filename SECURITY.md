@@ -218,3 +218,4 @@ By reporting security vulnerabilities, you agree to:
 **Version:** 1.0
 
 *Securing the future of decentralized transportation* 🔒🚗
+
