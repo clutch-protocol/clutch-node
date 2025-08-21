@@ -1,104 +1,183 @@
-# Contributing to Clutch-Node
+# Contributing to Clutch Node
 
-Thank you for your interest in contributing to Clutch-Node! We welcome contributions from the community and appreciate your help in making this project better.
+Thank you for your interest in contributing to Clutch Node! This document provides guidelines and information for contributors.
 
-## Code of Conduct
+## 🌟 Vision
 
-By participating in this project, you are expected to uphold our Code of Conduct. Please report unacceptable behavior to mehran.mazhar@gmail.com.
+Clutch Protocol aims to revolutionize ride-sharing through decentralization, reducing fees from 15-25% to 5-8%, enabling instant payouts, and empowering users via community governance.
 
-## How Can I Contribute?
+## 🚀 Getting Started
 
-### Reporting Bugs
-
-Before creating bug reports, please check the issue tracker to avoid duplicates. When creating a bug report, please include:
-
-- A clear and descriptive title
-- A detailed description of the issue
-- Steps to reproduce the problem
-- Expected behavior vs. actual behavior
-- Your environment details (OS, Rust version, etc.)
-- Any relevant logs or error messages
-
-### Suggesting Enhancements
-
-Enhancement suggestions are welcome! Please provide:
-
-- A clear and descriptive title
-- A detailed description of the proposed feature
-- Explain why this enhancement would be useful
-- Include examples if possible
-
-### Code Contributions
-
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests for your changes
-5. Ensure tests pass (`cargo test`)
-6. Run clippy for linting (`cargo clippy`)
-7. Format your code (`cargo fmt`)
-8. Commit your changes (`git commit -m 'Add some amazing feature'`)
-9. Push to the branch (`git push origin feature/amazing-feature`)
-10. Open a Pull Request
+### Prerequisites
+- Rust 1.70+
+- Docker & Docker Compose
+- Git
 
 ### Development Setup
+1. Fork the repository
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/clutch-node.git
+   cd clutch-node
+   ```
+3. Set up development environment:
+   ```bash
+   cargo build
+   cargo test
+   ```
 
-1. Install Rust (1.70+)
-2. Clone your fork
-3. Run `cargo build` to compile
-4. Run `cargo test` to run tests
-5. Run `cargo clippy` to check for issues
+## 📋 How to Contribute
 
-## Style Guidelines
+### 1. Issues
+- Check existing issues before creating new ones
+- Use issue templates when available
+- Provide clear descriptions and reproduction steps
+- Label issues appropriately
 
-### Rust Code Style
+### 2. Pull Requests
+- Create feature branches: `git checkout -b feature/your-feature-name`
+- Follow the PR template
+- Ensure all tests pass
+- Keep commits atomic and well-documented
+- Reference related issues in PR description
 
-- Follow the standard Rust formatting (`cargo fmt`)
-- Use descriptive variable and function names
-- Add documentation comments for public APIs
+### 3. Code Standards
+
+#### Rust Guidelines
 - Follow Rust naming conventions
-- Keep functions focused and small
-- Use proper error handling
+- Use `cargo fmt` for formatting
+- Use `cargo clippy` for linting
+- Add tests for new functionality
+- Document public APIs with `///` comments
 
-### Commit Messages
+#### Security Focus
+- Client-side signing only
+- No private key exposure
+- Validate all inputs
+- Follow blockchain security best practices
 
-- Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-- Limit the first line to 72 characters or less
-- Reference issues and pull requests liberally after the first line
+### 4. Commit Messages
+Follow conventional commits format:
+```
+type(scope): description
 
-## Testing
+Examples:
+feat(consensus): implement Aura consensus mechanism
+fix(api): resolve transaction validation bug
+docs(readme): update installation instructions
+```
 
-- Write tests for new functionality
-- Ensure existing tests continue to pass
-- Include integration tests where appropriate
-- Test on multiple platforms if possible
+## 🧪 Testing
 
-## Documentation
+### Running Tests
+```bash
+# Unit tests
+cargo test
 
-- Update README.md if needed
-- Document any new public APIs
-- Include code examples where helpful
-- Keep documentation up to date with changes
+# Integration tests
+cargo test --test integration
 
-## Review Process
+# All tests with coverage
+cargo test --all-features
+```
 
-1. All submissions require review
-2. Reviewers will check for:
-   - Code quality and style
-   - Test coverage
-   - Documentation completeness
-   - Security considerations
-   - Performance implications
+### Test Guidelines
+- Write tests for all new features
+- Maintain test coverage above 80%
+- Test both success and error cases
+- Use descriptive test names
 
-## Recognition
+## 📚 Documentation
 
-Contributors will be recognized in our README and releases. Thank you for helping make Clutch-Node better!
+- Update README.md for user-facing changes
+- Add inline documentation for complex code
+- Update API documentation
+- Include examples in documentation
 
-## Questions?
+## 🔒 Security
 
-Feel free to contact us at mehran.mazhar@gmail.com or open an issue for discussion.
+### Reporting Security Issues
+- **DO NOT** create public issues for security vulnerabilities
+- Email: mehran.mazhar@gmail.com
+- Include detailed reproduction steps
+- Allow time for investigation before disclosure
 
+### Security Guidelines
+- Never commit private keys or secrets
+- Use secure coding practices
+- Follow cryptographic best practices
+- Validate all external inputs
 
+## 🏗️ Architecture Principles
 
+### Decentralization First
+- No single points of failure
+- Minimize centralized dependencies
+- Enable peer-to-peer interactions
 
+### Scalability
+- Design for high throughput
+- Consider network effects
+- Plan for horizontal scaling
+
+### Transparency
+- All transactions on-chain
+- Open source everything
+- Clear audit trails
+
+## 📅 Development Process
+
+### Roadmap Alignment
+Current focus areas (MVP by September 12, 2025):
+- Consensus mechanism (Aura)
+- Transaction validation
+- Node networking
+- Fee distribution (90% drivers, 5% nodes, 5% developers)
+
+### Review Process
+1. Automated CI/CD checks
+2. Code review by maintainers
+3. Security review for sensitive changes
+4. Community feedback for major features
+
+## 🤝 Community
+
+### Communication
+- GitHub Discussions for general questions
+- Issues for bugs and feature requests
+- Email for security concerns
+
+### Code of Conduct
+We follow a strict code of conduct:
+- Be respectful and inclusive
+- Focus on constructive feedback
+- Zero tolerance for harassment
+- Prioritize project goals over personal preferences
+
+## 🎯 Getting Help
+
+### Resources
+- [README.md](./README.md) - Project overview
+- [Documentation](./docs/) - Detailed guides
+- [Examples](./examples/) - Code samples
+
+### Contact
+- **Maintainer:** Mehran Mazhar
+- **Email:** mehran.mazhar@gmail.com
+- **GitHub:** [@MehranMazhar](https://github.com/MehranMazhar)
+
+## 🏆 Recognition
+
+Contributors will be:
+- Listed in CONTRIBUTORS.md
+- Mentioned in release notes
+- Invited to community calls
+- Eligible for future governance tokens
+
+## 📄 License
+
+By contributing, you agree that your contributions will be licensed under the same license as the project (Apache 2.0).
+
+---
+
+**Remember:** We're building the future of decentralized transportation. Every contribution matters! 🚗⛓️
