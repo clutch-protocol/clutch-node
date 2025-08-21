@@ -9,6 +9,8 @@
 
 Clutch-Node is a blockchain-based ridesharing platform that aims to improve urban mobility by leveraging blockchain technology to create a decentralized, efficient, and secure system for ridesharing.
 
+**Created and maintained by [Mehran Mazhar](https://github.com/MehranMazhar)**
+
 ## Features
 - **Decentralized System**: Eliminates intermediaries, allowing users to connect directly.
 - **Secure Transactions**: Utilizes blockchain technology to ensure the security and privacy of all transactions.
@@ -46,6 +48,13 @@ Contributions are what make the open-source community such an amazing place to l
 
 ## License
 Distributed under the Apache License 2.0. See `LICENSE` for more information.
+
+## Author & Maintainer
+
+**Mehran Mazhar**
+- GitHub: [@MehranMazhar](https://github.com/MehranMazhar)
+- Website: [MehranMazhar.com](https://MehranMazhar.com)
+- Email: mehran.mazhar@gmail.com
 
 ## Contact
 If you have any questions or comments, please feel free to contact us at mehran.mazhar@gmail.com.
