@@ -30,18 +30,18 @@ This project automatically builds and publishes Docker images to Docker Hub at `
 #### 🚀 **Docker Optimizations**
 Our Docker images feature several optimizations for production use:
 
-- **📦 Ultra-Small Size**: Alpine Linux base (~5MB) vs Ubuntu (~70MB)
+- **📦 Minimal Size**: Debian Slim base (~50MB) with stripped binaries
 - **🔒 Security**: Non-root user execution with minimal dependencies
-- **⚡ Performance**: Statically linked binary with stripped symbols
+- **⚡ Performance**: Optimized binary with clang compiler
 - **🛡️ Health Checks**: Built-in container health monitoring
 - **📱 Multi-Arch**: Supports AMD64 and ARM64 architectures
 - **💨 Fast Builds**: Optimized layer caching for dependencies
 
 ### Using Pre-built Images
-Our Docker images are highly optimized using Alpine Linux and static linking for minimal size and maximum security.
+Our Docker images are highly optimized using Debian Slim for minimal size and maximum compatibility.
 
 ```bash
-# Pull the latest image (typically <50MB)
+# Pull the latest image (typically ~100MB)
 docker pull 9194010019/clutch-node:latest
 
 # Run a single node
