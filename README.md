@@ -20,6 +20,63 @@ Clutch-Node is a blockchain-based ridesharing platform that aims to improve urba
 ## Prerequisites
 - Docker
 - Docker Compose
+- Rust 1.70+ (for local development)
+
+## 🐳 Docker
+
+### Automated Builds
+This project automatically builds and publishes Docker images to Docker Hub at `9194010019/clutch-node` when code is pushed to the main branch.
+
+### Using Pre-built Images
+```bash
+# Pull the latest image
+docker pull 9194010019/clutch-node:latest
+
+# Run a single node
+docker run --rm -p 8081:8081 9194010019/clutch-node:latest
+
+# Run with custom config
+docker run --rm -p 8081:8081 -v ${PWD}/config:/usr/src/clutch-node/config 9194010019/clutch-node:latest --env node1
+```
+
+### Local Docker Development
+```powershell
+# Build locally
+.\scripts\docker-build.ps1
+
+# Build and push to Docker Hub
+.\scripts\docker-build.ps1 -Push
+
+# Build with custom tag
+.\scripts\docker-build.ps1 -Tag "dev" -Push
+```
+
+### Docker Compose
+```bash
+# Run full development environment
+docker-compose up -d
+
+# View logs
+docker-compose logs -f node1
+
+# Stop all services
+docker-compose down
+```
+
+### Setting Up Docker Hub Auto-Publishing
+
+To enable automatic Docker image publishing, add these secrets to your GitHub repository:
+
+1. Go to your repository → Settings → Secrets and variables → Actions
+2. Add the following secrets:
+   - `DOCKERHUB_USERNAME`: Your Docker Hub username
+   - `DOCKERHUB_TOKEN`: Docker Hub access token (create at hub.docker.com/settings/security)
+
+The GitHub Action will automatically:
+- Build Docker images on push to main branch
+- Push to `9194010019/clutch-node:latest`
+- Create additional tags for branches and commits
+- Update the Docker Hub repository description
 
 ## Running the Project Locally
 
