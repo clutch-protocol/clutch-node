@@ -56,8 +56,13 @@ npm-debug.log*
 
 # Runtime data
 *.pid
-*.lock
+package-lock.json
+yarn.lock
+npm-shrinkwrap.json
 *.sqlite
+
+# Allow Cargo.lock (needed for reproducible Rust builds)
+!Cargo.lock
 
 # Coverage and test reports
 coverage/

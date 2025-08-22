@@ -11,17 +11,23 @@ FROM rust:${RUST_VERSION}-alpine AS builder
 # Install build dependencies in a single layer
 RUN apk add --no-cache \
     musl-dev \
-    clang-dev \
-    clang \
-    llvm-dev \
+    clang17-dev \
+    clang17 \
+    llvm17-dev \
+    llvm17-static \
     pkgconfig \
     openssl-dev \
+    openssl-libs-static \
+    linux-headers \
+    build-base \
     && rm -rf /var/cache/apk/*
 
 # Set build environment for static linking
 ENV RUSTFLAGS="-C target-feature=+crt-static"
-ENV CC=clang
-ENV CXX=clang++
+ENV CC=clang-17
+ENV CXX=clang++-17
+ENV LIBCLANG_PATH="/usr/lib/llvm17/lib"
+ENV BINDGEN_EXTRA_CLANG_ARGS="-I/usr/include/linux"
 
 # Create app user for security
 RUN addgroup -g 1000 clutch && \
