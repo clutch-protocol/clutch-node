@@ -1,9 +1,64 @@
-target/
-doc/
-*_blockchain.db
+# Docker ignore file to optimize build context and security
 
-# IDE-specific files
+# Git files
+.git
+.github
+.gitignore
+
+# Documentation
+*.md
+docs/
+examples/
+
+# Development files
 .vscode/
 .idea/
-*.iml
+*.swp
+*.swo
+*~
 
+# Build artifacts (except what we need)
+target/debug/
+target/tmp/
+target/rust-analyzer/
+*.pdb
+
+# Test and output files
+output/
+tests/
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Docker files (avoid recursion)
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# CI/CD files
+.github/workflows/
+
+# Scripts (except essential ones)
+scripts/
+
+# Environment and config files with secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Dependencies and cache
+node_modules/
+npm-debug.log*
+
+# Runtime data
+*.pid
+*.lock
+*.sqlite
+
+# Coverage and test reports
+coverage/
+*.lcov

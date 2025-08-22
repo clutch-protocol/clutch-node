@@ -47,6 +47,13 @@ if ($Push) {
 }
 
 Write-Host ""
+Write-Host ""
+Write-Host "📊 Image Analysis:" -ForegroundColor Cyan
+docker image ls $ImageName --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+
+Write-Host ""
 Write-Host "📋 Available commands:" -ForegroundColor White
 Write-Host "  Test locally:    docker run --rm -p 8081:8081 $ImageName" -ForegroundColor Gray
-Write-Host "  Run with config: docker run --rm -p 8081:8081 -v `${PWD}/config:/usr/src/clutch-node/config $ImageName" -ForegroundColor Gray
+Write-Host "  Run with config: docker run --rm -p 8081:8081 -v `${PWD}/config:/app/config $ImageName" -ForegroundColor Gray
+Write-Host "  Health check:    docker run --rm $ImageName --version" -ForegroundColor Gray
+Write-Host "  Shell access:    docker run --rm -it --entrypoint /bin/sh $ImageName" -ForegroundColor Gray

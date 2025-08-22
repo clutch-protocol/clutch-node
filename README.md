@@ -27,16 +27,31 @@ Clutch-Node is a blockchain-based ridesharing platform that aims to improve urba
 ### Automated Builds
 This project automatically builds and publishes Docker images to Docker Hub at `9194010019/clutch-node` when code is pushed to the main branch.
 
+#### 🚀 **Docker Optimizations**
+Our Docker images feature several optimizations for production use:
+
+- **📦 Ultra-Small Size**: Alpine Linux base (~5MB) vs Ubuntu (~70MB)
+- **🔒 Security**: Non-root user execution with minimal dependencies
+- **⚡ Performance**: Statically linked binary with stripped symbols
+- **🛡️ Health Checks**: Built-in container health monitoring
+- **📱 Multi-Arch**: Supports AMD64 and ARM64 architectures
+- **💨 Fast Builds**: Optimized layer caching for dependencies
+
 ### Using Pre-built Images
+Our Docker images are highly optimized using Alpine Linux and static linking for minimal size and maximum security.
+
 ```bash
-# Pull the latest image
+# Pull the latest image (typically <50MB)
 docker pull 9194010019/clutch-node:latest
 
 # Run a single node
 docker run --rm -p 8081:8081 9194010019/clutch-node:latest
 
 # Run with custom config
-docker run --rm -p 8081:8081 -v ${PWD}/config:/usr/src/clutch-node/config 9194010019/clutch-node:latest --env node1
+docker run --rm -p 8081:8081 -v ${PWD}/config:/app/config 9194010019/clutch-node:latest --env node1
+
+# Health check
+docker run --rm 9194010019/clutch-node:latest --version
 ```
 
 ### Local Docker Development

@@ -9,7 +9,7 @@ services:
       - "4001:4001"
       - "3001:3001"
     volumes:
-      - clutch-config:/usr/src/clutch-node/config
+      - clutch-config:/app/config
     command: ["--env", "node1"]
 
   node2:
@@ -22,7 +22,7 @@ services:
       - "4002:4002"
       - "3002:3002"
     volumes:
-      - clutch-config:/usr/src/clutch-node/config
+      - clutch-config:/app/config
     command: ["--env", "node2"]
 
   node3:
@@ -35,7 +35,7 @@ services:
       - "4003:4003"
       - "3003:3003"
     volumes:
-      - clutch-config:/usr/src/clutch-node/config
+      - clutch-config:/app/config
     command: ["--env", "node3"]
 
   grafana:

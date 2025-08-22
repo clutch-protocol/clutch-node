@@ -1,45 +1,86 @@
-# Start with the official Rust image as the builder stage
-FROM rust:1.76.0 AS builder
+# Multi-stage build for optimized image size
+# Build arguments for flexibility
+ARG RUST_VERSION=1.76
+ARG ALPINE_VERSION=3.19
 
-# Install dependencies required for building librocksdb-sys
-RUN apt-get update && apt-get install -y clang
+#==============================================================================
+# Builder Stage - Use Alpine for smaller base image
+#==============================================================================
+FROM rust:${RUST_VERSION}-alpine AS builder
 
-# Set the working directory inside the container
+# Install build dependencies in a single layer
+RUN apk add --no-cache \
+    musl-dev \
+    clang-dev \
+    clang \
+    llvm-dev \
+    pkgconfig \
+    openssl-dev \
+    && rm -rf /var/cache/apk/*
+
+# Set build environment for static linking
+ENV RUSTFLAGS="-C target-feature=+crt-static"
+ENV CC=clang
+ENV CXX=clang++
+
+# Create app user for security
+RUN addgroup -g 1000 clutch && \
+    adduser -D -s /bin/sh -u 1000 -G clutch clutch
+
 WORKDIR /usr/src/clutch-node
 
-# Copy Cargo.toml and Cargo.lock files separately to leverage Docker cache
+# Copy dependency files for better caching
 COPY Cargo.toml Cargo.lock ./
 
-# This step will create a dummy main.rs, and build the dependencies.
-# This will leverage the caching of Docker layers, so subsequent builds will be faster.
-RUN mkdir src
-RUN echo "fn main() {}" > src/main.rs
-RUN cargo build --release
+# Create dummy source and build dependencies
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build --release --target x86_64-unknown-linux-musl && \
+    rm -rf src
 
-# Remove the dummy main.rs file
-RUN rm -f src/main.rs
-
-# Copy the actual source code
+# Copy actual source code
 COPY src ./src
 
-# Build the project in release mode
-RUN cargo build --release
+# Build the final binary
+RUN cargo build --release --target x86_64-unknown-linux-musl --bin clutch-node
 
-# Create a new stage with a smaller base image
-FROM ubuntu:24.04
+# Strip the binary to reduce size further
+RUN strip target/x86_64-unknown-linux-musl/release/clutch-node
 
-# Install required libraries to run the binary
-RUN apt-get update && apt-get install -y libclang-dev libc6 libstdc++6 && apt-get clean
+#==============================================================================
+# Runtime Stage - Minimal Alpine image
+#==============================================================================
+FROM alpine:${ALPINE_VERSION}
 
-# Set the working directory inside the container
-WORKDIR /usr/src/clutch-node
+# Install only essential runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata && \
+    rm -rf /var/cache/apk/*
 
-# Create a config directory
-RUN mkdir -p config
+# Create non-root user
+RUN addgroup -g 1000 clutch && \
+    adduser -D -s /bin/sh -u 1000 -G clutch clutch
 
-# Copy the compiled binary from the builder stage
-COPY --from=builder /usr/src/clutch-node/target/release/clutch-node .
+# Create directories with proper permissions
+RUN mkdir -p /usr/local/bin /app/config && \
+    chown -R clutch:clutch /app
 
-# Set the command to run the release binary
-ENTRYPOINT ["./clutch-node"]
+# Copy the optimized binary
+COPY --from=builder /usr/src/clutch-node/target/x86_64-unknown-linux-musl/release/clutch-node /usr/local/bin/clutch-node
+
+# Set permissions and switch to non-root user
+RUN chmod +x /usr/local/bin/clutch-node
+USER clutch
+
+# Set working directory
+WORKDIR /app
+
+# Health check for container monitoring
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD clutch-node --version || exit 1
+
+# Expose default port (configurable via environment)
+EXPOSE 8081
+
+# Set the entrypoint and default command
+ENTRYPOINT ["clutch-node"]
 CMD ["--env", "default"]
