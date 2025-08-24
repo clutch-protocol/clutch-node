@@ -1,3 +1,6 @@
 /target
 /output
 *.db
+
+# Include monitoring configs (they should be in source control)
+# monitoring/

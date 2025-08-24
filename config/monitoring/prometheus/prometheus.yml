@@ -1,0 +1,54 @@
+# Prometheus Configuration for Clutch Protocol
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+scrape_configs:
+  # Prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Clutch Node 1
+  - job_name: "clutch-node-1"
+    static_configs:
+      - targets: ["node1:3001"]
+    scrape_interval: 10s
+    metrics_path: /metrics
+    scheme: http
+
+  # Clutch Node 2  
+  - job_name: "clutch-node-2"
+    static_configs:
+      - targets: ["node2:3002"]
+    scrape_interval: 10s
+    metrics_path: /metrics
+    scheme: http
+
+  # Clutch Node 3
+  - job_name: "clutch-node-3"
+    static_configs:
+      - targets: ["node3:3003"]
+    scrape_interval: 10s
+    metrics_path: /metrics
+    scheme: http
+
+  # Optional: Add more services
+  # - job_name: "clutch-hub-api"
+  #   static_configs:
+  #     - targets: ["hub-api:3000"]
+  #   scrape_interval: 15s
+  #   metrics_path: /metrics
