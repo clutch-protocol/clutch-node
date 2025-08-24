@@ -91,21 +91,9 @@ networks:
 volumes:
   grafana-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: E:/docker_shared/grafana  
 
   prometheus-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: E:/docker_shared/prometheus 
 
   seq-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: E:/docker_shared/seq
