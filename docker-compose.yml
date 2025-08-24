@@ -83,7 +83,8 @@ services:
     volumes:
       - seq-data:/data
     environment:
-      - ACCEPT_EULA=Y  
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_NOAUTHENTICATION=true  
   
 networks:
   clutch-network:  # Shared network for all services
