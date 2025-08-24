@@ -205,7 +205,7 @@ Ready to contribute to the future of decentralized transportation?
 
 1. **Read** our [Contributing Guide](CONTRIBUTING.md)
 2. **Follow** our [Code of Conduct](CODE_OF_CONDUCT.md)  
-3. **Check** open [Issues](https://github.com/clutch-protocol/clutch-node/issues)
+3. **Check** open [Issues](https://github.com/clutchprotocol/clutch-node/issues)
 4. **Start** with a good first issue
 5. **Submit** your first pull request!
 

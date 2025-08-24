@@ -177,7 +177,7 @@ Special thanks to all contributors who make Clutch Protocol possible:
 - ❌ Cancelled
 
 For more detailed information about specific changes, please refer to:
-- [GitHub Releases](https://github.com/clutch-protocol/clutch-node/releases)
-- [GitHub Issues](https://github.com/clutch-protocol/clutch-node/issues)
-- [Pull Requests](https://github.com/clutch-protocol/clutch-node/pulls)
+- [GitHub Releases](https://github.com/clutchprotocol/clutch-node/releases)
+- [GitHub Issues](https://github.com/clutchprotocol/clutch-node/issues)
+- [Pull Requests](https://github.com/clutchprotocol/clutch-node/pulls)
 
